@@ -262,3 +262,49 @@ void AH5_free_opt_attrs(AH5_opt_attrs_t *opt_attrs)
     }
 }
 
+
+// Write int attribute <attr_name> given by address <path>
+char AH5_write_int_attr(hid_t loc_id, const char *path, char* attr_name, const int wdata)
+{
+    char success = AH5_FALSE;
+
+    if (H5LTset_attribute_int(loc_id, path, attr_name, &wdata, 1) >= 0)
+        success = AH5_TRUE;
+
+    return success;
+}
+
+
+// Write float attribute <attr_name> given by address <path>
+char AH5_write_flt_attr(hid_t loc_id, const char *path, char* attr_name, const float wdata)
+{
+    char success = AH5_FALSE;
+
+    if (H5LTset_attribute_float(loc_id, path, attr_name, &wdata, 1) >= 0)
+        success = AH5_TRUE;
+
+    return success;
+}
+
+
+// Write complex attribute <attr_name> given by address <path>
+char AH5_write_cpx_attr(hid_t loc_id, const char* path, char* attr_name, const AH5_complex_t *wdata)
+{
+    char success = AH5_FALSE;
+
+    // TO BE IMPLEMENTED...
+
+    return success;
+}
+
+
+// Write string attribute <attr_name> given by address <path>
+char AH5_write_str_attr(hid_t loc_id, const char *path, char *attr_name, const char *wdata)
+{
+    char success = AH5_FALSE;
+
+    if (H5LTset_attribute_string(loc_id, path, attr_name, wdata) >= 0);
+        success = AH5_TRUE;
+
+    return success;
+}

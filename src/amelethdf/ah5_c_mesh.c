@@ -953,6 +953,223 @@ char AH5_read_mesh(hid_t file_id, AH5_mesh_t *mesh)
     return rdata;
 }
 
+
+// Write structured mesh
+char AH5_write_smesh(hid_t file_id, const char *path, const AH5_smesh_t *smesh)
+{
+    char success = AH5_FALSE;
+
+    AH5_PRINT_ERR_FUNC_NOT_IMPLEMENTED(AH5_C_MESH, path);
+
+    return success;
+}
+
+// Write groupGroup
+char AH5_write_groupgroup(hid_t file_id, const char *path, const AH5_groupgroup_t *groupgroup, int nb_ggrp)
+{
+    char success = AH5_TRUE;
+    hid_t grp;
+    int i;
+    char *ggrp_name;
+
+    // NMT: I prefer build an empty group, because I am not sure that everyone check that the group exist before to open it.
+    grp = H5Gcreate(file_id, path, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    if (nb_ggrp > 0)
+    {
+        for (i = 0; i < nb_ggrp; i++)
+        {
+            ggrp_name = AH5_get_name_from_path(groupgroup[i].path);
+            success &= AH5_write_str_dataset(grp, ggrp_name, groupgroup[i].nb_groupgroupnames, strlen(groupgroup[i].groupgroupnames[0]), groupgroup[i].groupgroupnames[0]);
+        }
+    }
+    return success;
+}
+
+// Write group in unstructured mesh
+char AH5_write_umsh_group(hid_t file_id, const char *path, const AH5_ugroup_t *ugroup, int nb_ugroup)
+{
+    char success = AH5_FALSE;
+    int i;
+    hid_t root;
+
+    // NMT: I prefer build an empty group, because I am not sure that everyone check that the group exist before to open it.
+    root = H5Gcreate(file_id, path, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    for (i = 0; i < nb_ugroup; i++)
+    {
+        if (ugroup->nb_groupelts > 0)
+        {
+            if (AH5_write_int_dataset(root, ugroup[i].path, ugroup[i].nb_groupelts, ugroup[i].groupelts))
+            {
+                if (AH5_write_str_attr(root, ugroup[i].path, AH5_A_TYPE, ugroup[i].type))
+                    if (strcmp(ugroup[i].type, AH5_V_NODE))
+                      success = AH5_write_str_attr(root, ugroup[i].path, AH5_A_ENTITY_TYPE, ugroup[i].entitytype);
+            }
+            if (!success)
+              return success;
+        }
+    }
+    return success;
+}
+
+// Write table of type "pointInElement" from /selectorOnMesh (unstructured) (index: 32-bit signed int, vector: 32-bit signed float)
+char AH5_write_usom_pie_table(hid_t file_id, const char *path, const AH5_usom_pie_table_t *usom_pie_table)
+{
+    char success = AH5_FALSE;
+
+    AH5_PRINT_ERR_FUNC_NOT_IMPLEMENTED(AH5_C_MESH, path);
+
+    return success;
+}
+
+// Read dataset of type "edge" or "face" from /selectorOnMesh (32-bit signed int)
+char AH5_write_usom_ef_table(hid_t file_id, const char *path, const AH5_usom_ef_table_t *usom_ef_table)
+{
+    char success = AH5_FALSE;
+
+    AH5_PRINT_ERR_FUNC_NOT_IMPLEMENTED(AH5_C_MESH, path);
+
+    return success;
+}
+
+// Read selector on mesh (unstructured mesh)
+char AH5_write_umesh_som_table(hid_t file_id, const char *path, const AH5_usom_table_t *usom_table, int nb_som)
+{
+    char success = AH5_FALSE;
+
+    AH5_PRINT_ERR_FUNC_NOT_IMPLEMENTED(AH5_C_MESH, path);
+
+    return success;
+}
+
+/** Write unstructured mesh */
+char AH5_write_umesh(hid_t file_id, const char *path, const AH5_umesh_t *umesh)
+{
+    char success = AH5_FALSE;
+
+    hid_t msh;
+    hsize_t dims1[1], dims2[2];
+
+    // Check umesh sanity first
+    if (umesh == NULL
+        || umesh->elementnodes == NULL
+        || umesh->elementtypes == NULL
+        || umesh->nodes == NULL)
+        return success;
+
+    msh = H5Gcreate(file_id, path, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    if (!AH5_write_str_attr(msh, ".", AH5_A_TYPE, AH5_V_UNSTRUCTURED))
+        return success;
+
+    // Write m x 1 dataset "elementNodes" (32-bit signed integer)
+    if (!AH5_write_int_dataset(msh, AH5_CATEGORY_NAME(AH5_G_ELEMENT_NODES), umesh->nb_elementnodes, umesh->elementnodes))
+        return success;
+
+    // Write m x 1 dataset "elementTypes" (8-bit signed char)
+    if (!AH5_write_char_dataset(msh, AH5_CATEGORY_NAME(AH5_G_ELEMENT_TYPES), umesh->nb_elementtypes, umesh->elementtypes))
+        return success;
+
+    // Write m x n dataset "nodes" (32-bit signed float)
+    if (!AH5_write_flt_array(msh, AH5_CATEGORY_NAME(AH5_G_NODES), 2, umesh->nb_nodes, umesh->nodes))
+        return success;
+
+    // Write groupGroups
+    if (!AH5_write_groupgroup(msh, AH5_CATEGORY_NAME(AH5_G_GROUPGROUP), umesh->groupgroups, umesh->nb_groupgroups))
+        // handled error
+      return success;
+
+    // Write groups
+    if (!AH5_write_umsh_group(msh, AH5_CATEGORY_NAME(AH5_G_GROUP), umesh->groups, umesh->nb_groups))
+        // handled error
+        return success;
+
+    // Write selectorOnMesh
+    // FIXME(NMT) not implemented yet...
+    //if (!AH5_write_umesh_som_table(msh, AH5_CATEGORY_NAME(AH5_G_SELECTOR_ON_MESH), umesh->som_tables, umesh->nb_som_tables))
+    //    return AH5_FAILURE;
+
+    success = AH5_TRUE;
+    return success;
+}
+
+// Write mesh instance
+char AH5_write_msh_instance(hid_t file_id, const char *path, const AH5_msh_instance_t *msh_instance)
+{
+    char success = AH5_FALSE;
+    char msh_path[AH5_ABSOLUTE_PATH_LENGTH];
+
+    if (AH5_path_valid(file_id, path))
+    {
+        strcpy(msh_path, path);
+        AH5_join_path(msh_path, msh_instance->path);
+
+        if (msh_instance->type == MSH_UNSTRUCTURED)
+        {
+            success = AH5_write_umesh(file_id, msh_path, &msh_instance->data.unstructured);
+        }
+        else if (msh_instance->type == MSH_STRUCTURED)
+        {
+            success = AH5_write_smesh(file_id, msh_path, &msh_instance->data.structured);
+        }
+        else
+        {
+            AH5_print_err_inv_attr(AH5_C_MESH, path, AH5_A_TYPE);
+            success = AH5_FALSE;
+        }
+    }
+    else
+    {
+        AH5_print_err_path(AH5_C_MESH, path);
+        success = AH5_FALSE;
+    }
+
+    return success;
+}
+
+// Write link between mesh
+char AH5_write_mlk_instance(hid_t file_id, const char *path, const AH5_mlk_instance_t *mlk_instance)
+{
+    char success = AH5_FALSE;
+
+    AH5_PRINT_ERR_FUNC_NOT_IMPLEMENTED(AH5_C_MESH, path);
+
+    return success;
+}
+
+// Write mesh group
+char AH5_write_msh_group(hid_t file_id, const char *path, const AH5_msh_group_t *msh_group)
+{
+    char success = AH5_TRUE;
+    int i;
+    hid_t grp;
+
+    if (AH5_path_valid(file_id, AH5_C_MESH))
+        grp = H5Gopen1(file_id, path);
+    else
+        grp = H5Gcreate1(file_id, path, 0);
+
+    for (i = 0; i < msh_group->nb_msh_instances; i++)
+        success &= AH5_write_msh_instance(grp, path, msh_group->msh_instances + i);
+
+    for (i = 0; i < msh_group->nb_mlk_instances; i++)
+        success &= AH5_write_mlk_instance(grp, path, msh_group->mlk_instances + i);
+
+    return success;
+}
+
+// Write mesh categories
+char AH5_write_mesh(hid_t file_id, const AH5_mesh_t *mesh)
+{
+  char success = AH5_TRUE;
+  int i;
+
+  for (i = 0; i < mesh->nb_groups; i++)
+      success &= AH5_write_msh_group(file_id, AH5_C_MESH, mesh->groups + i);
+
+  return success;
+}
+
+
+
 // Print structured mesh
 void AH5_print_smesh(const AH5_smesh_t *smesh, int space)
 {
