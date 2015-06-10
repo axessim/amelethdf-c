@@ -2,7 +2,7 @@
 
 
 // Init link instance
-void AH5_init_lnk_instance (AH5_lnk_instance_t *lnk_instance)
+void AH5_init_lnk_instance(AH5_lnk_instance_t *lnk_instance)
 {
     lnk_instance->path = NULL;
     lnk_instance->opt_attrs.nb_instances = 0;
@@ -13,7 +13,7 @@ void AH5_init_lnk_instance (AH5_lnk_instance_t *lnk_instance)
 }
 
 // Init link group (group of instances)
-void AH5_init_lnk_group (AH5_lnk_group_t *lnk_group)
+void AH5_init_lnk_group(AH5_lnk_group_t *lnk_group)
 {
     lnk_group->path = NULL;
     lnk_group->opt_attrs.nb_instances = 0;
@@ -24,7 +24,7 @@ void AH5_init_lnk_group (AH5_lnk_group_t *lnk_group)
 
 
 // Init link category (all groups/instances)
-void AH5_init_link (AH5_link_t *link)
+void AH5_init_link(AH5_link_t *link)
 {
     link->nb_groups = 0;
     link->groups = NULL;

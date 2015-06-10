@@ -29,6 +29,22 @@ extern "C" {
         float           *nodes;
     } AH5_axis_t;
 
+    typedef enum _AH5_group_type_t
+    {
+      GROUP_TYPE_INVALID = -1,
+      GROUP_NODE = 1,
+      GROUP_ELEMENT = 2
+    } AH5_group_type_t;
+
+    typedef enum _AH5_group_entitytype_t
+    {
+      GROUP_ENTITYTYPE_INVALID = -1,
+      GROUP_ENTITYTYPE_UNDEF = 0,
+      GROUP_EDGE = 1,
+      GROUP_FACE = 2,
+      GROUP_VOLUME = 3
+    } AH5_group_entitytype_t;
+
     typedef struct _AH5_sgroup_t
     {
         char            *path;
@@ -181,8 +197,20 @@ extern "C" {
         AH5_msh_group_t *groups;
     } AH5_mesh_t;
 
-    AH5_PUBLIC void AH5_init_msh_group(AH5_msh_group_t *msh_group);
-    AH5_PUBLIC void AH5_init_mesh(AH5_mesh_t *mesh);
+
+
+    
+    AH5_PUBLIC AH5_groupgroup_t* AH5_init_groupgroup(AH5_groupgroup_t *groupgroup, hsize_t nb, size_t length);
+    AH5_PUBLIC AH5_axis_t* AH5_init_axis(AH5_axis_t *axis, hsize_t nb_nodes);
+    AH5_PUBLIC AH5_sgroup_t* AH5_init_sgroup(AH5_sgroup_t *group, hsize_t nb_eles, AH5_group_type_t type, AH5_group_entitytype_t entitytype);
+    AH5_PUBLIC AH5_ugroup_t* AH5_init_ugroup(AH5_ugroup_t *group, hsize_t nb_eles, AH5_group_type_t type, AH5_group_entitytype_t entitytype);
+    
+    AH5_PUBLIC AH5_smesh_t* AH5_init_smesh(AH5_smesh_t *smesh, hsize_t nb_groups, hsize_t nb_groupgroups, hsize_t nb_som_tables);
+    AH5_PUBLIC AH5_umesh_t* AH5_init_umesh(AH5_umesh_t *umesh, hsize_t nb_elementnodes, hsize_t nb_elementtypes, hsize_t nb_nodes, hsize_t nb_groups, hsize_t nb_groupgroups, hsize_t nb_som_tables);
+    AH5_PUBLIC AH5_msh_instance_t* AH5_init_msh_instance(AH5_msh_instance_t *msh_instance);
+    AH5_PUBLIC AH5_mlk_instance_t* AH5_init_mlk_instance(AH5_mlk_instance_t *mlk_instance);
+    AH5_PUBLIC AH5_msh_group_t* AH5_init_msh_group(AH5_msh_group_t *msh_group, hsize_t nb_meshs, hsize_t nb_mesh_links);
+    AH5_PUBLIC AH5_mesh_t* AH5_init_mesh(AH5_mesh_t *mesh, hsize_t nb_groups);
 
     AH5_PUBLIC char AH5_read_groupgroup(hid_t file_id, const char* path, AH5_groupgroup_t *groupgroup);
     AH5_PUBLIC char AH5_read_smesh_axis(hid_t file_id, const char* path, AH5_axis_t *axis);
