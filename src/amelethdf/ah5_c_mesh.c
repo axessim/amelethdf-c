@@ -4,6 +4,7 @@
  * Initialized and allocates mesh group.
  * 
  * @param groupgroup the initialized group
+ * @param path the mesh groupgroup name
  * @param nb the number of entry
  * @param length the entry size (0 represent the default group name length)
  * 
@@ -11,7 +12,7 @@
  * allocate memory, a null pointer is returned.
  */
 AH5_PUBLIC AH5_groupgroup_t* AH5_init_groupgroup(
-    AH5_groupgroup_t *groupgroup, hsize_t nb, size_t length)
+    AH5_groupgroup_t *groupgroup, const char *path, hsize_t nb, size_t length)
 {
   char success = AH5_TRUE;
   hsize_t i;
@@ -21,6 +22,9 @@ AH5_PUBLIC AH5_groupgroup_t* AH5_init_groupgroup(
     groupgroup->path = NULL;
     groupgroup->nb_groupgroupnames = nb;
     groupgroup->groupgroupnames = NULL;
+
+    if (path)
+      AH5_setpath(&groupgroup->path, path);
 
     if (length == 0)
       length = AH5_ELEMENT_NAME_LENGTH + 1;
@@ -84,6 +88,7 @@ AH5_PUBLIC AH5_axis_t* AH5_init_axis(AH5_axis_t *axis, hsize_t nb_nodes)
  * Initialized and allocates mesh group.
  * 
  * @param group the initialized group
+ * @param path the mesh name
  * @param nb_eles number of element pointed by the group
  * @param type the group type (GROUP_NODE, GROUP_ELEMENT)
  * @param entitytype the group element type (GROUP_EDGE, GROUP_FACE,
@@ -93,7 +98,8 @@ AH5_PUBLIC AH5_axis_t* AH5_init_axis(AH5_axis_t *axis, hsize_t nb_nodes)
  * allocate memory, a null pointer is returned.
  */
 AH5_PUBLIC AH5_sgroup_t* AH5_init_smsh_group(
-    AH5_sgroup_t *group, hsize_t nb_eles, AH5_group_type_t type, AH5_group_entitytype_t entitytype)
+    AH5_sgroup_t *group, const char *path, hsize_t nb_eles,
+    AH5_group_type_t type, AH5_group_entitytype_t entitytype)
 {
   char success = AH5_TRUE;
   char *ctype, *centitytype = NULL;
@@ -109,6 +115,8 @@ AH5_PUBLIC AH5_sgroup_t* AH5_init_smsh_group(
     group->elements = NULL;
     group->normals = NULL;
     
+    if (path)
+      AH5_setpath(&group->path, path);
     
     if (nb_eles)
     {
@@ -195,6 +203,7 @@ AH5_PUBLIC AH5_sgroup_t* AH5_init_smsh_group(
  * Initialized and allocates mesh group.
  * 
  * @param group the initialized group
+ * @param path the mesh name
  * @param nb_eles number of element pointed by the group
  * @param type the group type (GROUP_NODE, GROUP_ELEMENT)
  * @param entitytype the group element type (GROUP_EDGE, GROUP_FACE,
@@ -204,7 +213,8 @@ AH5_PUBLIC AH5_sgroup_t* AH5_init_smsh_group(
  * allocate memory, a null pointer is returned.
  */
 AH5_PUBLIC AH5_ugroup_t* AH5_init_umsh_group(
-    AH5_ugroup_t *group, hsize_t nb_eles, AH5_group_type_t type, AH5_group_entitytype_t entitytype)
+    AH5_ugroup_t *group, const char *path, hsize_t nb_eles,
+    AH5_group_type_t type, AH5_group_entitytype_t entitytype)
 {
   char success = AH5_TRUE;
   char *ctype, *centitytype = NULL;
@@ -216,6 +226,9 @@ AH5_PUBLIC AH5_ugroup_t* AH5_init_umsh_group(
     group->entitytype = NULL;
     group->nb_groupelts = nb_eles;
     group->groupelts = NULL;
+
+    if (path)
+      AH5_setpath(&group->path, path);
     
     if (nb_eles)
     {
@@ -294,6 +307,9 @@ AH5_smesh_t* AH5_init_smesh(
   
   if (smesh)
   {
+    AH5_init_axis(&smesh->x, 0);
+    AH5_init_axis(&smesh->y, 0);
+    AH5_init_axis(&smesh->z, 0);
     smesh->nb_groups = nb_groups;
     smesh->groups = NULL;
     smesh->nb_groupgroups = nb_groupgroups;
@@ -420,17 +436,59 @@ AH5_umesh_t* AH5_init_umesh(
   return umesh;
 }
 
+AH5_msh_instance_t* AH5_init_msh_instance(
+    AH5_msh_instance_t *msh_instance, const char *path, AH5_mesh_class_t type)
+{
+  if (msh_instance)
+  {
+    msh_instance->path = NULL;
+    msh_instance->type = type;
+    
+    if (path)
+      AH5_setpath(&msh_instance->path, path);
+
+    if (type == MSH_UNSTRUCTURED)
+      AH5_init_umesh(&msh_instance->data.unstructured, 0, 0, 0, 0, 0, 0);
+    else if (type == MSH_STRUCTURED)
+      AH5_init_smesh(&msh_instance->data.structured, 0, 0, 0);
+  }
+
+  return msh_instance;
+}
+
+AH5_mlk_instance_t* AH5_init_mlk_instance(
+    AH5_mlk_instance_t *mlk_instance, const char *path, AH5_meshlink_class_t type)
+{
+  if (mlk_instance)
+  {
+    mlk_instance->path = NULL;
+    mlk_instance->mesh1 = NULL;
+    mlk_instance->mesh2 = NULL;
+    mlk_instance->data = NULL;
+    mlk_instance->dims[0] = 0;
+    mlk_instance->dims[1] = 0;
+    mlk_instance->type = type;
+
+    if (path)
+      AH5_setpath(&mlk_instance->path, path);
+  }
+
+  return mlk_instance;
+}
+
 /** 
  * Initialized and allocates mesh group.
  * 
  * @param msh_group the initialized mesh
+ * @param path the mesh group name
  * @param nb_meshs the number of meshs,
  * @param nb_mesh_links the number of mesh links.
  * 
  * @return On success, a pointer to the mesh. If the function failed to
  * allocate memory, a null pointer is returned.
  */
-AH5_msh_group_t* AH5_init_msh_group(AH5_msh_group_t *msh_group, hsize_t nb_meshs, hsize_t nb_mesh_links)
+AH5_msh_group_t* AH5_init_msh_group(
+    AH5_msh_group_t *msh_group, const char *path, hsize_t nb_meshs, hsize_t nb_mesh_links)
 {
   if (msh_group)
   {
@@ -439,6 +497,9 @@ AH5_msh_group_t* AH5_init_msh_group(AH5_msh_group_t *msh_group, hsize_t nb_meshs
     msh_group->msh_instances = NULL;
     msh_group->nb_mlk_instances = nb_mesh_links;
     msh_group->mlk_instances = NULL;
+
+    if (path)
+      AH5_setpath(&msh_group->path, path);
 
     if (nb_meshs) {
       msh_group->msh_instances = (AH5_msh_instance_t*)malloc(nb_meshs*sizeof(AH5_msh_instance_t));
@@ -2136,7 +2197,7 @@ void AH5_free_msh_group(AH5_msh_group_t *msh_group)
             AH5_free_mlk_instance(msh_group->mlk_instances + i);
         free(msh_group->mlk_instances);
     }
-    AH5_init_msh_group(msh_group, 0, 0);
+    AH5_init_msh_group(msh_group, NULL, 0, 0);
 }
 
 

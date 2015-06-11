@@ -332,6 +332,28 @@ char AH5_path_valid(hid_t loc_id, const char *path)
     return AH5_TRUE;
 }
 
+/** 
+ * Set the given path into dest.
+ * 
+ * @param dest the pointer to the destination string path.
+ * @param src the source string path
+ * 
+ * @return success boolean value
+ */
+char AH5_setpath(char **dest, const char *src)
+{
+  if (dest)
+  {
+    *dest = (char*)malloc((strlen(src)+1)*sizeof(char));
+    if (*dest == NULL)
+      return AH5_FALSE;
+    strcpy(*dest, src);
+    return AH5_TRUE;
+  }
+
+  return AH5_FALSE;
+}
+
 
 // Add element to aset; allocates new memory!!!
 AH5_set_t AH5_add_to_set(AH5_set_t aset, char *aelement)

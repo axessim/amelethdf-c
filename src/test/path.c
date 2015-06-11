@@ -9,6 +9,18 @@
 //! Test suite counter.
 int tests_run = 0;
 
+
+char* test_set_path()
+{
+  char *p1;
+
+  mu_assert_false("null", AH5_setpath(NULL, NULL));
+  mu_assert_true("set valid path", AH5_setpath(&p1, "/new/path"));
+  mu_assert_str_equal("check", p1, "/new/path");
+
+  return MU_FINISHED_WITHOUT_ERRORS;
+}
+
 char* test_join()
 {
     char path[AH5_ABSOLUTE_PATH_LENGTH];
@@ -124,6 +136,8 @@ char *all_tests()
     mu_run_test(test_join);
     mu_run_test(test_trim);
     mu_run_test(test_get_base_or_name_from_path);
+    mu_run_test(test_set_path);
+    
     return 0;
 }
 
