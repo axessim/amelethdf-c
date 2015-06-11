@@ -436,6 +436,16 @@ AH5_umesh_t* AH5_init_umesh(
   return umesh;
 }
 
+/** 
+ * Initialized and allocates mesh.
+ * 
+ * @param msh_instance the initialized mesh
+ * @param path the mesh name
+ * @param type the mesh type (MSH_UNSTRUCTURED, MSH_STRUCTURED)
+ * 
+ * @return On success, a pointer to the mesh. If the function failed to
+ * allocate memory, a null pointer is returned.
+ */
 AH5_msh_instance_t* AH5_init_msh_instance(
     AH5_msh_instance_t *msh_instance, const char *path, AH5_mesh_class_t type)
 {
@@ -456,6 +466,17 @@ AH5_msh_instance_t* AH5_init_msh_instance(
   return msh_instance;
 }
 
+/** 
+ * Initialized and allocates mesh link.
+ * 
+ * @param mlk_instance the initialized mesh
+ * @param path the mesh link name
+ * @param type the mesh link type (MSHLNK_INVALID, MSHLNK_NODE, MSHLNK_EDGE,
+ *   MSHLNK_FACE, MSHLNK_VOLUME)
+ * 
+ * @return On success, a pointer to the mesh. If the function failed to
+ * allocate memory, a null pointer is returned.
+ */
 AH5_mlk_instance_t* AH5_init_mlk_instance(
     AH5_mlk_instance_t *mlk_instance, const char *path, AH5_meshlink_class_t type)
 {
