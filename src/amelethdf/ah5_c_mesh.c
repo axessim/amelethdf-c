@@ -1538,7 +1538,7 @@ char AH5_write_groupgroup(hid_t loc_id, const AH5_groupgroup_t *groupgroup, hsiz
                 if (groupgroup[i].path != NULL)
                 {
                     ggrp_name = AH5_get_name_from_path(groupgroup[i].path);
-                    success &= AH5_write_str_dataset(grp, ggrp_name, groupgroup[i].nb_groupgroupnames, strlen(groupgroup[i].groupgroupnames[0]) + 1, groupgroup[i].groupgroupnames[0]);
+                    success &= AH5_write_str_dataset(grp, ggrp_name, groupgroup[i].nb_groupgroupnames, strlen(groupgroup[i].groupgroupnames[0]) + 1, groupgroup[i].groupgroupnames);
                 }
                 else
                 {
@@ -1836,7 +1836,7 @@ void AH5_print_umesh(const AH5_umesh_t *umesh, int space)
         printf("%*s-nodes: %lu\n", space + 2, "", (unsigned long) umesh->nb_nodes[0]);
         for (i = 0; i < umesh->nb_nodes[0]; i++)
         {
-            printf("%*sNode n°%lu: ", space + 5, "", (unsigned long) i);
+            printf("%*sNode n %lu: ", space + 5, "", (unsigned long) i);
             for (j = 0; j < (int) umesh->nb_nodes[1]; j++)
                 printf("%f ", umesh->nodes[i * umesh->nb_nodes[1] + j]);
             printf("\n");

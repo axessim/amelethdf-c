@@ -186,7 +186,6 @@ char AH5_write_str_dataset(hid_t loc_id, const char *dset_name, const hsize_t le
     buf = (char *) malloc((size_t) len*(slen-1)+1 * sizeof(char));
     buf[0] = '\0';
     for (k = 0; k < len; k++)  {
-      printf("***************** AH5_write_str_dataset s[%d]=%s\n", k, wdata[k]);
       strcat(buf + (k*(slen-1)), wdata[k]);
     }
 

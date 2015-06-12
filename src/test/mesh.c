@@ -375,7 +375,7 @@ char* test_write_groupgroup()
 #define LENGTH 13
     AH5_groupgroup_t gg;
     hid_t file_id, filetype, memtype, space, dset;
-    char groupgroupnames[DIM0][LENGTH] = {"group_name_1", "group_name_2"};
+    char **groupgroupnames;
     char **rdata;
     size_t sdim;
     int ndims, i;
@@ -385,14 +385,17 @@ char* test_write_groupgroup()
 
     // Chek some bad usages.
     gg.path = NULL;
-    gg.nb_groupgroupnames = -1;
+    gg.nb_groupgroupnames = 0;
     gg.groupgroupnames = NULL;
+    mu_assert_true("empty",
+                   AH5_write_groupgroup(file_id, NULL, 0));
 
-    mu_assert_false("Bad number of group of group.",
-                    AH5_write_groupgroup(file_id, &gg, -1));
-
-    AH5_write_str_dataset(file_id, "dataset_name",
-                          DIM0, LENGTH, groupgroupnames[0]);
+    groupgroupnames = (char**) malloc(DIM0 * sizeof(char*));
+    groupgroupnames[0] = (char*) malloc(LENGTH * sizeof(char));
+    groupgroupnames[1] = (char*) malloc(LENGTH * sizeof(char));
+    strcpy(groupgroupnames[0], "group_name_1");
+    strcpy(groupgroupnames[1], "group_name_2");
+    AH5_write_str_dataset(file_id, "dataset_name", DIM0, LENGTH, groupgroupnames);
 
     // build a groupgroup with relative path.
     gg.path = "gg_name";
@@ -419,6 +422,9 @@ char* test_write_groupgroup()
         mu_assert_str_equal("Check the groupGroup.",
                             rdata[i], groupgroupnames[i]);
     // Release resources.
+    free(groupgroupnames[0]);
+    free(groupgroupnames[1]);
+    free(groupgroupnames);
     free(rdata[0]);
     free(rdata);
     mu_assert("HDF5 error in H5Dclose.", H5Dclose(dset) >= 0);
@@ -705,7 +711,7 @@ char *test_read_umesh()
 // Run all tests
 char *all_tests()
 {
-    //FIXME: mu_run_test(test_write_groupgroup);
+    mu_run_test(test_write_groupgroup);
     mu_run_test(test_init_functions);
     mu_run_test(test_write_unstructured_mesh_group);
     mu_run_test(test_write_umesh);
