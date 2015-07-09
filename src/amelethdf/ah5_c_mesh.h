@@ -202,8 +202,8 @@ extern "C" {
     
     AH5_PUBLIC AH5_groupgroup_t* AH5_init_groupgroup(AH5_groupgroup_t *groupgroup, const char *path, hsize_t nb, size_t length);
     AH5_PUBLIC AH5_axis_t* AH5_init_axis(AH5_axis_t *axis, hsize_t nb_nodes);
-    AH5_PUBLIC AH5_sgroup_t* AH5_init_sgroup(AH5_sgroup_t *group, const char *path, hsize_t nb_eles, AH5_group_type_t type, AH5_group_entitytype_t entitytype);
-    AH5_PUBLIC AH5_ugroup_t* AH5_init_ugroup(AH5_ugroup_t *group, const char *path, hsize_t nb_eles, AH5_group_type_t type, AH5_group_entitytype_t entitytype);
+  AH5_PUBLIC AH5_sgroup_t* AH5_init_smsh_group(AH5_sgroup_t *group, const char *path, hsize_t nb_eles, AH5_group_type_t type, AH5_group_entitytype_t entitytype);
+    AH5_PUBLIC AH5_ugroup_t* AH5_init_umsh_group(AH5_ugroup_t *group, const char *path, hsize_t nb_eles, AH5_group_type_t type, AH5_group_entitytype_t entitytype);
     
     AH5_PUBLIC AH5_smesh_t* AH5_init_smesh(AH5_smesh_t *smesh, hsize_t nb_groups, hsize_t nb_groupgroups, hsize_t nb_som_tables);
     AH5_PUBLIC AH5_umesh_t* AH5_init_umesh(AH5_umesh_t *umesh, hsize_t nb_elementnodes, hsize_t nb_elementtypes, hsize_t nb_nodes, hsize_t nb_groups, hsize_t nb_groupgroups, hsize_t nb_som_tables);
@@ -213,7 +213,7 @@ extern "C" {
     AH5_PUBLIC AH5_mesh_t* AH5_init_mesh(AH5_mesh_t *mesh, hsize_t nb_groups);
 
     AH5_PUBLIC char AH5_read_groupgroup(hid_t file_id, const char* path, AH5_groupgroup_t *groupgroup);
-    AH5_PUBLIC char AH5_read_smesh_axis(hid_t file_id, const char* path, AH5_axis_t *axis);
+    AH5_PUBLIC char AH5_read_smsh_axis(hid_t file_id, const char* path, AH5_axis_t *axis);
     AH5_PUBLIC char AH5_read_smsh_group(hid_t file_id, const char *path, AH5_sgroup_t *sgroup);
     AH5_PUBLIC char AH5_read_ssom_pie_table(hid_t file_id, const char *path, AH5_ssom_pie_table_t *ssom_pie_table);
     AH5_PUBLIC char AH5_read_smesh(hid_t file_id, const char* path, AH5_smesh_t *smesh);
