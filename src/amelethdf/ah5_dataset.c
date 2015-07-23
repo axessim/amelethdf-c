@@ -47,10 +47,10 @@ char AH5_read_cpx_dataset(hid_t file_id, const char *path, const hsize_t mn, AH5
     char success = AH5_FALSE;
     hid_t dset_id, type_id;
     hsize_t i;
-    float *buf;
+    float *buf = NULL;
 
     *rdata = (AH5_complex_t *) malloc((size_t) mn * sizeof(AH5_complex_t));
-    buf = (float *) malloc((size_t) mn * 2 * sizeof(float));
+    buf = (float *) malloc((size_t) mn * 200 * sizeof(float));
     type_id = AH5_H5Tcreate_cpx_memtype();
 
     dset_id = H5Dopen(file_id, path, H5P_DEFAULT);
@@ -63,7 +63,7 @@ char AH5_read_cpx_dataset(hid_t file_id, const char *path, const hsize_t mn, AH5
     }
     H5Dclose(dset_id);
     H5Tclose(type_id);
-    free(buf);
+    if (buf != NULL) free(buf);
     if (!success)
     {
         free(*rdata);
@@ -182,7 +182,7 @@ char AH5_write_str_dataset(hid_t loc_id, const char *dset_name, const hsize_t le
     hid_t filetype, memtype, space, dset;
     hsize_t dims[1] = {len}, k;
     char *buf = NULL;
-    
+
     buf = (char *) malloc((size_t) len*(slen-1)+1 * sizeof(char));
     buf[0] = '\0';
     for (k = 0; k < len; k++)  {
@@ -248,7 +248,7 @@ char AH5_write_cpx_array(hid_t loc_id, const char *dset_name, const int rank, co
 
     // TO BE IMPLEMENTED...
     AH5_PRINT_ERR_FUNC_NOT_IMPLEMENTED("Array", dset_name);
-    
+
     return success;
 }
 
@@ -256,10 +256,41 @@ char AH5_write_cpx_array(hid_t loc_id, const char *dset_name, const int rank, co
 // Write 1D string dataset
 char AH5_write_str_array(hid_t loc_id, const char *dset_name, const int rank, const hsize_t dims[], char *wdata)
 {
-    char success = AH5_FALSE;
+    hsize_t nbstr;
+    size_t maxlength = 1;
+    hid_t strtype;
+    hid_t dataspace_id;
+    hid_t dataset_id;
 
-    // TO BE IMPLEMENTED...
-    AH5_PRINT_ERR_FUNC_NOT_IMPLEMENTED("Array", dset_name);
-    
-    return success;
+    if (rank > 2)
+    {
+        AH5_PRINT_ERR_FUNC_NOT_IMPLEMENTED("Array", dset_name);
+        return AH5_FALSE;
+    }
+
+    nbstr = dims[0];
+    if (rank == 2) maxlength = dims[1];
+
+    // Create str datatype
+    strtype = H5Tcopy(H5T_C_S1);
+    if (H5Tset_size(strtype, maxlength) < 0) return AH5_FALSE;
+
+    // Create a simple dataspace with the given dimension and the same max dimension
+    dataspace_id = H5Screate_simple(1, &nbstr, NULL);
+    if (dataspace_id < 0) return AH5_FALSE;
+
+    // Create the dataset
+    dataset_id = H5Dcreate(loc_id, dset_name, strtype, dataspace_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    if (dataspace_id < 0) return AH5_FALSE;
+
+    // Write the array
+    if (H5Dwrite(dataset_id, strtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, wdata) < 0) return AH5_FALSE;
+
+    // Release the dataset
+    if (H5Dclose (dataset_id) < 0) AH5Warning("Fail to close dataset.\n");
+
+    // Release dataspace
+    if (H5Sclose(dataspace_id) < 0) AH5Warning("Fail to close dataspace.\n");
+
+    return AH5_TRUE;
 }

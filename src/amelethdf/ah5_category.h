@@ -12,7 +12,7 @@ extern "C" {
 #define AH5_FILE_FORMAT                  "AMELETHDF"
 #define AH5_FILE_A_VERSION               "AMELETHDF_FORMAT_VERSION"
 #define AH5_FILE_DEFAULT_VERSION         "1.5.4"
-  
+
 // remove first char
 #define AH5_CATEGORY_NAME(name) ((name) + 1)
 

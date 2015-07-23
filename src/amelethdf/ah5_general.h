@@ -55,6 +55,17 @@ extern "C" {
 # define ACCESS _acess
 #endif
 
+// Display a warning message
+#define AH5Warning(...) printf("*** Warning: "); printf(__VA_ARGS__)
+
+  // TODO: management of log level
+  // typedef enum _log_level_t {} log_level_t;
+  // extern log_level_t ah5_log_level;
+  // Set and get methods
+  // Log method
+  // void AH5Log(const log_level_t level, const char* fmt, ...);
+  // Specific logger AH5Error, AH5Warining, ...
+
 #ifdef AH5_SDT_CCOMPLEX
 #include <complex.h>
     typedef complex AH5_complex_t;
@@ -85,13 +96,13 @@ extern "C" {
         hsize_t         nb_values;
     } AH5_set_t;
 
-    /** 
+    /**
      * Create a Amelet-HDF file and set entry point if not null.
-     * 
+     *
      * @param name name of the file to access.
      * @param flags file access flags (see H5Fcreate)
      * @param entry_point the Amelet-HDF entry point if NULL it is ignored.
-     * 
+     *
      * @return Returns a file identifier if successful; otherwise returns a
      * negative value.
      */
@@ -132,4 +143,3 @@ extern "C" {
 #endif
 
 #endif // AH5_GENERAL_H
-

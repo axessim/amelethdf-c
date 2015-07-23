@@ -15,6 +15,7 @@ extern "C" {
         char            *subject;
         char            *subject_name;
         char            *object;
+        char            *object_name;
     } AH5_lnk_instance_t;
 
     typedef struct _AH5_lnk_group_t

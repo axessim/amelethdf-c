@@ -1,13 +1,7 @@
 #include "ah5_edataset.h"
 
 hid_t AH5_Get_cpx_type(){
-  hid_t cpxtyp = H5Tcreate(H5T_COMPOUND, H5Tget_size(H5T_NATIVE_FLOAT) * 2);
-
-  H5Tinsert(cpxtyp, "r", 0, H5T_NATIVE_FLOAT);
-
-  H5Tinsert(cpxtyp, "i", H5Tget_size(H5T_NATIVE_FLOAT), H5T_NATIVE_FLOAT);
-
-  return cpxtyp;
+  return AH5_H5Tcreate_cpx_memtype();
 }
 
 
