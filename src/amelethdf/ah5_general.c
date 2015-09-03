@@ -3,13 +3,13 @@
 #include <ctype.h>
 
 
-/** 
+/**
  * Write string attribute in given node.
- * 
+ *
  * @param loc_id valid HDF5 node instance
  * @param attr_name the attribute name
  * @param wdata the attribute value
- * 
+ *
  * @return return success status
  */
 char AH5_write_str_root_attr(hid_t loc_id, char *attr_name, const char *wdata)
@@ -17,8 +17,8 @@ char AH5_write_str_root_attr(hid_t loc_id, char *attr_name, const char *wdata)
   char success = AH5_FALSE;
 
   hid_t aid, atype, attr;
-  
-  
+
+
   aid  = H5Screate(H5S_SCALAR);
   atype = H5Tcopy(H5T_C_S1);
   H5Tset_size(atype, strlen(wdata));
@@ -28,11 +28,11 @@ char AH5_write_str_root_attr(hid_t loc_id, char *attr_name, const char *wdata)
     if (H5Sclose(aid) >= 0)
       if (H5Aclose(attr) >= 0)
         success = AH5_TRUE;
-  
+
   return success;
 }
 
-    
+
 hid_t AH5_create(const char *name, unsigned flags, const char *entry_point)
 {
   hid_t file_id;
@@ -43,7 +43,7 @@ hid_t AH5_create(const char *name, unsigned flags, const char *entry_point)
 
   if (entry_point)
     AH5_write_str_root_attr(file_id, AH5_A_ENTRY_POINT, entry_point);
-  
+
   return file_id;
 }
 
@@ -332,12 +332,12 @@ char AH5_path_valid(hid_t loc_id, const char *path)
     return AH5_TRUE;
 }
 
-/** 
+/**
  * Set the given path into dest.
- * 
+ *
  * @param dest the pointer to the destination string path.
  * @param src the source string path
- * 
+ *
  * @return success boolean value
  */
 char AH5_setpath(char **dest, const char *src)
@@ -510,3 +510,7 @@ void AH5_print_wrn_attr(const char *category, const char *path, const char *attr
 }
 
 
+void AH5_print_wrn_outputs(const char* path)
+{
+    printf("\n***** WARNING: Ths simulation \"%s[@%s]\" does not contains outputs. *****\n\n", path);
+}

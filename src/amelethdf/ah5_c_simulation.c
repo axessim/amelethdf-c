@@ -45,7 +45,7 @@ char AH5_read_sim_instance (hid_t file_id, const char *path, AH5_sim_instance_t 
         sim_instance->nb_outputs = 1;  // in case of single value
         strcpy(path2, path);
         strcat(path2, AH5_G_OUTPUTS);
-        if (AH5_path_valid(file_id, path2))        
+        if (AH5_path_valid(file_id, path2))
             if (H5LTget_dataset_ndims(file_id, path2, &nb_dims) >= 0)
                 if (nb_dims <= 1)
                     if (H5LTget_dataset_info(file_id, path2, &(sim_instance->nb_outputs), &type_class, &length) >= 0)
@@ -61,9 +61,8 @@ char AH5_read_sim_instance (hid_t file_id, const char *path, AH5_sim_instance_t 
     }
     if (!success2)
     {
-        AH5_print_err_dset(AH5_C_SIMULATION, path2);
+        AH5_print_wrn_outputs(path);
         sim_instance->nb_outputs = 0;
-        rdata = AH5_FALSE;
     }
 
     return rdata;
@@ -79,7 +78,7 @@ char AH5_read_simulation (hid_t file_id, AH5_simulation_t *simulation)
 
     simulation->instances = NULL;
 
-    if (AH5_path_valid(file_id, AH5_C_SIMULATION))    
+    if (AH5_path_valid(file_id, AH5_C_SIMULATION))
     {
         children = AH5_read_children_name(file_id, AH5_C_SIMULATION);
         simulation->nb_instances = children.nb_children;
