@@ -512,5 +512,5 @@ void AH5_print_wrn_attr(const char *category, const char *path, const char *attr
 
 void AH5_print_wrn_outputs(const char* path)
 {
-    printf("\n***** WARNING: Ths simulation \"%s[@%s]\" does not contains outputs. *****\n\n", path);
+    printf("\n***** WARNING: Ths simulation \"%s\" does not contains outputs. *****\n\n", path);
 }
