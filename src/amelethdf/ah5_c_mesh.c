@@ -2237,3 +2237,38 @@ void AH5_free_mesh(AH5_mesh_t *mesh)
     AH5_init_mesh(mesh, 0);
 }
 
+// Return the nodes number associated to the given element type or 0.
+int AH5_element_size(char element_type) {
+  int size = 0;
+
+  switch (element_type) {
+    case UELE_BAR2:
+      size = 2;
+      break;
+
+    case UELE_BAR3:
+    case UELE_TRI3:
+      size = 3;
+      break;
+
+    case UELE_QUAD4:
+    case UELE_TETRA4:
+      size = 4;
+      break;
+
+    case UELE_TRI6:
+    case UELE_PENTA6:
+      size = 6;
+      break;
+
+    case UELE_QUAD8:
+    case UELE_HEXA8:
+      size = 8;
+      break;
+
+    default:
+      size = 0;
+  }
+
+  return size;
+}

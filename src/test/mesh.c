@@ -708,6 +708,40 @@ char *test_read_umesh()
 }
 
 
+//! Test 
+char *test_element_size()
+{
+    mu_assert_str_equal(
+        "Check element_size", AH5_element_size(UELE_INVALID), 0);
+    mu_assert_str_equal(
+        "Check element_size", AH5_element_size(UELE_BAR2), 2);
+    mu_assert_str_equal(
+        "Check element_size", AH5_element_size(UELE_BAR3), 3);
+    mu_assert_str_equal(
+        "Check element_size", AH5_element_size(UELE_TRI3), 3);
+    mu_assert_str_equal(
+        "Check element_size", AH5_element_size(UELE_TRI6), 6);
+    mu_assert_str_equal(
+        "Check element_size", AH5_element_size(UELE_QUAD4), 4);
+    mu_assert_str_equal(
+        "Check element_size", AH5_element_size(UELE_QUAD8), 8);
+    mu_assert_str_equal(
+        "Check element_size", AH5_element_size(UELE_TETRA4), 4);
+    mu_assert_str_equal(
+        "Check element_size", AH5_element_size(UELE_PYRA5), 5);
+    mu_assert_str_equal(
+        "Check element_size", AH5_element_size(UELE_PENTA6), 6);
+    mu_assert_str_equal(
+        "Check element_size", AH5_element_size(UELE_HEXA8), 8);
+    mu_assert_str_equal(
+        "Check element_size", AH5_element_size(UELE_TETRA10), 10);
+    mu_assert_str_equal(
+        "Check element_size", AH5_element_size(UELE_HEXA20), 20);
+
+    return MU_FINISHED_WITHOUT_ERRORS;
+}
+
+
 // Run all tests
 char *all_tests()
 {

@@ -128,6 +128,15 @@ extern "C" {
         UELE_TETRA10            = 108,
         UELE_HEXA20             = 109
     } AH5_uelement_type_t;
+
+  /**
+   * @def AH5_UMESH_DIM
+   * Read the mesh dimension from umesh.nb_nodes
+   * @def AH5_UMESH_NODES_SIZE
+   * Read the number of nodes from umesh.nb_nodes
+   */
+#define AH5_UMESH_DIM 1
+#define AH5_UMESH_NODES_SIZE 0
   
     typedef struct _AH5_umesh_t
     {
@@ -265,6 +274,9 @@ extern "C" {
     AH5_PUBLIC void AH5_free_msh_group(AH5_msh_group_t *msh_group);
     AH5_PUBLIC void AH5_free_mesh(AH5_mesh_t *mesh);
 
+  // Define some useful tools for manege / used / make mesh;
+  AH5_PUBLIC int AH5_element_size(char element_type);
+  
 #ifdef __cplusplus
 }
 #endif
