@@ -16,7 +16,9 @@ OPTION(AMELETHDF_BUILD_DOCS "Build Amelet-HDF docs" ON)
 OPTION(AMELETHDF_ENABLE_COVERAGE "Enable coverage" OFF)
 
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/resources/cmake") # For custom cmake modules
-INCLUDE(DoxygenTarget)
+IF (AMELETHDF_BUILD_DOCS)
+  INCLUDE(DoxygenTarget)
+ENDIF ()
 IF (AMELETHDF_ENABLE_COVERAGE)
   INCLUDE(CodeCoverage)
 ENDIF ()
