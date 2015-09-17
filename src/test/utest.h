@@ -151,17 +151,19 @@ char *__message__;
 #define mu_assert_str_equal(message, str1, str2) mu_assert(message, !strcmp(str1, str2))
 
 //! A simple function to allocate a new string.
-__inline char* new_string(char *src)  {
-    char *dst = malloc((strlen(src) + 1) * sizeof(char));
-    strcpy(dst, src);
-    return dst;
+__inline char *new_string(char *src)
+{
+  char *dst = malloc((strlen(src) + 1) * sizeof(char));
+  strcpy(dst, src);
+  return dst;
 }
 
 //! Build a test file from file name and the extension.
-__inline hid_t AH5_build_test_file_from_name(const char* name, const char* ext)  {
+__inline hid_t AH5_build_test_file_from_name(const char *name, const char *ext)
+{
   char *file_name;
   hid_t file_id;
-  file_name = (char*)malloc((strlen(name) + strlen(ext) + 1)* sizeof(char));
+  file_name = (char *)malloc((strlen(name) + strlen(ext) + 1)* sizeof(char));
   strcpy(file_name, name);
   strcat(file_name, ext);
   file_id = H5Fcreate((file_name), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -172,21 +174,21 @@ __inline hid_t AH5_build_test_file_from_name(const char* name, const char* ext) 
 //! copy from disk
 __inline void filecopy(const char *input, const char *output)
 {
-    signed char buf[100];
-    void *pb = (void *) buf;
-    FILE *fpi, *fpo;
-    size_t n;
+  signed char buf[100];
+  void *pb = (void *) buf;
+  FILE *fpi, *fpo;
+  size_t n;
 
-    fpi = fopen(input, "rb");
-    fpo = fopen(output, "wb");
+  fpi = fopen(input, "rb");
+  fpo = fopen(output, "wb");
 
-    if (fpi && fpo)
-    {
-        while ((n = fread(pb, sizeof(char), 100, fpi)))
-            fwrite(pb, sizeof(char), n, fpo);
-    }
-    fclose(fpi);
-    fclose(fpo);
+  if (fpi && fpo)
+  {
+    while ((n = fread(pb, sizeof(char), 100, fpi)))
+      fwrite(pb, sizeof(char), n, fpo);
+  }
+  fclose(fpi);
+  fclose(fpo);
 }
 
 //! Used the test suite fonction name to build the test file.

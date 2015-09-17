@@ -8,7 +8,7 @@
 extern "C" {
 #endif
 
-  /* AH5 back compatibility */
+/* AH5 back compatibility */
 #define AH5_VERSION_1_5_4                1
 
 #define AH5_FILE_A_FORMAT                "FORMAT"

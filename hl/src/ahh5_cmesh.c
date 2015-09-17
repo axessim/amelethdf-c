@@ -65,24 +65,24 @@ AH5_axis_t *AH5_axis_copy(AH5_axis_t *dst, const AH5_axis_t *src)
 }
 
 char AHH5_init_polygonal_path(
-    AHH5_polygonal_path_t *poly,
-    AH5_polygon_type_t type,
-    hsize_t nb_nodes,
-    const AH5_index_t *nodes_index,
-    int orientation)
+  AHH5_polygonal_path_t *poly,
+  AH5_polygon_type_t type,
+  hsize_t nb_nodes,
+  const AH5_index_t *nodes_index,
+  int orientation)
 {
   if (!poly)
     return AH5_FALSE;
 
   poly->type = type;
   poly->orientation = orientation;
-  
+
   poly->nb_nodes = 0;
   poly->nodes_index = NULL;
   if (nodes_index && nb_nodes)
   {
     poly->nb_nodes = nb_nodes;
-    poly->nodes_index = (AH5_index_t*)malloc(nb_nodes * sizeof(AH5_index_t));
+    poly->nodes_index = (AH5_index_t *)malloc(nb_nodes * sizeof(AH5_index_t));
     memcpy(poly->nodes_index, nodes_index, nb_nodes * sizeof(AH5_index_t));
   }
 
@@ -119,7 +119,7 @@ void AHH5_load_polygonal_path(
     nb_nodes = low->polygontypes[polygon_id * 2 + 1];
     path->nb_nodes = nb_nodes;
 
-    path->nodes_index = (AH5_index_t*)malloc(nb_nodes * sizeof(AH5_index_t));
+    path->nodes_index = (AH5_index_t *)malloc(nb_nodes * sizeof(AH5_index_t));
 
     for (k = 0; k < (int)nb_nodes; ++k)
       path->nodes_index[k] = low->polygonnodes[polygon_nodes_offsets[polygon_id] + k];
@@ -157,10 +157,10 @@ char AHH5_interpret_cmesh(AHH5_cmesh_t *height, AH5_cmesh_t *low)
     /*AHH5_MEMCOPY copy memory so 'path' is copied as point, however a deep
      * copy is expected*/
     height->groups[i].path
-        = malloc((strlen(low->groups[i].path)+1)*sizeof(char));
+      = malloc((strlen(low->groups[i].path)+1)*sizeof(char));
     strcpy(height->groups[i].path, low->groups[i].path);
     height->groups[i].groupelts
-        = malloc(low->groups[i].nb_groupelts*sizeof(AH5_index_t));
+      = malloc(low->groups[i].nb_groupelts*sizeof(AH5_index_t));
     memcpy(height->groups[i].groupelts, low->groups[i].groupelts,
            low->groups[i].nb_groupelts*sizeof(AH5_index_t));
   }
@@ -170,14 +170,14 @@ char AHH5_interpret_cmesh(AHH5_cmesh_t *height, AH5_cmesh_t *low)
     /*AHH5_MEMCOPY copy memory so 'path' is copied as point, however a deep
      * copy is expected*/
     height->groupgroups[i].path
-        = malloc((strlen(low->groupgroups[i].path)+1)*sizeof(char));
+      = malloc((strlen(low->groupgroups[i].path)+1)*sizeof(char));
     strcpy(height->groupgroups[i].path, low->groupgroups[i].path);
   }
 
   height->nb_intersections = low->nb_intersections;
   height->intersections
-  = (AHH5_intersection_t *)malloc(height->nb_intersections
-                                  * sizeof(AHH5_intersection_t));
+    = (AHH5_intersection_t *)malloc(height->nb_intersections
+                                    * sizeof(AHH5_intersection_t));
 
   for (i = 0; i < (int)height->nb_intersections; ++i)
   {
@@ -195,7 +195,7 @@ char AHH5_interpret_cmesh(AHH5_cmesh_t *height, AH5_cmesh_t *low)
       if (abs(polygon_id) < (int)low->nb_polygontypes[POLYGON_SIZE])
       {
         height->intersections[i].polygon
-        = (AHH5_polygon_t *)malloc(sizeof(AHH5_polygon_t));
+          = (AHH5_polygon_t *)malloc(sizeof(AHH5_polygon_t));
         AHH5_load_polygonal_path(&(height->intersections[i].polygon->path),
                                  polygon_id, low, polygon_nodes_offsets);
 
@@ -205,9 +205,9 @@ char AHH5_interpret_cmesh(AHH5_cmesh_t *height, AH5_cmesh_t *low)
         if (height->intersections[i].polygon->path.type == POLY_THROUGH)
         {
           height->intersections[i].polygon->region
-              = (AHH5_region_t *)malloc(sizeof(AHH5_region_t));
+            = (AHH5_region_t *)malloc(sizeof(AHH5_region_t));
           height->intersections[i].polygon->region->area
-              = low->regions[regions_index[abs(polygon_id)]].area;
+            = low->regions[regions_index[abs(polygon_id)]].area;
           AHH5_load_polygonal_path(&(height->intersections[i].polygon->region->path),
                                    low->regions[regions_index[abs(polygon_id)]].polygon_id,
                                    low, polygon_nodes_offsets);
@@ -217,12 +217,12 @@ char AHH5_interpret_cmesh(AHH5_cmesh_t *height, AH5_cmesh_t *low)
         if (height->intersections[i].polygon->path.type == POLY_CLOSE)
         {
           height->intersections[i].polygon->region
-              = (AHH5_region_t *)malloc(sizeof(AHH5_region_t));
+            = (AHH5_region_t *)malloc(sizeof(AHH5_region_t));
           height->intersections[i].polygon->region->area
-              = low->regions[regions_index[abs(polygon_id)]].area;
+            = low->regions[regions_index[abs(polygon_id)]].area;
           AHH5_init_polygonal_path(
-              &(height->intersections[i].polygon->region->path),
-              height->intersections[i].polygon->path.type, 0, NULL, 0);
+            &(height->intersections[i].polygon->region->path),
+            height->intersections[i].polygon->path.type, 0, NULL, 0);
         }
       }
     }
@@ -230,7 +230,7 @@ char AHH5_interpret_cmesh(AHH5_cmesh_t *height, AH5_cmesh_t *low)
 
   free(polygon_nodes_offsets);
   free(regions_index);
-  
+
   return 1;
 }
 
@@ -244,7 +244,7 @@ char AHH5_dump_cmesh(AH5_cmesh_t *low, AHH5_cmesh_t *height)
 void AHH5_free_cmesh(AHH5_cmesh_t *cmesh)
 {
   int i;
-  
+
   if (cmesh)
   {
     if (cmesh->intersections)
@@ -304,7 +304,8 @@ void AHH5_free_region(AHH5_region_t *region)
 
 void AHH5_free_polygonal_path(AHH5_polygonal_path_t *path)
 {
-  if (path) {
+  if (path)
+  {
     free(path->nodes_index);
     path->nodes_index = NULL;
   }
@@ -322,8 +323,8 @@ void AHH5_print_cmesh(const AHH5_cmesh_t *cmesh, int space)
 
 
 void AHH5_print_intersection(
-    const AHH5_intersection_t *intersection, int space,
-    const AHH5_cmesh_t *cmesh)
+  const AHH5_intersection_t *intersection, int space,
+  const AHH5_cmesh_t *cmesh)
 {
   printf("%*s-intersection: type=%lu, index=[%lu, %lu, %lu], normal=%lu\n", space, "",
          (unsigned long) intersection->type,
@@ -337,8 +338,8 @@ void AHH5_print_intersection(
 
 
 void AHH5_print_polygon(
-    const AHH5_polygon_t *polygon, int space,
-    const AHH5_cmesh_t *cmesh)
+  const AHH5_polygon_t *polygon, int space,
+  const AHH5_cmesh_t *cmesh)
 {
   printf("%*s-polygon:\n", space, "");
   AHH5_print_polygonal_path(&(polygon->path), space + 2, cmesh);
@@ -348,8 +349,8 @@ void AHH5_print_polygon(
 
 
 void AHH5_print_region(
-    const AHH5_region_t *region, int space,
-    const AHH5_cmesh_t *cmesh)
+  const AHH5_region_t *region, int space,
+  const AHH5_cmesh_t *cmesh)
 {
   printf("%*s-region: area=%e\n", space, "",
          region->area);
@@ -358,8 +359,8 @@ void AHH5_print_region(
 
 
 void AHH5_print_polygonal_path(
-    const AHH5_polygonal_path_t *path, int space,
-    const AHH5_cmesh_t *cmesh)
+  const AHH5_polygonal_path_t *path, int space,
+  const AHH5_cmesh_t *cmesh)
 {
   int i;
   printf("%*s-polygonal path: type=%lu, orientation=%lu\n", space, "",

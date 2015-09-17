@@ -148,20 +148,20 @@ static char *test_free_cmesh()
 
   /* Build the grid */
   cmesh.grid.x.nb_nodes = 3;
-  cmesh.grid.x.nodes = (float*)malloc(cmesh.grid.x.nb_nodes * sizeof(float));
+  cmesh.grid.x.nodes = (float *)malloc(cmesh.grid.x.nb_nodes * sizeof(float));
   cmesh.grid.y.nb_nodes = 4;
-  cmesh.grid.y.nodes = (float*)malloc(cmesh.grid.y.nb_nodes * sizeof(float));
+  cmesh.grid.y.nodes = (float *)malloc(cmesh.grid.y.nb_nodes * sizeof(float));
   cmesh.grid.z.nb_nodes = 5;
-  cmesh.grid.z.nodes = (float*)malloc(cmesh.grid.z.nb_nodes * sizeof(float));
+  cmesh.grid.z.nodes = (float *)malloc(cmesh.grid.z.nb_nodes * sizeof(float));
   /* the nodes */
   cmesh.nb_nodes[0] = 24;
   cmesh.nb_nodes[1] = 3;
-  cmesh.nodes = (float*)malloc(cmesh.nb_nodes[0] * cmesh.nb_nodes[1] * sizeof(float));
+  cmesh.nodes = (float *)malloc(cmesh.nb_nodes[0] * cmesh.nb_nodes[1] * sizeof(float));
   /* Build the intersections */
   cmesh.nb_intersections = 15;
   cmesh.intersections =
-      (AH5_intersection_t*)malloc(
-          cmesh.nb_intersections * sizeof(AH5_intersection_t));
+    (AH5_intersection_t *)malloc(
+      cmesh.nb_intersections * sizeof(AH5_intersection_t));
   /* map 1 */
   AH5_init_intersection(cmesh.intersections + 0, INTER_FREE, 2,1,3, 2, 0);
   AH5_init_intersection(cmesh.intersections + 1, INTER_FREE, 2,2,3, 2, 1);
@@ -186,20 +186,20 @@ static char *test_free_cmesh()
   /* Build polygons */
   cmesh.nb_polygontypes[0] = 19;
   cmesh.nb_polygontypes[1] = 2;
-  cmesh.polygontypes = (char*)malloc(cmesh.nb_polygontypes[1]
-                                     * cmesh.nb_polygontypes[0]
-                                     * sizeof(char));
+  cmesh.polygontypes = (char *)malloc(cmesh.nb_polygontypes[1]
+                                      * cmesh.nb_polygontypes[0]
+                                      * sizeof(char));
   cmesh.nb_polygonnodes = 42;
-  cmesh.polygonnodes = (AH5_index_t*)malloc(cmesh.nb_polygonnodes
-                                            * sizeof(AH5_index_t));
+  cmesh.polygonnodes = (AH5_index_t *)malloc(cmesh.nb_polygonnodes
+                       * sizeof(AH5_index_t));
 
   /* Build regions */
   cmesh.nb_regions = 10;
   cmesh.regions =
-      (AH5_region_t*)malloc(
-          cmesh.nb_polygontypes[0]
-          * cmesh.nb_polygontypes[1]
-          * sizeof(AH5_region_t));
+    (AH5_region_t *)malloc(
+      cmesh.nb_polygontypes[0]
+      * cmesh.nb_polygontypes[1]
+      * sizeof(AH5_region_t));
   AH5_init_region(cmesh.regions + 0, 0.1, 10);
   AH5_init_region(cmesh.regions + 1, 0.2, 12);
   AH5_init_region(cmesh.regions + 2, 0.3, 14);
@@ -219,8 +219,8 @@ static char *test_free_cmesh()
   cmesh.groupgroups = NULL;
   cmesh.nb_groups = 1;
   cmesh.groups =
-      (AH5_cgroup_t*)malloc(
-          cmesh.nb_groups * sizeof(AH5_cgroup_t));
+    (AH5_cgroup_t *)malloc(
+      cmesh.nb_groups * sizeof(AH5_cgroup_t));
   AH5_init_conform_group(cmesh.groups + 0, "path_name", "element", "face", 8, groupelts);
 
   AH5_free_cmesh(&cmesh);

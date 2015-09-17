@@ -6,7 +6,8 @@
 
 #ifndef AH5_WITH_MPI_
 
-int main(int argc, char** argv){
+int main(int argc, char **argv)
+{
 
   printf("MPI extension is not enabled, test done.\n");
 
@@ -18,30 +19,36 @@ int main(int argc, char** argv){
 
 #define print(rank, ...) if((rank)==0)printf(__VA_ARGS__)
 
-hsize_t Index(int nb_dims, const hsize_t dims[], const hsize_t rank[]){
+hsize_t Index(int nb_dims, const hsize_t dims[], const hsize_t rank[])
+{
   hsize_t id = rank[0];
   int idim;
-  for(idim=1;idim<nb_dims;idim++){
+  for(idim=1; idim<nb_dims; idim++)
+  {
     id *= dims[idim];
     id += rank[idim];
   }
   return id;
 }
 
-char Verify(hid_t loc_id, const char* path, const hsize_t size, int* ref){
-    // Read the dataset we have just written
+char Verify(hid_t loc_id, const char *path, const hsize_t size, int *ref)
+{
+  // Read the dataset we have just written
 
-  int* data;
+  int *data;
 
   char status = AH5_read_int_dataset(loc_id, path, size, &data);
 
-  if(status!=AH5_TRUE){
+  if(status!=AH5_TRUE)
+  {
     return status;
   }
 
   int i;
-  for(i=0;i<size;i++){
-    if(data[i] != ref[i]){
+  for(i=0; i<size; i++)
+  {
+    if(data[i] != ref[i])
+    {
       status = AH5_FALSE;
     }
   }
@@ -56,7 +63,8 @@ char Verify(hid_t loc_id, const char* path, const hsize_t size, int* ref){
 
 
 
-char* test_assym_low(hid_t hdf, int mpirank){
+char *test_assym_low(hid_t hdf, int mpirank)
+{
 
   // The process 0 does not write anything.
   // The process 1 writes one column
@@ -64,16 +72,18 @@ char* test_assym_low(hid_t hdf, int mpirank){
 
   hid_t dataset;
 
-  hsize_t dims[] = {
-      1, 3
+  hsize_t dims[] =
+  {
+    1, 3
   };
-  hsize_t edims[] = {
-      H5S_UNLIMITED, 3
+  hsize_t edims[] =
+  {
+    H5S_UNLIMITED, 3
   };
 
   AH5_RETURN_IF_FAILED(AH5_create_earray(hdf, "pearray",
-      2, dims, edims, H5T_NATIVE_INT, &dataset),
-      "Creation PEarrayset failed.\n");
+                                         2, dims, edims, H5T_NATIVE_INT, &dataset),
+                       "Creation PEarrayset failed.\n");
 
 
   hsize_t block[] = {1, mpirank};
@@ -81,18 +91,21 @@ char* test_assym_low(hid_t hdf, int mpirank){
 
   hsize_t start[] = {0, 0};
 
-  if(mpirank!=0){
+  if(mpirank!=0)
+  {
     start[1] = mpirank - 1;
   }
 
   hsize_t ones[]  = {1, 1};
 
-  int* data = NULL;
-  if(mpirank!=0){
+  int *data = NULL;
+  if(mpirank!=0)
+  {
     data = malloc(mpirank * sizeof(int));
 
     int j;
-    for(j=0;j<mpirank;j++){
+    for(j=0; j<mpirank; j++)
+    {
       data[j] = 0;
     }
   }
@@ -100,10 +113,11 @@ char* test_assym_low(hid_t hdf, int mpirank){
 
 
   AH5_RETURN_IF_FAILED(AH5_write_pearray(dataset,
-        2, dims, block, start, ones, ones, block, data, H5T_NATIVE_INT),
-        "Extend array failed.\n");
+                                         2, dims, block, start, ones, ones, block, data, H5T_NATIVE_INT),
+                       "Extend array failed.\n");
 
-  if(mpirank!=0){
+  if(mpirank!=0)
+  {
     free(data);
   }
 
@@ -111,18 +125,21 @@ char* test_assym_low(hid_t hdf, int mpirank){
 
   int maxdim = 2;
   int i;
-  for(i=0;i<maxdim;i++){
+  for(i=0; i<maxdim; i++)
+  {
     edims[0] = 1;
     edims[1] = 0;
     AH5_RETURN_IF_FAILED(AH5_extend_earray(dataset, 2, dims, edims),
-        "Extend array failed.\n");
+                         "Extend array failed.\n");
 
     data = NULL;
-    if(mpirank!=0){
+    if(mpirank!=0)
+    {
       data = malloc(mpirank * sizeof(int));
 
       int j;
-      for(j=0;j<mpirank;j++){
+      for(j=0; j<mpirank; j++)
+      {
         data[j] = i+1;
       }
     }
@@ -130,10 +147,11 @@ char* test_assym_low(hid_t hdf, int mpirank){
     start[0] = dims[0] - 1;
 
     AH5_RETURN_IF_FAILED(AH5_write_pearray(dataset,
-        2, dims, block, start, ones, ones, block, data, H5T_NATIVE_INT),
-        "Extend array failed.\n");
+                                           2, dims, block, start, ones, ones, block, data, H5T_NATIVE_INT),
+                         "Extend array failed.\n");
 
-    if(mpirank!=0){
+    if(mpirank!=0)
+    {
       free(data);
     }
     MPI_Barrier(MPI_COMM_WORLD);
@@ -184,7 +202,8 @@ char* test_assym_low(hid_t hdf, int mpirank){
 
 
 
-char* test_assym(hid_t hdf, int mpirank){
+char *test_assym(hid_t hdf, int mpirank)
+{
 
   // The process 0 does not write anything.
   // The process 1 writes one column
@@ -194,79 +213,87 @@ char* test_assym(hid_t hdf, int mpirank){
 
   AH5_initialize_Earrayset(&arrayset);
 
-  hsize_t dims[] = {
-      H5S_UNLIMITED, 3
+  hsize_t dims[] =
+  {
+    H5S_UNLIMITED, 3
   };
 
   AH5_RETURN_IF_FAILED(AH5_create_PEarrayset(hdf, "peArraySet",
-      2, dims, H5T_NATIVE_INT, &arrayset),
-      "Creation PEarrayset failed.\n");
+                       2, dims, H5T_NATIVE_INT, &arrayset),
+                       "Creation PEarrayset failed.\n");
 
 
   hsize_t block[] = {1, mpirank};
 
   hsize_t start[] = {0, 0};
-  if(mpirank != 0){
+  if(mpirank != 0)
+  {
     start[1] = mpirank - 1;
   }
 
   hsize_t ones[]  = {1, 1};
 
   AH5_RETURN_IF_FAILED(AH5_set_mpi_mapping_PEarrayset(&arrayset,
-      block, start, ones, ones, block),
-      "Set mapping PEarrayset failed.\n");
+                       block, start, ones, ones, block),
+                       "Set mapping PEarrayset failed.\n");
 
   AH5_RETURN_IF_FAILED(AH5_set_int_dim_Earrayset(&arrayset,
-      0, 1, dims, NULL, "coucou nature", NULL, NULL),
-      "Set dim 0 PEarrayset failed.\n");
+                       0, 1, dims, NULL, "coucou nature", NULL, NULL),
+                       "Set dim 0 PEarrayset failed.\n");
 
   dims[0] = 3;
   int datadim[] = {1, 2, 2};
   AH5_RETURN_IF_FAILED(AH5_set_int_dim_Earrayset(&arrayset,
-      1, 1, dims, datadim, "mpirank", NULL, NULL),
-      "Set dim 1 PEarrayset failed.\n");
+                       1, 1, dims, datadim, "mpirank", NULL, NULL),
+                       "Set dim 1 PEarrayset failed.\n");
 
 
   int maxdim = 20;
   int i;
-  for(i=0;i<maxdim;i++){
+  for(i=0; i<maxdim; i++)
+  {
 
-    int* data = NULL;
-    if(mpirank!=0){
+    int *data = NULL;
+    if(mpirank!=0)
+    {
       data = malloc(mpirank * sizeof(int));
 
       int j;
-      for(j=0;j<mpirank;j++){
+      for(j=0; j<mpirank; j++)
+      {
         data[j] = 3 * i + j + mpirank - 1;
       }
     }
 
     datadim[0] = i;
     AH5_RETURN_IF_FAILED(AH5_append_Earrayset(&arrayset,
-        1, data, datadim),
-        "Extension PEarrayset failed.\n");
+                         1, data, datadim),
+                         "Extension PEarrayset failed.\n");
 
 
-    if(mpirank!=0){
+    if(mpirank!=0)
+    {
       free(data);
     }
     MPI_Barrier(MPI_COMM_WORLD);
   }
 
   AH5_RETURN_IF_FAILED(AH5_free_Earrayset(&arrayset),
-      "Free PEarrayset failed.\n");
+                       "Free PEarrayset failed.\n");
 
   // Verif
 
-  int* refdata = malloc(maxdim * 3 * sizeof(int));
+  int *refdata = malloc(maxdim * 3 * sizeof(int));
 
   dims[0] = maxdim;
   dims[1] = 3;
 
   int iu;
   int iv;
-  for(iu=0;iu<maxdim;iu++){
-    for(iv=0;iv<3;iv++){
+  for(iu=0; iu<maxdim; iu++)
+  {
+    for(iv=0; iv<3; iv++)
+    {
       hsize_t rank[] = { iu, iv };
 
       hsize_t id = Index(2, dims, rank);
@@ -278,7 +305,7 @@ char* test_assym(hid_t hdf, int mpirank){
 
 
   AH5_RETURN_IF_FAILED(Verify(hdf, "peArraySet/data", maxdim * 3, refdata),
-      "Verif PEdataset failed.\n");
+                       "Verif PEdataset failed.\n");
 
   free(refdata);
 
@@ -292,7 +319,8 @@ char* test_assym(hid_t hdf, int mpirank){
 
 
 
-int main(int argc, char** argv){
+int main(int argc, char **argv)
+{
 
   MPI_Init(&argc, &argv);
 
@@ -302,7 +330,8 @@ int main(int argc, char** argv){
   int nbprocess;
   MPI_Comm_size(MPI_COMM_WORLD, &nbprocess);
 
-  if(nbprocess != 3){
+  if(nbprocess != 3)
+  {
     print(mpirank, "Please relaunch with three process.\n");
     return EXIT_FAILURE;
   }
@@ -326,13 +355,14 @@ int main(int argc, char** argv){
 
 
 
-  char* message;
+  char *message;
 
 
 
   message = test_assym_low(hdf, mpirank);
 
-  if(message!=NULL){
+  if(message!=NULL)
+  {
     printf("%d** %s\n", mpirank, message);
     return EXIT_FAILURE;
   }
@@ -345,7 +375,8 @@ int main(int argc, char** argv){
 
   message = test_assym(hdf, mpirank);
 
-  if(message!=NULL){
+  if(message!=NULL)
+  {
     printf("%d** %s\n", mpirank, message);
     return EXIT_FAILURE;
   }

@@ -19,17 +19,17 @@
 extern "C" {
 #endif
 
-  /**
-   * Build a linear rang
-   *
-   * @param axis
-   * @param start
-   * @param step
-   * @param size
-   *
-   * @return
-   */
-  AHH5_PUBLIC char ahh5_axis_build_linspace(AH5_axis_t *axis, float start, float step, int size);
+/**
+ * Build a linear rang
+ *
+ * @param axis
+ * @param start
+ * @param step
+ * @param size
+ *
+ * @return
+ */
+AHH5_PUBLIC char ahh5_axis_build_linspace(AH5_axis_t *axis, float start, float step, int size);
 
 #ifdef __cplusplus
 }

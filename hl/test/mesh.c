@@ -2,10 +2,10 @@
  * @file   mesh.c
  * @author Nathanaël MUOT <nathanael.muot@axessim.fr>
  * @date   Fri Jul 11 13:49:21 2014
- * 
+ *
  * @brief  Test ahh5_mesh.h
- * 
- * 
+ *
+ *
  */
 
 #include <string.h>
@@ -29,7 +29,7 @@ static char *test_axis_build_linspace()
   mu_assert_approx_equal("axis build linspace",
                          axis.nodes[9], 9.1, 0.00001);
   mu_assert_eq("axis build linspace", axis.nb_nodes, 11);
-  
+
   return NULL;
 }
 

@@ -13,7 +13,7 @@ int tests_run = 0;
 static char *test_interpret_cmesh()
 {
   /*
-    
+
    */
   AH5_cmesh_t cmesh;
   AHH5_cmesh_t cmesh_hl;
@@ -23,7 +23,8 @@ static char *test_interpret_cmesh()
   float x[] = {1., 2., 3.};
   float y[] = {1., 2., 3., 4.};
   float z[] = {1., 2., 3., 4., 5.};
-  float nodes[] = {
+  float nodes[] =
+  {
     /*map 1*/
     2.2, 1.2, 3.,
     2.5, 2.0, 3.,
@@ -53,7 +54,8 @@ static char *test_interpret_cmesh()
     5., 2., 0.,
     5., 3., 0.
   };
-  char polygontypes[] = {
+  char polygontypes[] =
+  {
     /*Intersect poly*/
     /*map 1*/
     POLY_LAST, 2,
@@ -82,7 +84,8 @@ static char *test_interpret_cmesh()
     POLY_CTHROUGH, 3,
     POLY_CTHROUGH, 1
   };
-  AH5_index_t polygonnodes[] = {
+  AH5_index_t polygonnodes[] =
+  {
     /*Intersect poly*/
     /*map 1*/
     0, 1,
@@ -120,7 +123,7 @@ static char *test_interpret_cmesh()
   AH5_index_t map1m[] = {2,4,6};
   AH5_index_t map2p[] = {9, 11};
   AH5_index_t map2m[] = {10,12};
-  
+
   /* Build the grid */
   cmesh.grid.x.nb_nodes = 3;
   cmesh.grid.x.nodes = x;
@@ -135,72 +138,163 @@ static char *test_interpret_cmesh()
   /* Build the intersections */
   cmesh.nb_intersections = 16;
   cmesh.intersections =
-      (AH5_intersection_t*)malloc(
-          cmesh.nb_intersections * sizeof(AH5_intersection_t));
+    (AH5_intersection_t *)malloc(
+      cmesh.nb_intersections * sizeof(AH5_intersection_t));
   /* map 1 */
-  cmesh.intersections[ 0] = (AH5_intersection_t){INTER_FREE, {2,1,3}, 2, 0};
-  cmesh.intersections[ 1] = (AH5_intersection_t){INTER_FREE, {2,2,3}, 2, 1};
-  cmesh.intersections[ 2] = (AH5_intersection_t){INTER_FREE, {3,2,3}, 2, 2};
-  cmesh.intersections[ 3] = (AH5_intersection_t){INTER_FREE, {3,3,3}, 2, 3};
-  cmesh.intersections[ 4] = (AH5_intersection_t){INTER_FREE, {4,3,3}, 2, 4};
+  cmesh.intersections[ 0] = (AH5_intersection_t)
+  {
+    INTER_FREE, {2,1,3}, 2, 0
+  };
+  cmesh.intersections[ 1] = (AH5_intersection_t)
+  {
+    INTER_FREE, {2,2,3}, 2, 1
+  };
+  cmesh.intersections[ 2] = (AH5_intersection_t)
+  {
+    INTER_FREE, {3,2,3}, 2, 2
+  };
+  cmesh.intersections[ 3] = (AH5_intersection_t)
+  {
+    INTER_FREE, {3,3,3}, 2, 3
+  };
+  cmesh.intersections[ 4] = (AH5_intersection_t)
+  {
+    INTER_FREE, {4,3,3}, 2, 4
+  };
   /**/
-  cmesh.intersections[ 5] = (AH5_intersection_t){INTER_FREE, {2,2,3}, 2, 1};
-  cmesh.intersections[ 6] = (AH5_intersection_t){INTER_FREE, {3,2,3}, 2, 2};
-  cmesh.intersections[ 7] = (AH5_intersection_t){INTER_FREE, {3,3,3}, 2, 3};
+  cmesh.intersections[ 5] = (AH5_intersection_t)
+  {
+    INTER_FREE, {2,2,3}, 2, 1
+  };
+  cmesh.intersections[ 6] = (AH5_intersection_t)
+  {
+    INTER_FREE, {3,2,3}, 2, 2
+  };
+  cmesh.intersections[ 7] = (AH5_intersection_t)
+  {
+    INTER_FREE, {3,3,3}, 2, 3
+  };
   /* map 2 */
-  cmesh.intersections[ 8] = (AH5_intersection_t){INTER_FREE, {3,1,3}, 2, 5};
-  cmesh.intersections[ 9] = (AH5_intersection_t){INTER_FREE, {3,2,3}, 2, 6};
-  cmesh.intersections[10] = (AH5_intersection_t){INTER_FREE, {4,2,3}, 2, 7};
-  cmesh.intersections[11] = (AH5_intersection_t){INTER_FREE, {4,3,3}, 2, 8};
+  cmesh.intersections[ 8] = (AH5_intersection_t)
+  {
+    INTER_FREE, {3,1,3}, 2, 5
+  };
+  cmesh.intersections[ 9] = (AH5_intersection_t)
+  {
+    INTER_FREE, {3,2,3}, 2, 6
+  };
+  cmesh.intersections[10] = (AH5_intersection_t)
+  {
+    INTER_FREE, {4,2,3}, 2, 7
+  };
+  cmesh.intersections[11] = (AH5_intersection_t)
+  {
+    INTER_FREE, {4,3,3}, 2, 8
+  };
   /**/
-  cmesh.intersections[12] = (AH5_intersection_t){INTER_FREE, {3,2,3}, 2, 6};
-  cmesh.intersections[13] = (AH5_intersection_t){INTER_FREE, {4,2,3}, 2, 7};
+  cmesh.intersections[12] = (AH5_intersection_t)
+  {
+    INTER_FREE, {3,2,3}, 2, 6
+  };
+  cmesh.intersections[13] = (AH5_intersection_t)
+  {
+    INTER_FREE, {4,2,3}, 2, 7
+  };
   /**/
   /* map 3 */
-  cmesh.intersections[14] = (AH5_intersection_t){INTER_FREE, {1,3,3}, 2, -9};
-  cmesh.intersections[15] = (AH5_intersection_t){INTER_FREE, {5,8,5}, 2, 10};
+  cmesh.intersections[14] = (AH5_intersection_t)
+  {
+    INTER_FREE, {1,3,3}, 2, -9
+  };
+  cmesh.intersections[15] = (AH5_intersection_t)
+  {
+    INTER_FREE, {5,8,5}, 2, 10
+  };
   /* Build polygons */
   cmesh.nb_polygontypes[0] = 20;
   cmesh.nb_polygontypes[1] = 2;
   cmesh.polygontypes = polygontypes;
   cmesh.nb_polygonnodes = 50;
   cmesh.polygonnodes = polygonnodes;
-  
+
   /* Build regions */
   cmesh.nb_regions = 11;
   cmesh.regions =
-      (AH5_region_t*)malloc(
-          cmesh.nb_polygontypes[0]
-          * cmesh.nb_polygontypes[1]
-          * sizeof(AH5_region_t));
-  cmesh.regions[0] = (AH5_region_t){0.1, 11};
-  cmesh.regions[1] = (AH5_region_t){0.2, 13};
-  cmesh.regions[2] = (AH5_region_t){0.3, 15};
-  
-  cmesh.regions[3] = (AH5_region_t){0.1, 12};
-  cmesh.regions[4] = (AH5_region_t){0.2, 14};
-  cmesh.regions[5] = (AH5_region_t){0.3, 16};
-  
-  cmesh.regions[6] = (AH5_region_t){0.4, 17};
-  cmesh.regions[7] = (AH5_region_t){ 0.5, 19};
-  
-  cmesh.regions[8] = (AH5_region_t){0.4, 18};
-  cmesh.regions[9] = (AH5_region_t){0.5, 20};
+    (AH5_region_t *)malloc(
+      cmesh.nb_polygontypes[0]
+      * cmesh.nb_polygontypes[1]
+      * sizeof(AH5_region_t));
+  cmesh.regions[0] = (AH5_region_t)
+  {
+    0.1, 11
+  };
+  cmesh.regions[1] = (AH5_region_t)
+  {
+    0.2, 13
+  };
+  cmesh.regions[2] = (AH5_region_t)
+  {
+    0.3, 15
+  };
 
-  cmesh.regions[10] = (AH5_region_t){0.6, -1};
+  cmesh.regions[3] = (AH5_region_t)
+  {
+    0.1, 12
+  };
+  cmesh.regions[4] = (AH5_region_t)
+  {
+    0.2, 14
+  };
+  cmesh.regions[5] = (AH5_region_t)
+  {
+    0.3, 16
+  };
+
+  cmesh.regions[6] = (AH5_region_t)
+  {
+    0.4, 17
+  };
+  cmesh.regions[7] = (AH5_region_t)
+  {
+    0.5, 19
+  };
+
+  cmesh.regions[8] = (AH5_region_t)
+  {
+    0.4, 18
+  };
+  cmesh.regions[9] = (AH5_region_t)
+  {
+    0.5, 20
+  };
+
+  cmesh.regions[10] = (AH5_region_t)
+  {
+    0.6, -1
+  };
 
   /* The groups */
   cmesh.nb_groupgroups = 0;
   cmesh.nb_groups = 5;
   cmesh.groups =
-      (AH5_cgroup_t*)malloc(
-          cmesh.nb_groups * sizeof(AH5_cgroup_t));
-  cmesh.groups[0] = (AH5_cgroup_t){"map1", "face", "PEC", 8, map1};
-  cmesh.groups[1] = (AH5_cgroup_t){"map2", "face", "PEC", 6, map2};
-  cmesh.groups[2] = (AH5_cgroup_t){"map3", "face", "PEC", 2, map3};
+    (AH5_cgroup_t *)malloc(
+      cmesh.nb_groups * sizeof(AH5_cgroup_t));
+  cmesh.groups[0] = (AH5_cgroup_t)
+  {"map1", "face", "PEC", 8, map1
+  };
+  cmesh.groups[1] = (AH5_cgroup_t)
+  {"map2", "face", "PEC", 6, map2
+  };
+  cmesh.groups[2] = (AH5_cgroup_t)
+  {"map3", "face", "PEC", 2, map3
+  };
 
-  cmesh.groups[3] = (AH5_cgroup_t){"map1m", "volume", "free", 3, map1m};
-  cmesh.groups[4] = (AH5_cgroup_t){"map2p", "volume", "free", 3, map2p};
+  cmesh.groups[3] = (AH5_cgroup_t)
+  {"map1m", "volume", "free", 3, map1m
+  };
+  cmesh.groups[4] = (AH5_cgroup_t)
+  {"map2p", "volume", "free", 3, map2p
+  };
 
   /* Interpret the conform mesh. */
   mu_assert("Interpret conform mesh.",
@@ -223,7 +317,7 @@ static char *test_interpret_cmesh()
                       cmesh_hl.groups[3].path, "map1m");
   mu_assert_str_equal("The number of group 1.",
                       cmesh_hl.groups[4].path, "map2p");
-  
+
   mu_assert_eq("The nodes numbers.",
                cmesh_hl.nb_nodes[0], 24);
   mu_assert_eq("The nodes number (dims).",
@@ -291,7 +385,7 @@ static char *test_interpret_cmesh()
                cmesh_hl.intersections[1].polygon->region->path.nodes_index[0], 16);
   mu_assert_eq("Intersections [1] polygon region area.",
                cmesh_hl.intersections[1].polygon->region->area, (float)0.1);
-  
+
   mu_assert_eq("Intersections [14] type.",
                cmesh_hl.intersections[14].type, INTER_FREE);
   mu_assert_eq("Intersections [14] i.",
@@ -342,7 +436,7 @@ static char *test_interpret_cmesh()
 
   /*release memory*/
   AHH5_free_cmesh(&cmesh_hl);
-  
+
   return NULL;
 }
 
@@ -365,7 +459,7 @@ static char *test_intersection()
   b.polygon = NULL;
 
   mu_assert_eq("cmp", AHH5_intersection_cmp(&a, &b), 0);
-  
+
   a.index[0] = 1;
   mu_assert_gt("cmp", AHH5_intersection_cmp(&a, &b), 0);
   mu_assert_lt("cmp", AHH5_intersection_cmp(&b, &a), 0);
@@ -386,7 +480,7 @@ static char *test_intersection()
   mu_assert_lt("cmp", AHH5_intersection_cmp(&b, &a), 0);
 
   a.type = 0;
-  a.polygon = (AHH5_polygon_t*)1;
+  a.polygon = (AHH5_polygon_t *)1;
   mu_assert_gt("cmp", AHH5_intersection_cmp(&a, &b), 0);
   mu_assert_lt("cmp", AHH5_intersection_cmp(&b, &a), 0);
 
