@@ -8,6 +8,9 @@
 extern "C" {
 #endif
 
+  /* AH5 back compatibility */
+#define AH5_VERSION_1_5_4                1
+
 #define AH5_FILE_A_FORMAT                "FORMAT"
 #define AH5_FILE_FORMAT                  "AMELETHDF"
 #define AH5_FILE_A_VERSION               "AMELETHDF_FORMAT_VERSION"
@@ -207,6 +210,7 @@ extern "C" {
 
 
 /* ah5_phmodel.h */
+#define AH5_A_VOLUMETRIC_MASS_DENSITY           "volumetricMassDensity"
 #define AH5_G_RELATIVE_PERMITTIVITY             "/relativePermittivity"
 #define AH5_G_RELATIVE_PERMEABILITY             "/relativePermeability"
 #define AH5_G_ELECTRIC_CONDUCTIVITY             "/electricConductivity"
@@ -240,6 +244,7 @@ extern "C" {
 #define AH5_V_ZSZT2                             "ZsZt2"
 #define AH5_V_DEBYE                             "debye"
 #define AH5_V_LORENTZ                           "lorentz"
+#define AH5_V_VOLUMETRIC_MASS_DENSITY_UNDEFINE   0
 
 /* ah5_simulation.h */
 #define AH5_A_MODULE    "module"

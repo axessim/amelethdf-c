@@ -68,6 +68,7 @@ extern "C" {
         AH5_material_prop_t relative_permeability;
         AH5_material_prop_t electric_conductivity;
         AH5_material_prop_t magnetic_conductivity;
+        float volumetric_mass_density;
     } AH5_volume_instance_t;
 
     typedef struct _AH5_surface_instance_t

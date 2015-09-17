@@ -125,6 +125,9 @@ INSTALL(FILES
   "${CMAKE_CURRENT_BINARY_DIR}/src/amelethdf/ah5_config.h"
   DESTINATION "include")
 
+#-------------------------------------------------------------
+# Finalise ah5 configure
+#-------------------------------------------------------------
 # Define the Amelet-HDF tools and test dependance.
 SET(AMELETHDF_TOOLS_LINK_LIBS amelethdfc ${AMELETHDF_DEP_LINK_LIBS})
 SET(AMELETHDF_TESTS_LINK_LIBS amelethdfc ${AMELETHDF_DEP_LINK_LIBS})
@@ -151,6 +154,8 @@ SET(AMELETHDF_HL_INCLUDE_DIRS
 
 SET(AMELETHDF_HL_TOOLS_LINK_LIBS amelethdfc_hl ${AMELETHDF_HL_DEP_LINK_LIBS})
 SET(AMELETHDF_HL_TESTS_LINK_LIBS amelethdfc_hl ${AMELETHDF_HL_DEP_LINK_LIBS})
+
+SET(AMELETHDF_EXEMPLES_DIR "${CMAKE_SOURCE_DIR}/exemples")
 
 #-------------------------------------------------------------
 # 

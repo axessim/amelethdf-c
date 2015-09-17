@@ -7,7 +7,8 @@ FOREACH (test_file ${tests_src})
   FILE (RELATIVE_PATH rel_test_file ${CMAKE_CURRENT_SOURCE_DIR} ${test_file})
   STRING (REPLACE ".c"  "" test_exec ${rel_test_file})
   SET(test_exec "c_${test_exec}")
-
+  
+  ADD_DEFINITIONS("-DAH5_DATA_DIR=${AMELETHDF_EXEMPLES_DIR}")
   ADD_EXECUTABLE (${test_exec} ${test_file})
   TARGET_LINK_LIBRARIES (${test_exec} ${AMELETHDF_TESTS_LINK_LIBS})
 

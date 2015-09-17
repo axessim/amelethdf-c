@@ -32,7 +32,6 @@ char AH5_write_str_root_attr(hid_t loc_id, char *attr_name, const char *wdata)
   return success;
 }
 
-
 hid_t AH5_create(const char *name, unsigned flags, const char *entry_point)
 {
   hid_t file_id;
@@ -45,6 +44,11 @@ hid_t AH5_create(const char *name, unsigned flags, const char *entry_point)
     AH5_write_str_root_attr(file_id, AH5_A_ENTRY_POINT, entry_point);
 
   return file_id;
+}
+
+hid_t AH5_open(const char *name, unsigned flags)
+{
+  return H5Fopen(name, flags, H5P_DEFAULT);
 }
 
 // Set complex number

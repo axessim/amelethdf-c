@@ -199,4 +199,10 @@ __inline void filecopy(const char *input, const char *output)
 //! Close the test file.
 #define AH5_close_test_file(file_id) H5Fclose((file_id))
 
+// Stringify
+#define XSTR(s) STR(s)
+#define STR(x) #x
+
+#define AH5_open_exemple_file(name) AH5_open(XSTR(AH5_DATA_DIR) "/" name, H5F_ACC_RDONLY)
+
 #endif // _TESTS_TEST_H_

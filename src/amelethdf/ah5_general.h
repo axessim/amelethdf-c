@@ -108,6 +108,17 @@ extern "C" {
      */
     AH5_PUBLIC hid_t AH5_create(const char *name, unsigned flags, const char *entry_point);
 
+    /** 
+     * Open a Amelet-HDF file
+     * 
+     * @param name name name of the file to access.
+     * @param flags flags file access flags (see H5Fcreate)
+     * 
+     * @return Returns a file identifier if successful; otherwise returns a
+     * negative value.
+     */
+    AH5_PUBLIC hid_t AH5_open(const char *name, unsigned flags);
+
     AH5_PUBLIC hid_t AH5_H5Tcreate_cpx_memtype(void);
     AH5_PUBLIC hid_t AH5_H5Tcreate_cpx_filetype(void);
 
