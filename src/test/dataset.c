@@ -42,10 +42,8 @@ char *test_write_complex_dataset()
   AH5_complex_t cplx[2];
 
   file_id = AH5_auto_test_file();
-  cplx[0].re=10.;
-  cplx[0].im=20.;
-  cplx[1].re=10.5;
-  cplx[1].im=20.5;
+  cplx[0] = AH5_set_complex(10., 20.);
+  cplx[1] = AH5_set_complex(10.5, 20.5);
 
   mu_assert("Write complex dataset.",
             AH5_write_cpx_dataset(file_id,"dataset_name", 2, cplx));
@@ -63,10 +61,10 @@ char *test_write_complex_dataset()
   j = 0;
   for (i = 0; i < length; i++)
   {
-    printf("Real parts : %f %f\n", cplx[i].re, buf[j]);
-    printf("Imaginary parts : %f %f\n", cplx[i].im, buf[j+1]);
-    mu_assert_equal("Check the real values.", cplx[i].re, buf[j]);
-    mu_assert_equal("Check the imaginary value.", cplx[i].im, buf[j+1]);
+    printf("Real parts : %f %f\n", creal(cplx[i]), buf[j]);
+    printf("Imaginary parts : %f %f\n", cimag(cplx[i]), buf[j+1]);
+    mu_assert_equal("Check the real values.", creal(cplx[i]), buf[j]);
+    mu_assert_equal("Check the imaginary value.", cimag(cplx[i]), buf[j+1]);
     j = j + 2;
   }
   free(buf);
@@ -74,6 +72,7 @@ char *test_write_complex_dataset()
 
   return MU_FINISHED_WITHOUT_ERRORS;
 }
+
 char *test_read_complex_dataset()
 {
 
@@ -90,17 +89,15 @@ char *test_read_complex_dataset()
 
   file_id = AH5_auto_test_file();
 
-  cplx[0].re=10.;
-  cplx[0].im=20.;
-  cplx[1].re=10.5;
-  cplx[1].im=20.5;
+  cplx[0] = AH5_set_complex(10., 20.);
+  cplx[1] = AH5_set_complex(10.5, 20.5);
   //first write complex array set with hdf5 lib
   real_part = (float *)malloc(2 * sizeof(float));
   imag_part = (float *)malloc(2 * sizeof(float));
   for( i=0; i<2; i++)
   {
-    real_part[i] = cplx[i].re;
-    imag_part[i] = cplx[i].im;
+    real_part[i] = creal(cplx[i]);
+    imag_part[i] = cimag(cplx[i]);
   }
   type_id = create_type_id(H5T_NATIVE_FLOAT);
   dims[0] = 2;
@@ -123,14 +120,15 @@ char *test_read_complex_dataset()
 
   for (i = 0; i < 2; i++)
   {
-    printf("Real parts : %f %f\n", cplx[i].re, rdata[i].re);
-    printf("Imaginary parts : %f %f\n", cplx[i].im, rdata[i].im);
-    mu_assert_equal("Check the real values.", cplx[i].re, rdata[i].re);
-    mu_assert_equal("Check the imaginary value.", cplx[i].im, rdata[i].im);
+    printf("Real parts : %f %f\n", creal(cplx[i]), creal(rdata[i]));
+    printf("Imaginary parts : %f %f\n", cimag(cplx[i]), cimag(rdata[i]));
+    mu_assert_equal("Check the real values.", creal(cplx[i]), creal(rdata[i]));
+    mu_assert_equal("Check the imaginary value.", cimag(cplx[i]), cimag(rdata[i]));
   }
 
   return MU_FINISHED_WITHOUT_ERRORS;
 }
+
 char *test_write_string_dataset()
 {
 #define DIM0 4

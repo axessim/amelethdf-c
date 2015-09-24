@@ -71,6 +71,8 @@ char AH5_cmesh_compute_offset(const AH5_cmesh_t *cmesh,
       }
     }
   }
+
+  return  AH5_TRUE;
 }
 
 

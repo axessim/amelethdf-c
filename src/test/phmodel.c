@@ -55,19 +55,19 @@ char *test_read_phm_volume_instance()
     vol.relative_permeability.type, MP_SINGLE_COMPLEX);
   mu_assert_close(
     "relative_permeability",
-    vol.relative_permeability.data.singlecomplex.value.re, 1., TOL);
+    creal(vol.relative_permeability.data.singlecomplex.value), 1., TOL);
   mu_assert_close(
     "relative_permeability",
-    vol.relative_permeability.data.singlecomplex.value.im, 0., TOL);
+    cimag(vol.relative_permeability.data.singlecomplex.value), 0., TOL);
   mu_assert_eq(
     "relative_permittivity",
     vol.relative_permittivity.type, MP_SINGLE_COMPLEX);
   mu_assert_close(
     "relative_permittivity",
-    vol.relative_permittivity.data.singlecomplex.value.re, 1., TOL);
+    creal(vol.relative_permittivity.data.singlecomplex.value), 1., TOL);
   mu_assert_close(
     "relative_permittivity",
-    vol.relative_permittivity.data.singlecomplex.value.im, 0., TOL);
+    cimag(vol.relative_permittivity.data.singlecomplex.value), 0., TOL);
 
   AH5_print_phm_volume_instance(&vol, 0);
   AH5_free_phm_volume_instance(&vol);
@@ -98,10 +98,10 @@ char *test_read_phm_volume_instance()
     vol.relative_permeability.type, MP_SINGLE_COMPLEX);
   mu_assert_close(
     "relative_permeability",
-    vol.relative_permeability.data.singlecomplex.value.re, 1., TOL);
+    creal(vol.relative_permeability.data.singlecomplex.value), 1., TOL);
   mu_assert_close(
     "relative_permeability",
-    vol.relative_permeability.data.singlecomplex.value.im, 0., TOL);
+    cimag(vol.relative_permeability.data.singlecomplex.value), 0., TOL);
   mu_assert_eq(
     "relative_permittivity",
     vol.relative_permittivity.type, MP_DEBYE);
@@ -150,10 +150,10 @@ char *test_read_phm_volume_instance()
     vol.relative_permeability.type, MP_SINGLE_COMPLEX);
   mu_assert_close(
     "relative_permeability",
-    vol.relative_permeability.data.singlecomplex.value.re, 1., TOL);
+    creal(vol.relative_permeability.data.singlecomplex.value), 1., TOL);
   mu_assert_close(
     "relative_permeability",
-    vol.relative_permeability.data.singlecomplex.value.im, 0., TOL);
+    cimag(vol.relative_permeability.data.singlecomplex.value), 0., TOL);
   mu_assert_eq(
     "relative_permittivity",
     vol.relative_permittivity.type, MP_LORENTZ);

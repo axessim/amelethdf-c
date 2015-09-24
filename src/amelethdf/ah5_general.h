@@ -68,7 +68,7 @@ extern "C" {
 
 #ifdef AH5_SDT_CCOMPLEX
 #include <complex.h>
-typedef complex AH5_complex_t;
+typedef double complex AH5_complex_t;
 #else
 typedef struct _AH5_complex_t
 {

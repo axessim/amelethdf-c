@@ -50,7 +50,7 @@ char AH5_read_cpx_dataset(hid_t file_id, const char *path, const hsize_t mn, AH5
   float *buf = NULL;
 
   *rdata = (AH5_complex_t *) malloc((size_t) mn * sizeof(AH5_complex_t));
-  buf = (float *) malloc((size_t) mn * 200 * sizeof(float));
+  buf = (float *) malloc((size_t) mn * 200 * sizeof(float));  /*XXX(nmt) Why 200?*/
   type_id = AH5_H5Tcreate_cpx_memtype();
 
   dset_id = H5Dopen(file_id, path, H5P_DEFAULT);
@@ -155,6 +155,8 @@ char AH5_write_cpx_dataset(hid_t loc_id, const char *dset_name, const hsize_t le
   char success = AH5_FALSE;
   hsize_t dims[1] = {len};
   H5O_info_t info;
+  float *buf = NULL;
+  hsize_t i;
 
   H5Oget_info(loc_id, &info);
   if (info.type == H5O_TYPE_GROUP)
@@ -165,8 +167,19 @@ char AH5_write_cpx_dataset(hid_t loc_id, const char *dset_name, const hsize_t le
 
     if ((dset = H5Dcreate(loc_id, dset_name, cpx_filetype, space, H5P_DEFAULT, H5P_DEFAULT,
                           H5P_DEFAULT)) >= 0)
-      if (H5Dwrite(dset, cpx_memtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, wdata) >= 0)
+    {
+      buf = (float *) malloc((size_t) 2 * len * sizeof(float));
+      for (i = 0; i < len; ++i)
+      {
+        buf[2*i] = creal(wdata[i]);
+        buf[2*i+1] = cimag(wdata[i]);
+      }
+      
+      if (H5Dwrite(dset, cpx_memtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf) >= 0)
         success = AH5_TRUE;
+
+      free(buf);
+    }
 
     H5Dclose(dset);
     H5Sclose(space);
