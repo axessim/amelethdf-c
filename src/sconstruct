@@ -1,0 +1,707 @@
+#! /usr/bin/env python
+# -*- mode:python; coding:utf-8; -*-
+#
+# *** PLEASE KEEP THIS FILE PIP8 CONFORME. ***
+#
+# * This file is part of Mustrad project. *
+#
+# This file provide Mustard project builder.
+#
+
+import glob
+import os
+import sys
+import platform
+import fnmatch
+
+# Explicite scons import
+from SCons.Script.SConscript import (SConsEnvironment)
+try:
+    from Scons.Script.SConscript import (Export, Dir, AddOption,
+                                         GetOption, Environment, SConscript,
+                                         Depends)
+except:
+    pass
+
+# Import resources
+resources_path = os.path.realpath(
+    os.path.join(Dir("#").abspath,  # <=> os.pqth.dirname(__file__)
+                 "..", "resources", "scons"))
+sys.path.append(resources_path)
+import doxygen
+import lint
+
+# Define some constante
+CHOICE_PLATFORM = ('guessed', 'linux32', 'linux64', 'win32', 'win64')
+DEFAULT_PLATFORM = CHOICE_PLATFORM[0]
+
+CHOICE_FLAVOR = ('release', 'debug', 'assert')
+DEFAULT_FLAVOR = CHOICE_FLAVOR[0]
+
+# add command line options
+AddOption('--flavor',
+          dest='flavor',
+          default=DEFAULT_FLAVOR,
+          choices=CHOICE_FLAVOR,
+          help="build flavor id (default: %(default)s)")
+
+AddOption('--platform',
+          dest='platform',
+          default=DEFAULT_PLATFORM,
+          choices=CHOICE_PLATFORM,
+          help="build for platforme id (default: %(default)s)")
+
+AddOption('--prefix',
+          dest='prefix',
+          default="build",
+          help="Install path")
+
+AddOption('--build-dir',
+          dest='build_dir',
+          default="tmp",
+          help="Where are stored temporal data.")
+
+AddOption('--dependencies',
+          dest='deps',
+          default="",
+          help="The path to dependencies library (~, $name or ${name}).")
+
+AddOption('--enable-conforme',
+          dest='with_conform',
+          default=False,
+          action='store_true',
+          help="Enable conform meshing tools compilation.")
+
+AddOption('--enable-parallel',
+          dest='enable_parallel',
+          default=False,
+          action='store_true',
+          help="Enable parallel build.")
+
+
+def guessed_platform():
+    "Return platform"
+    platform_ = GetOption('platform')
+
+    if not platform_ in CHOICE_PLATFORM:
+        raise Exception("Un supported platform '%s'" % platform)
+
+    if platform_ == 'guessed':
+        sys_name = platform.system().lower()
+        if sys_name.find('win') >= 0:
+            sys_name = 'win'
+        archi = platform.architecture()
+        if archi[0].find('64') >= 0:
+            archi = '64'
+        else:
+            archi = '32'
+        return "".join((sys_name, archi)).lower()
+    return platform_
+
+
+def get_flavor():
+    return GetOption('flavor')
+
+MUSTARD_SRC = os.getcwd()
+
+hdf5_libs = ['hdf5_hl', 'hdf5']
+amelet_libs = hdf5_libs + ['amelethdfc']
+temsi_libs = ['amelethdfc_hl', 'temsiff']
+
+
+if guessed_platform().startswith("win"):
+    boost_unit_test_framework = {
+        'debug': ['boost_unit_test_framework-vc100-mt-gd-1_55'],
+        'release': ['boost_unit_test_framework-vc100-mt-1_55']}
+
+    # NMT include this dependqnce raise an error (LNK2005)
+    # ['boost_program_options-vc100-mt-gd-1_52']
+    boost_program_options = {'debug': [], 'release': []}
+
+    boost_libs = {'debug': [], 'release': []}
+
+else:
+    boost_unit_test_framework = {
+        'debug': ['boost_unit_test_framework'],
+        'release': ['boost_unit_test_framework']}
+
+    boost_program_options = {
+        'debug': ['boost_program_options'],
+        'release': ['boost_program_options']}
+
+    boost_libs = {'debug': [], 'release': []}
+
+
+def get_tmp_dir(compoment_name):
+    "Return where are store temporale data"
+    p = GetOption('build_dir')
+    if os.path.isabs(p):
+        return os.path.join(p, compoment_name)
+    return os.path.join('..', '..', p,
+                        guessed_platform(), get_flavor(),
+                        compoment_name)
+
+
+def get_install_dir(compoment_name):
+    "Return where are store temporale data"
+    p = GetOption('prefix')
+    if os.path.isabs(p):
+        return p
+    return os.path.join('..', '..', p, guessed_platform())
+
+
+def get_src_dir(compoment_name):
+    return os.path.join(MUSTARD_SRC, compoment_name, 'src')
+
+
+def get_include_dir(compoment_name):
+    return os.path.join(MUSTARD_SRC, compoment_name, 'src')
+
+
+def get_compoment_name(prefix, name):
+    "Return the compoment name some thing like that 'mustardcore'."
+    return prefix + name
+
+
+def formatpath(path):
+    "Extend path see os.path.expanduser and os.path.expandvars"
+    return os.path.normpath(os.path.realpath(
+        os.path.expanduser(os.path.expandvars(path))))
+
+
+def get_dependencies_include():
+    "Return include dependencies as list."
+    deps = GetOption('deps').split(os.pathsep)
+    return [os.path.join(formatpath(d), 'include')
+            for d in deps
+            if os.path.isdir(os.path.join(formatpath(d), 'include'))]
+
+
+def get_dependencies_lib():
+    "Return include dependencies as list."
+    deps = GetOption('deps').split(os.pathsep)
+    libs = [os.path.join(formatpath(d), 'lib')
+            for d in deps
+            if os.path.isdir(os.path.join(formatpath(d), 'lib'))]
+    if (guessed_platform() == "linux64"):
+        libs += [os.path.join(formatpath(d), 'lib64')
+                 for d in deps
+                 if os.path.isdir(os.path.join(formatpath(d), 'lib64'))]
+    return libs
+
+
+def with_conform():
+    "Return True if conform meshing tools conpilation is enable."
+    return GetOption("with_conform")
+
+def parallel_enable():
+    "Return True if parallel build is enable."
+    return GetOption("enable_parallel")
+
+
+class SubProjectBuilder(object):
+    flags = {}
+    mode = ''
+
+    @staticmethod
+    def set_mode(mode, **flags):
+        SubProjectBuilder.flags.setdefault(mode, {})
+
+        for flag_name, flag_val in flags.items():
+            if isinstance(flag_val, str):
+                flag_val = flag_val.split(' ')
+            SubProjectBuilder.flags[mode].setdefault(flag_name, [])
+            SubProjectBuilder.flags[mode][flag_name].extend(flag_val)
+
+    @staticmethod
+    def use_mode(mode):
+        print '**** Compiling in ' + mode + ' mode...'
+        SubProjectBuilder.mode = mode
+
+    def __init__(self, localenv, project, prefix=''):
+        self._localenv = localenv
+        self._project = project
+        self._prefix = prefix
+
+    def get_flavor(self):
+        return self.mode
+
+    def get_local_env(self):
+        return self._localenv
+    def get_compoment_name(self):
+        "Return the compoment name some thing like that 'mustardcore'."
+        return get_compoment_name(self._prefix, self._project)
+
+    def get_tmp_dir(self):
+        "Return where are store temporale data"
+        return get_tmp_dir(self.get_compoment_name())
+
+    def get_install_dir(self):
+        "Return the install path"
+        return get_install_dir(self.get_compoment_name())
+
+    def get_targetpath(self):
+        return os.path.join(self.get_tmp_dir(), self.get_compoment_name())
+
+    def check_src(self):
+        """Build the project for check it.
+
+         - cppling.py
+         - ...
+        """
+        print "**** init checker %s" % self.get_compoment_name()
+        builddir = self.get_tmp_dir()
+        env = self._localenv.Clone()
+
+        files = glob.glob(os.path.join('src', '*.cpp'))
+        files += glob.glob(os.path.join('src', '*', '*.cpp'))
+        files += glob.glob(os.path.join('src', '*', '*.h'))
+        srclst = map(lambda x: os.path.join(builddir, x), files)
+        for src in srclst:
+            #lint = env.Lint(self.get_targetpath(), source=srclst)
+            lint = env.LintFile(src + ".lint", source=src)
+            env.Alias('all', lint)
+            env.Alias('check', lint)
+            env.Alias('cpplint', lint)
+
+    def build_lib(self):
+        print "**** init lib %s" % self.get_compoment_name()
+        builddir = self.get_tmp_dir()
+        installdir = self.get_install_dir()
+        env = self._localenv.Clone()
+
+        print "**** builddir: ", builddir
+        print "**** installdir: ", installdir
+
+        # specify the build directory
+        env.VariantDir(builddir, ".", duplicate=0)
+        #
+        env.Append(**self.flags[self.mode])
+        # add define like MUSTARDCORE_LIBRARY
+        lib_name = self.get_compoment_name().upper()
+        env.Append(CPPDEFINES='%s_LIBRARY' % lib_name)
+        if self.get_flavor() == "debug":
+            env.Append(CPPDEFINES='%s__DEBUG' % lib_name)
+        else:
+            env.Append(CPPDEFINES='%s_NDEBUG' % lib_name)
+
+        # build the module
+        srclst = map(lambda x: os.path.join(builddir, x),
+                     # old source style (src/ and src/bym)
+                     glob.glob(os.path.join('src', '*.cpp'))
+                     + glob.glob(os.path.join('src', '*', '*.cpp')) 
+                     # public source (src/bym/$comp_name)
+                     + glob.glob(os.path.join('src', '*', '*', '*.cpp')) 
+                     # internal part (src/bym/$comp_name/$internal)
+                     + glob.glob(os.path.join('src', '*', '*', '*', '*.cpp'))) 
+        lib = env.SharedLibrary(self.get_targetpath(), source=srclst)
+        env.Alias('all', lib)
+        env.Alias('build', lib)
+        env.Alias(self.get_compoment_name(), lib)
+
+        installlib = os.path.join(installdir, 'lib')
+        if (guessed_platform().find("win") >= 0):
+            installbin = os.path.join(installdir, 'bin')
+            env.Install(installbin, lib[0])
+            env.Alias('install', installbin)
+            env.Alias('install_%s' % self.get_compoment_name(), installlib)
+
+            env.Install(installlib, lib[1:])
+            env.Alias('install', installlib)
+            env.Alias('install_%s' % self.get_compoment_name(), installlib)
+
+        else:
+            env.Install(installlib, lib)
+            env.Alias('install', installlib)
+            env.Alias('install_%s' % self.get_compoment_name(), installlib)
+
+        # now the header file
+        def add_headers(parent, pattern, destdir, basedir="", recursive=False):
+            for entry in os.listdir(parent):
+                entrypath = os.path.join(parent, entry)
+                if (os.path.isfile(entrypath)
+                        and fnmatch.fnmatch(entry, pattern)):
+                    env.Install(destdir, entrypath)
+                    env.Alias('install', destdir)
+                    env.Alias('install_%s' % self.get_compoment_name(),
+                              destdir)
+                elif os.path.isdir(entrypath) and recursive:
+                    add_headers(entrypath, pattern,
+                                os.path.join(destdir, entry),
+                                os.path.join(basedir, entry), recursive)
+        add_headers('src', '*.h',
+                    os.path.join(installdir, 'include'),
+                    recursive=True)
+
+        return lib
+
+    def build_tools(self):
+        print "**** init tools fo %s" % self.get_compoment_name()
+        # build the unit test
+        localenv = self._localenv.Clone()
+        installdir = self.get_install_dir()
+        builddir = self.get_tmp_dir()
+
+        #specify the build directory
+        localenv.VariantDir(builddir, ".", duplicate=0)
+        #
+        localenv.Append(**self.flags[self.mode])
+        # set env
+        localenv.Append(CPPPATH=['src', ])
+        localenv.Append(LIBS=[self.get_compoment_name()])
+        localenv.Append(LIBPATH=['/usr/lib/', builddir])
+        # build tools
+        for srs_name in glob.glob('tools/*.cpp'):
+            name = os.path.basename(srs_name)
+            targetname, e = os.path.splitext(name)
+            targetname = "mustard_" + targetname
+            targetpath = os.path.join(builddir, 'bin', targetname)
+            src = os.path.join(builddir, srs_name)
+            pgm = localenv.Program(targetpath, source=src)
+            env.Alias('all', pgm)  # note: not localenv
+            env.Alias('build', pgm)  # note: not localenv
+
+            bin_path = os.path.join(installdir, 'bin')
+            env.Install(bin_path, pgm)
+            env.Alias('install', bin_path)
+
+    def build_tests(self):
+        print "**** init tests on %s" % self.get_compoment_name()
+        # build the unit test
+        builddir = self.get_tmp_dir()
+        installdir = self.get_install_dir()
+        localenv = self._localenv.Clone()
+
+        targetname = 'test_' + self.get_compoment_name()
+        targetpath = os.path.join(builddir, 'bin', targetname)
+
+        #specify the build directory
+        localenv.VariantDir(builddir, ".", duplicate=0)
+        #
+        localenv.Append(**self.flags[self.mode])
+
+        # build the module
+        srclst = map(lambda x: os.path.join(builddir, x),
+                     glob.glob('tests/*.cpp'))
+
+        localenv.Append(CPPPATH=['src', ])
+        localenv.Append(LIBS=[self.get_compoment_name()]
+                        + boost_unit_test_framework[self.get_flavor()])
+        localenv.Append(LIBPATH=['/usr/lib/', builddir]
+                        + get_dependencies_lib())
+
+        # build test
+        pgm = localenv.Program(targetpath, source=srclst)
+        env.Alias('all', pgm)
+        env.Alias('test', pgm)
+
+        test_path = os.path.join(installdir, 'bin')
+        env.Install(test_path, pgm)
+        env.Alias('test', test_path)
+
+    def build(self):
+        self.check_src()
+        self.build_lib()
+        self.build_tests()
+        self.build_tools()
+
+
+class SubProjectDef(object):
+    def __init__(self, localenv, project, prefix=''):
+        self._projenv = localenv.Clone()
+
+        self._project_name = project
+        self._deps = []
+        self._prefix = prefix
+
+        self._projenv.Append(CPPPATH=[os.path.abspath(
+            os.path.join(self.get_name(), 'src'))])
+
+    def get_name(self):
+        return self._project_name
+
+    def get_prefix(self):
+        return self._prefix
+
+    def get_compement_name(self):
+        return get_compoment_name(self._prefix, self.get_name())
+
+    def get_tmp_dir(self):
+        return get_tmp_dir(self.get_compement_name())
+
+    def get_include_dir(self):
+        return get_include_dir(self.get_name())
+
+    def get_project_env(self):
+        return self._projenv
+
+    def add_modules_dep(self, dep_list):
+        for dep in dep_list:
+            self._projenv.Append(CPPPATH=[dep.get_include_dir()])
+            self._projenv.Append(LIBS=[dep.get_compement_name()])
+            self._projenv.Append(LIBPATH=[dep.get_tmp_dir()])
+            Depends(self.get_compement_name(), dep.get_compement_name())
+        self._deps.extend(dep_list)
+
+    def get_builder(self):
+        return SubProjectBuilder(self.get_project_env(),
+                                 self.get_name(),
+                                 prefix=self.get_prefix())
+
+    def scons(self):
+        project = self._project_name
+        return SConscript(os.path.join(project, 'sconscript'),
+                          exports=['project'])
+
+
+class Project(object):
+    subprojects = {}
+
+    def __init__(self, name, platform):
+        self._name = name
+        self._platform = platform
+
+    def add_sub_project(self, localenv, project):
+        proj = SubProjectDef(localenv, project, prefix=self._name)
+        self.subprojects[project] = proj
+        return proj
+
+    def get_sub_project(self, project):
+        return self.subprojects[project]
+
+    def set_mode(self, mode, platform, **flags):
+        if self._platform.find(platform) >= 0:
+            SubProjectBuilder.set_mode(mode, **flags)
+
+    def use_mode(self, mode):
+        SubProjectBuilder.use_mode(mode)
+
+    def scons(self, project):
+        return self.subprojects[project].scons()
+
+# some tools for build configur file.
+class ConfigHBuilder:
+    """For filled configure file.
+
+        config_h_build = ConfigHBuilder({'version_str': '0.1.5'})
+        config_h_build.add('debug', 1)
+        env.AlwaysBuild(env.Command('config.h', 'config.h.in', config_h_build))
+
+    {{{file:config.h.in
+
+    #define KEY "%(key)s"
+    #if %(debug)d
+    #define YES_THIS_IS_A_DEBUG_BUILD 1
+    #else
+    #define NDEBUG 1
+    #endif
+    
+    }}}
+
+    Inspired from: http://scons.org/wiki/GenerateConfig
+
+    """
+    def __init__(self, defines={}, call=None):
+        """Init ConfigHBuilder
+
+        INPUTS:
+          defines give some key:value to filled the configure file.
+
+          call is callable thing with (target, source, env) argument. See
+          __call__ method. This function is call for each configure file.
+
+        """
+        self._config_h_defines = defines
+        self._call = call
+
+    def add(self, name, value):
+        self._config_h_defines[name] = value
+
+    def get_config_h_defines(self):
+        return self._config_h_defines
+
+    def _pprint(self, msg):
+        print
+        print msg
+        print
+        for key, val in self.get_config_h_defines().items():
+            print "    %-20s %s" % (key, val)
+        print
+
+    def __call__(self, target, source, env):
+        config_h_defines = self.get_config_h_defines()
+        
+        self._pprint("Generating configure file with the following settings:")
+
+        for a_target, a_source in zip(target, source):
+            config_h = file(str(a_target), "w")
+            config_h_in = file(str(a_source), "r")
+            config_h.write(config_h_in.read() % config_h_defines)
+            config_h_in.close()
+            config_h.close()
+            if self._call:
+                self._call(target, source, env)
+
+def get_config_installer(destdirs_alias):
+    """This function is define to be used as 'call' function of ConfigHBuilder to
+    install configure file. See also add_headers.
+    """
+    def add_configures(target, source, env):
+        for destdir, alias in destdirs_alias:
+            print destdir, target
+            env.Install(destdir, target)
+            env.Alias(alias, destdir)
+    return add_configures
+
+
+platform_name = guessed_platform()
+
+if platform_name.startswith('win'):
+    msvs_version = '10.0'
+    if platform_name.find('32') >= 0:
+        target_arch = 'i386'
+    else:
+        target_arch = 'amd64'
+
+    env = Environment(MSVC_VERSION=msvs_version,
+                      ENV=os.environ,
+                      TARGET_ARCH=target_arch,)
+
+    cppdefines = ["MUSTARD_WIN"]
+
+else:
+    env = Environment(ENV=os.environ,
+                      toolpath=resources_path)
+
+    # Add doxygen builder
+    doxygen.generate(env)
+
+    cppdefines = ["MUSTARD_LINUX"]
+
+if platform_name.endswith("32"):
+    cppdefines.append("MUSTARD_32B")
+else:
+    cppdefines.append("MUSTARD_64B")
+
+
+#put all .sconsign files in one place
+env.SConsignFile()
+env.Append(CPPPATH=get_dependencies_include(),
+           LIBPATH=get_dependencies_lib(),
+           LIBS=boost_program_options[get_flavor()],
+           CPPDEFINES=cppdefines)
+
+
+proj = Project('mustard', guessed_platform())
+SConsEnvironment.jProj = proj
+proj.use_mode(get_flavor())
+
+# define the build flag for parallel mustard version
+MUSTARD_PARALLE_FLAGS = ""
+if parallel_enable():
+    MUSTARD_PARALLE_FLAGS = " -fopenmp "
+
+# add some flags
+proj.set_mode('debug', 'linux',
+              CCFLAGS="-Wall -W -Wextra -g3 -std=c++0x -D_DEBUG " 
+              + MUSTARD_PARALLE_FLAGS,
+              LINKFLAGS=MUSTARD_PARALLE_FLAGS)
+
+proj.set_mode('gprof', 'linux',
+              CCFLAGS="-Wall -W -Wextra -g3 -std=c++0x -D_DEBUG --coverage "
+              + MUSTARD_PARALLE_FLAGS,
+              LINKFLAGS="--coverage -pg " + MUSTARD_PARALLE_FLAGS)
+
+proj.set_mode('valgrin', 'linux',
+              CCFLAGS="-Wall -W -Wextra -g3 -std=c++0x -D_DEBUG "
+              + MUSTARD_PARALLE_FLAGS,
+              LINKFLAGS=MUSTARD_PARALLE_FLAGS)
+
+proj.set_mode('release', 'linux',
+              CCFLAGS='-Wall -W -Wextra -O3 -g0 -std=c++0x -DNDEBUG '
+              + MUSTARD_PARALLE_FLAGS,
+              LINKFLAGS=MUSTARD_PARALLE_FLAGS)
+
+proj.set_mode('assert', 'linux',
+              CCFLAGS='-Wall -W -Wextra -O2 -g2 -std=c++0x -DNDEBUG '
+              + MUSTARD_PARALLE_FLAGS,
+              LINKFLAGS=MUSTARD_PARALLE_FLAGS)
+
+proj.set_mode('debug', 'win',
+              CCFLAGS='/Zi /nologo /W1 /WX- /Od /Oy- /Gm- /EHsc /MDd /GS '
+                      '/fp:precise /Zc:wchar_t- /Zc:forScope /Gd ',
+              LINKFLAGS='/nologo')
+
+proj.set_mode('release', 'win',
+              CCFLAGS="/D_WIN32 /W1 /O2 /Oy- /Gm- /EHsc /MD /GS /fp:precise "
+                      "/Zc:wchar_t- /Zc:forScope /Gd ")
+
+proj.set_mode('assert', 'win',
+              CCFLAGS="/nologo /W1 /WX- /O2 /Oy- /EHsc /MD /fp:precise "
+                      "/Zc:wchar_t- /Zc:forScope /GS /Gm- /Gd ")
+
+#make sure the sconscripts can get to the variables
+#don't need to export anything but 'env'
+Export('env')
+
+# Doc
+if doxygen.exists(env):
+    doc = env.Doxygen('Doxyfile')
+    env.Alias('all', doc)
+    env.Alias('docs', doc)
+
+lint.setup_scons_lint(env, lint_filter="-runtime/printf,"
+                                       "-legal/copyright,"
+                                       "-readability/streams")
+
+# Core
+core = proj.add_sub_project(env, 'core')
+config_h_build = ConfigHBuilder()
+config_h_build.add("mustard_enable_parallel", 1 if parallel_enable() else 0)
+env.AlwaysBuild(env.Command(
+    os.path.join(get_src_dir("core"), 'bym', 'config_build.h'), 
+    os.path.join(get_src_dir("core"), 'bym', 'config_build.h.in'), 
+    config_h_build))
+core.scons()
+
+# Mesh
+geometry = proj.add_sub_project(env, 'geometry')
+geometry.add_modules_dep([core])
+geometry.scons()
+
+# Mesh
+mesh = proj.add_sub_project(env, 'mesh')
+mesh.add_modules_dep([core, geometry])
+mesh.scons()
+
+# Amelet
+amelet = proj.add_sub_project(env, 'amelet')
+amelet.add_modules_dep([core, geometry, mesh])
+amelet.get_project_env().Append(LIBS=amelet_libs)
+amelet.scons()
+
+# Strutured
+structured = proj.add_sub_project(env, 'structured')
+structured.add_modules_dep([core, geometry, mesh, amelet])
+structured.get_project_env().Append(LIBS=amelet_libs)
+structured.scons()
+
+# Strain
+strain = proj.add_sub_project(env, 'strain')
+strain.add_modules_dep([core, geometry, mesh, structured, amelet])
+strain.get_project_env().Append(LIBS=amelet_libs)
+strain.scons()
+
+# GD
+gd = proj.add_sub_project(env, 'gd')
+gd.add_modules_dep([core, geometry, mesh, structured, amelet])
+gd.get_project_env().Append(LIBS=amelet_libs)
+gd.scons()
+
+
+if (platform_name.startswith('linux') and with_conform()):
+    # Conform merh
+    strain = proj.add_sub_project(env, 'conform')
+    strain.add_modules_dep([core, geometry])
+    strain.get_project_env().Append(LIBS=amelet_libs + temsi_libs)
+    strain.scons()
