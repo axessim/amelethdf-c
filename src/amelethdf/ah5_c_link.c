@@ -1,8 +1,9 @@
 #include "ah5_c_link.h"
+#include "ah5_log.h"
 
 
 // Init link instance
-void AH5_init_lnk_instance (AH5_lnk_instance_t *lnk_instance)
+void AH5_init_lnk_instance(AH5_lnk_instance_t *lnk_instance)
 {
   lnk_instance->path = NULL;
   lnk_instance->opt_attrs.nb_instances = 0;
@@ -10,10 +11,11 @@ void AH5_init_lnk_instance (AH5_lnk_instance_t *lnk_instance)
   lnk_instance->subject = NULL;
   lnk_instance->subject_name = NULL; /* for purposes of the module */
   lnk_instance->object = NULL;
+  lnk_instance->object_name = NULL;
 }
 
 // Init link group (group of instances)
-void AH5_init_lnk_group (AH5_lnk_group_t *lnk_group)
+void AH5_init_lnk_group(AH5_lnk_group_t *lnk_group)
 {
   lnk_group->path = NULL;
   lnk_group->opt_attrs.nb_instances = 0;
@@ -24,7 +26,7 @@ void AH5_init_lnk_group (AH5_lnk_group_t *lnk_group)
 
 
 // Init link category (all groups/instances)
-void AH5_init_link (AH5_link_t *link)
+void AH5_init_link(AH5_link_t *link)
 {
   link->nb_groups = 0;
   link->groups = NULL;
@@ -68,6 +70,15 @@ char AH5_read_lnk_instance (hid_t file_id, const char *path, AH5_lnk_instance_t 
         {
           lnk_instance->subject_name = strdup(
                                          AH5_label_dataset.items[lnk_instance->opt_attrs.instances[i].value.i]);
+        }
+        AH5_free_lbl_dataset(&AH5_label_dataset);
+
+        if (strcmp(lnk_instance->opt_attrs.instances[i].name, "object_id") == 0 &&
+            lnk_instance->opt_attrs.instances[i].type == H5T_INTEGER &&
+            AH5_read_lbl_dataset(file_id, lnk_instance->object, &AH5_label_dataset))
+        {
+          lnk_instance->object_name = strdup(
+                                        AH5_label_dataset.items[lnk_instance->opt_attrs.instances[i].value.i]);
         }
         AH5_free_lbl_dataset(&AH5_label_dataset);
       }
@@ -204,6 +215,7 @@ void AH5_free_lnk_instance (AH5_lnk_instance_t *lnk_instance)
   free(lnk_instance->subject);
   free(lnk_instance->subject_name);
   free(lnk_instance->object);
+  free(lnk_instance->object_name);
   AH5_init_lnk_instance(lnk_instance);
 }
 

@@ -1,4 +1,5 @@
 #include "ah5_c_simulation.h"
+#include "ah5_log.h"
 
 
 // Read simulation instance

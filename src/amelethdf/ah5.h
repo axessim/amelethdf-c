@@ -2,6 +2,7 @@
 #define AH5_H
 
 #include "ah5_general.h"
+#include "ah5_log.h"
 #include "ah5_dataset.h"
 #include "ah5_attribute.h"
 #include "ah5_category.h"

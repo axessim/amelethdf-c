@@ -1,4 +1,5 @@
 #include "ah5_c_emsource.h"
+#include "ah5_log.h"
 
 
 // Read instance in /electromagneticSource/planeWave

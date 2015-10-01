@@ -1,8 +1,9 @@
 #include "ah5_c_extelt.h"
+#include "ah5_log.h"
 
-#ifdef _MSC_VER
-#define ACCESS _access
+#ifdef _WIN32
 #include <io.h>
+#define ACCESS _access
 #else
 #define ACCESS access
 #endif

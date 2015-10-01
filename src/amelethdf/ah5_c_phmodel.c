@@ -1,4 +1,5 @@
 #include "ah5_c_phmodel.h"
+#include "ah5_log.h"
 
 char AH5_read_phm_vimp (hid_t file_id, const char *path, AH5_material_prop_t *material_prop)
 {
@@ -156,6 +157,7 @@ char AH5_read_phm_volume_instance (hid_t file_id, const char *path,
   volume_instance->relative_permeability.type = MP_INVALID;
   volume_instance->electric_conductivity.type = MP_INVALID;
   volume_instance->magnetic_conductivity.type = MP_INVALID;
+  volume_instance->volumetric_mass_density = AH5_V_VOLUMETRIC_MASS_DENSITY_UNDEFINE;
 
   if (AH5_path_valid(file_id, path))
   {
@@ -176,6 +178,14 @@ char AH5_read_phm_volume_instance (hid_t file_id, const char *path,
     strcat(path2, AH5_G_MAGNETIC_CONDUCTIVITY);
     if (!AH5_read_phm_vimp(file_id, path2, &(volume_instance->magnetic_conductivity)))
       rdata = AH5_FALSE;
+
+    if (!AH5_read_flt_attr(
+          file_id, path, AH5_A_VOLUMETRIC_MASS_DENSITY,
+          &(volume_instance->volumetric_mass_density)))
+    {
+      AH5_print_wrn_attr(AH5_C_PHYSICAL_MODEL, path, AH5_A_VOLUMETRIC_MASS_DENSITY);
+      volume_instance->volumetric_mass_density = AH5_V_VOLUMETRIC_MASS_DENSITY_UNDEFINE;
+    }
   }
   else
   {

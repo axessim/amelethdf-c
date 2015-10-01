@@ -1,4 +1,5 @@
 #include "ah5_c_locsys.h"
+#include "ah5_log.h"
 
 
 // Read localizationSystem transformation

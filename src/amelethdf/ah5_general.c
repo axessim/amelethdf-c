@@ -1,5 +1,55 @@
 #include "ah5_general.h"
 
+#include <ctype.h>
+
+
+/**
+ * Write string attribute in given node.
+ *
+ * @param loc_id valid HDF5 node instance
+ * @param attr_name the attribute name
+ * @param wdata the attribute value
+ *
+ * @return return success status
+ */
+char AH5_write_str_root_attr(hid_t loc_id, char *attr_name, const char *wdata)
+{
+  char success = AH5_FALSE;
+
+  hid_t aid, atype, attr;
+
+
+  aid  = H5Screate(H5S_SCALAR);
+  atype = H5Tcopy(H5T_C_S1);
+  H5Tset_size(atype, strlen(wdata));
+  attr = H5Acreate1(loc_id, attr_name, atype, aid, H5P_DEFAULT);
+
+  if (H5Awrite(attr, atype, wdata) >= 0)
+    if (H5Sclose(aid) >= 0)
+      if (H5Aclose(attr) >= 0)
+        success = AH5_TRUE;
+
+  return success;
+}
+
+hid_t AH5_create(const char *name, unsigned flags, const char *entry_point)
+{
+  hid_t file_id;
+  file_id = H5Fcreate(name, flags, H5P_DEFAULT, H5P_DEFAULT);
+
+  AH5_write_str_root_attr(file_id, AH5_FILE_A_FORMAT, AH5_FILE_FORMAT);
+  AH5_write_str_root_attr(file_id, AH5_FILE_A_VERSION, AH5_FILE_DEFAULT_VERSION);
+
+  if (entry_point)
+    AH5_write_str_root_attr(file_id, AH5_A_ENTRY_POINT, entry_point);
+
+  return file_id;
+}
+
+hid_t AH5_open(const char *name, unsigned flags)
+{
+  return H5Fopen(name, flags, H5P_DEFAULT);
+}
 
 // Set complex number
 AH5_complex_t AH5_set_complex(float real, float imag)
@@ -149,77 +199,76 @@ char *AH5_trim_zeros(const char *version)
  *  "base" + "" -> "base"
  *
  */
-/*
 char *AH5_join_path(char *base, const char *head)
 {
-    char *endbase = NULL;
+  char *endbase = NULL;
 
-    if (head[0] == '\0')
-        return base;
-    if (base[0] == '\0')
-        return strcpy(base, head);
-
-    endbase = base + strlen(base);
-    while (isspace(*(--endbase)) && endbase != (base-1));
-
-    if ((*endbase == '/' && head[0] != '/')
-            || (*endbase != '/' && head[0] == '/'))
-    {
-        strcat(AH5_trim_path(base), head);
-    }
-    else if ((*endbase == '/' && head[0] == '/'))
-    {
-        strcat(AH5_trim_path(base), head + 1);
-    }
-    else
-    {
-        strcat(AH5_trim_path(base), "/");
-        strcat(base, head);
-    }
+  if (head[0] == '\0')
     return base;
+  if (base[0] == '\0')
+    return strcpy(base, head);
+
+  endbase = base + strlen(base);
+  while (isspace(*(--endbase)) && endbase != (base-1));
+
+  if ((*endbase == '/' && head[0] != '/')
+      || (*endbase != '/' && head[0] == '/'))
+  {
+    strcat(AH5_trim_path(base), head);
+  }
+  else if ((*endbase == '/' && head[0] == '/'))
+  {
+    strcat(AH5_trim_path(base), head + 1);
+  }
+  else
+  {
+    strcat(AH5_trim_path(base), "/");
+    strcat(base, head);
+  }
+  return base;
 }
 
 
 // Remove white char and return; does not allocate new memory
 char *AH5_trim_path(char *path)
 {
-    char *frontp = path - 1;
-    char *endp = NULL;
-    size_t len = 0;
+  char *frontp = path - 1;
+  char *endp = NULL;
+  size_t len = 0;
 
-    if (path == NULL)
-        return NULL;
+  if (path == NULL)
+    return NULL;
 
-    if (path[0] == '\0')
-        return path;
-
-    len = strlen(path);
-    endp = path + len;
-
-    // Move the front and back pointers to address the first non-whitespace
-    // characters from each end.
-
-    while (isspace(*(++frontp)));
-    while (isspace(*(--endp)) && endp != frontp);
-
-    if (path + len - 1 != endp)
-        *(endp + 1) = '\0';
-    else if (frontp != path &&  endp == frontp)
-        *path = '\0';
-
-    // Shift the string so that it starts at path so that if it's dynamically
-    // allocated, we can still free it on the returned pointer.  Note the reuse
-    // of endp to mean the front of the string buffer now.
-
-    endp = path;
-    if (frontp != path)
-    {
-        while (*frontp) *endp++ = *frontp++;
-        *endp = '\0';
-    }
+  if (path[0] == '\0')
     return path;
+
+  len = strlen(path);
+  endp = path + len;
+
+  // Move the front and back pointers to address the first non-whitespace
+  // characters from each end.
+
+  while (isspace(*(++frontp)));
+  while (isspace(*(--endp)) && endp != frontp);
+
+  if (path + len - 1 != endp)
+    *(endp + 1) = '\0';
+  else if (frontp != path &&  endp == frontp)
+    *path = '\0';
+
+  // Shift the string so that it starts at path so that if it's dynamically
+  // allocated, we can still free it on the returned pointer.  Note the reuse
+  // of endp to mean the front of the string buffer now.
+
+  endp = path;
+  if (frontp != path)
+  {
+    while (*frontp) *endp++ = *frontp++;
+    *endp = '\0';
+  }
+  return path;
 }
-*/
+
 
 // Check for path validity
 char AH5_path_valid(hid_t loc_id, const char *path)
@@ -287,6 +336,28 @@ char AH5_path_valid(hid_t loc_id, const char *path)
   return AH5_TRUE;
 }
 
+/**
+ * Set the given path into dest.
+ *
+ * @param dest the pointer to the destination string path.
+ * @param src the source string path
+ *
+ * @return success boolean value
+ */
+char AH5_setpath(char **dest, const char *src)
+{
+  if (dest)
+  {
+    *dest = (char *)malloc((strlen(src)+1)*sizeof(char));
+    if (*dest == NULL)
+      return AH5_FALSE;
+    strcpy(*dest, src);
+    return AH5_TRUE;
+  }
+
+  return AH5_FALSE;
+}
+
 
 // Add element to aset; allocates new memory!!!
 AH5_set_t AH5_add_to_set(AH5_set_t aset, char *aelement)
@@ -342,7 +413,7 @@ AH5_children_t AH5_read_children_name(hid_t file_id, const char *path)
   */
   if (AH5_path_valid(file_id, path) || strcmp(path, "/") == 0)
   {
-    group_id = H5Gopen1(file_id, path);
+    group_id = H5Gopen(file_id, path, H5P_DEFAULT);
     H5Gget_info(group_id, &ginfo);
     if (ginfo.nlinks > 0)
     {
@@ -392,6 +463,7 @@ char *AH5_get_name_from_path(const char *path)
   return (char *) path + i + 1;
 }
 
+
 // Get base part of a path; allocates new memory!
 char *AH5_get_base_from_path(const char *path)
 {
@@ -408,44 +480,55 @@ char *AH5_get_base_from_path(const char *path)
   return rdata;
 }
 
+
 void AH5_print_err_dset(const char *category, const char *path)
 {
-  printf("\n***** ERROR(%s): Cannot read dataset \"%s\". *****\n\n", category, path);
+  AH5_log_error("(%s): Cannot read dataset \"%s\".", category, path);
 }
+
 
 void AH5_print_err_tble(const char *category, const char *path)
 {
-  printf("\n***** ERROR(%s): Cannot read table \"%s\". *****\n\n", category, path);
+  AH5_log_error("(%s): Cannot read table \"%s\".", category, path);
 }
+
 
 void AH5_print_err_attr(const char *category, const char *path, const char *attr_name)
 {
-  printf("\n***** ERROR(%s): Cannot read mandatory attribute \"%s[@%s]\". *****\n\n", category, path,
-         attr_name);
+  AH5_log_error("(%s): Cannot read mandatory attribute \"%s[@%s]\".",
+                category, path, attr_name);
 }
+
 
 void AH5_print_err_path(const char *category, const char *path)
 {
-  printf("\n***** ERROR(%s): Cannot read path \"%s\". *****\n\n", category, path);
+  AH5_log_error("(%s): Cannot read path \"%s\".", category, path);
 }
+
 
 void AH5_print_err_inv_attr(const char *category, const char *path, const char *attr_name)
 {
-  printf("\n***** ERROR(%s): Invalid attribute value in \"%s[@%s]\". *****\n\n", category, path,
-         attr_name);
+  AH5_log_error("(%s): Invalid attribute value in \"%s[@%s]\".",
+                category, path, attr_name);
 }
+
 
 void AH5_print_err_func_not_implemented(const char *category, const char *path,
                                         const char *func_name)
 {
-  printf("\n***** ERROR(%s): Problem in %s... function '%s' not implemented yet!\n\n *****\n\n",
-         category, path, func_name);
+  AH5_log_error("(%s): Problem in %s... function '%s' not implemented yet!",
+                category, path, func_name);
 }
+
 
 void AH5_print_wrn_attr(const char *category, const char *path, const char *attr_name)
 {
-  printf("\n***** WARNING(%s): Invalid attribute value in \"%s[@%s]\". *****\n\n", category, path,
-         attr_name);
+  AH5_log_warn("(%s): Invalid attribute value in \"%s[@%s]\".",
+               category, path, attr_name);
 }
 
 
+void AH5_print_wrn_outputs(const char *path)
+{
+  AH5_log_warn("Ths simulation \"%s\" does not contains outputs.", path);
+}

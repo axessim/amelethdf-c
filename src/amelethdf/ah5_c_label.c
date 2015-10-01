@@ -1,4 +1,5 @@
 #include "ah5_c_label.h"
+#include "ah5_log.h"
 
 // Init label dataset
 void AH5_init_lbl_dataset(AH5_lbl_dataset_t *lbl_dataset)
