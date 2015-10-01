@@ -2,7 +2,7 @@
 
 int main()
 {
-    test_attribute();
+  test_attribute();
 
-    return 0;
+  return 0;
 }

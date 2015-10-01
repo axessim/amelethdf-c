@@ -133,10 +133,11 @@ char *__message__;
 
 
 //! A simple function to allocate a new string.
-char* new_string(char *src)  {
-    char *dst = malloc((strlen(src) + 1) * sizeof(char));
-    strcpy(dst, src);
-    return dst;
+char *new_string(char *src)
+{
+  char *dst = malloc((strlen(src) + 1) * sizeof(char));
+  strcpy(dst, src);
+  return dst;
 }
 
 
@@ -151,10 +152,11 @@ char* new_string(char *src)  {
 // memory or cleaned the working directory.
 
 //! Build a test file from file name and the extension.
-hid_t AH5_build_test_file_from_name(const char* name, const char* ext)  {
+hid_t AH5_build_test_file_from_name(const char *name, const char *ext)
+{
   char *file_name;
   hid_t file_id;
-  file_name = (char*)malloc((strlen(name) + strlen(ext) + 1)* sizeof(char));
+  file_name = (char *)malloc((strlen(name) + strlen(ext) + 1)* sizeof(char));
   strcpy(file_name, name);
   strcat(file_name, ext);
   file_id = H5Fcreate((file_name), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
