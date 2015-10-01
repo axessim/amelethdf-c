@@ -41,7 +41,7 @@ AH5_log_t AH5_get_log_level()
 }
 
 
-inline void _AH5_log(AH5_log_t level, const char *format, va_list args)
+void _AH5_log(AH5_log_t level, const char *format, va_list args)
 {
   if (level >= AH5_get_log_level())
   {
