@@ -188,6 +188,7 @@ SET(AMELETHDF_HL_TOOLS_LINK_LIBS amelethdfc_hl ${AMELETHDF_HL_DEP_LINK_LIBS})
 SET(AMELETHDF_HL_TESTS_LINK_LIBS amelethdfc_hl ${AMELETHDF_HL_DEP_LINK_LIBS})
 
 SET(AMELETHDF_EXEMPLES_DIR "${CMAKE_SOURCE_DIR}/exemples")
+SET(AMELETHDF_TEST_DATA_DIR "${CMAKE_SOURCE_DIR}/src/test/data")
 
 #-------------------------------------------------------------
 # 
@@ -212,7 +213,7 @@ ADD_SUBDIRECTORY(hl)
 #-------------------------------------------------------------
 # Coverage
 #-------------------------------------------------------------
-IF (AMELETHDF_ENABLE_COVERAGE)
+IF (AMELETHDF_ENABLE_COVERAGE AND CMAKE_COMPILER_IS_GNUCXX)
   IF (CMAKE_BUILD_TYPE STREQUAL "DEBUG" OR CMAKE_BUILD_TYPE STREQUAL "Coverage")
     SETUP_TARGET_FOR_COVERAGE(coverage ctest coverage)
   ENDIF ()

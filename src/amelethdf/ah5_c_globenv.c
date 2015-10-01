@@ -1,4 +1,5 @@
 #include "ah5_c_globenv.h"
+#include "ah5_log.h"
 
 
 // Init globalEnvironment instance
@@ -18,8 +19,6 @@ void AH5_init_global_environment (AH5_global_environment_t *global_environment)
   global_environment->nb_instances = 0;
   global_environment->instances = NULL;
 }
-
-
 
 
 // Read globalEnvironment instance

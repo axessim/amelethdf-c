@@ -150,6 +150,31 @@ char *__message__;
 
 #define mu_assert_str_equal(message, str1, str2) mu_assert(message, !strcmp(str1, str2))
 
+/**
+ * Define the HDF5 diff executable
+ */
+#if defined(_MSC_VER)
+# define H5DIFF "h5diffdll"
+#else
+# define H5DIFF "h5diff -q"
+#endif
+
+
+/* Short cut for check if two h5 file are equal. */
+#define mu_assert_ah5file_equal(message, file1, file2) do {             \
+    char        command[1024];                                          \
+    sprintf(command, H5DIFF " %s %s", (file1), (file2));                \
+    mu_assert(message, system(command) == 0);                           \
+  } while (0)
+
+/* Short cut for check if two h5 file are equal. */
+#define mu_assert_ah5grp_equal(message, file1, file2, grp) do {         \
+    char        command[1024];                                          \
+    sprintf(command, H5DIFF " %s %s %s", (file1), (file2), (grp));      \
+    mu_assert(message, system(command) == 0);                           \
+  } while (0)
+
+
 //! A simple function to allocate a new string.
 char *new_string(char *src)
 {
@@ -157,6 +182,7 @@ char *new_string(char *src)
   strcpy(dst, src);
   return dst;
 }
+
 
 //! Build a test file from file name and the extension.
 hid_t AH5_build_test_file_from_name(const char *name, const char *ext)
@@ -174,6 +200,7 @@ hid_t AH5_build_test_file_from_name(const char *name, const char *ext)
 
   return file_id;
 }
+
 
 //! copy from disk
 void filecopy(const char *input, const char *output)
@@ -196,6 +223,7 @@ void filecopy(const char *input, const char *output)
   fclose(fpo);
 }
 
+
 //! Used the test suite fonction name to build the test file.
 #if defined(_MSC_VER)
 # define AH5_auto_test_file() AH5_build_test_file_from_name(__FUNCTION__, ".test.h5")
@@ -203,13 +231,17 @@ void filecopy(const char *input, const char *output)
 # define AH5_auto_test_file() AH5_build_test_file_from_name(__func__, ".test.h5")
 #endif
 
+
 //! Close the test file.
 #define AH5_close_test_file(file_id) H5Fclose((file_id))
+
 
 // Stringify
 #define XSTR(s) STR(s)
 #define STR(x) #x
 
+
 #define AH5_open_exemple_file(name) AH5_open(XSTR(AH5_DATA_DIR) "/" name, H5F_ACC_RDONLY)
+#define AH5_open_test_data_file(name) AH5_open(XSTR(AH5_TEST_DATA_DIR) "/" name, H5F_ACC_RDONLY)
 
 #endif // _TESTS_TEST_H_

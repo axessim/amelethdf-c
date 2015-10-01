@@ -1,4 +1,5 @@
 #include "ah5_c_extelt.h"
+#include "ah5_log.h"
 
 #ifdef _WIN32
 #include <io.h>

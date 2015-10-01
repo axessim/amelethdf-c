@@ -463,6 +463,7 @@ char *AH5_get_name_from_path(const char *path)
   return (char *) path + i + 1;
 }
 
+
 // Get base part of a path; allocates new memory!
 char *AH5_get_base_from_path(const char *path)
 {
@@ -479,48 +480,55 @@ char *AH5_get_base_from_path(const char *path)
   return rdata;
 }
 
+
 void AH5_print_err_dset(const char *category, const char *path)
 {
-  printf("\n***** ERROR(%s): Cannot read dataset \"%s\". *****\n\n", category, path);
+  AH5_log_error("(%s): Cannot read dataset \"%s\".", category, path);
 }
+
 
 void AH5_print_err_tble(const char *category, const char *path)
 {
-  printf("\n***** ERROR(%s): Cannot read table \"%s\". *****\n\n", category, path);
+  AH5_log_error("(%s): Cannot read table \"%s\".", category, path);
 }
+
 
 void AH5_print_err_attr(const char *category, const char *path, const char *attr_name)
 {
-  printf("\n***** ERROR(%s): Cannot read mandatory attribute \"%s[@%s]\". *****\n\n", category, path,
-         attr_name);
+  AH5_log_error("(%s): Cannot read mandatory attribute \"%s[@%s]\".",
+                category, path, attr_name);
 }
+
 
 void AH5_print_err_path(const char *category, const char *path)
 {
-  printf("\n***** ERROR(%s): Cannot read path \"%s\". *****\n\n", category, path);
+  AH5_log_error("(%s): Cannot read path \"%s\".", category, path);
 }
+
 
 void AH5_print_err_inv_attr(const char *category, const char *path, const char *attr_name)
 {
-  printf("\n***** ERROR(%s): Invalid attribute value in \"%s[@%s]\". *****\n\n", category, path,
-         attr_name);
+  AH5_log_error("(%s): Invalid attribute value in \"%s[@%s]\".",
+                category, path, attr_name);
 }
+
 
 void AH5_print_err_func_not_implemented(const char *category, const char *path,
                                         const char *func_name)
 {
-  printf("\n***** ERROR(%s): Problem in %s... function '%s' not implemented yet!\n\n *****\n\n",
-         category, path, func_name);
+  AH5_log_error("(%s): Problem in %s... function '%s' not implemented yet!",
+                category, path, func_name);
 }
+
 
 void AH5_print_wrn_attr(const char *category, const char *path, const char *attr_name)
 {
-  printf("\n***** WARNING(%s): Invalid attribute value in \"%s[@%s]\". *****\n\n", category, path,
-         attr_name);
+  AH5_log_warn("(%s): Invalid attribute value in \"%s[@%s]\".",
+               category, path, attr_name);
 }
 
 
 void AH5_print_wrn_outputs(const char *path)
 {
-  printf("\n***** WARNING: Ths simulation \"%s\" does not contains outputs. *****\n\n", path);
+  AH5_log_warn("Ths simulation \"%s\" does not contains outputs.", path);
 }

@@ -1,4 +1,5 @@
 #include "ah5_c_phmodel.h"
+#include "ah5_log.h"
 
 char AH5_read_phm_vimp (hid_t file_id, const char *path, AH5_material_prop_t *material_prop)
 {

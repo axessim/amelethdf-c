@@ -1,4 +1,5 @@
 #include "ah5_c_outreq.h"
+#include "ah5_log.h"
 
 
 // Init outputRequest instance

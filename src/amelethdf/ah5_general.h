@@ -11,6 +11,7 @@
 #include <ah5_config.h>
 #include "ah5_category.h"
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -49,26 +50,17 @@ extern "C" {
 # define AH5_WITHOUT_MPI_ 1
 #endif
 
+
 // A specific flag for the complexes.
 #if __STDC_VERSION__ >= 199901L
 # define AH5_SDT_CCOMPLEX
 # define ACCESS _acess
 #endif
 
-// Display a warning message
-#define AH5Warning(...) printf("*** Warning: "); printf(__VA_ARGS__)
-
-// TODO: management of log level
-// typedef enum _log_level_t {} log_level_t;
-// extern log_level_t ah5_log_level;
-// Set and get methods
-// Log method
-// void AH5Log(const log_level_t level, const char* fmt, ...);
-// Specific logger AH5Error, AH5Warining, ...
 
 #ifdef AH5_SDT_CCOMPLEX
 #include <complex.h>
-typedef double complex AH5_complex_t;
+typedef float complex AH5_complex_t;
 #else
 typedef struct _AH5_complex_t
 {
@@ -134,22 +126,6 @@ AH5_PUBLIC char *AH5_get_base_from_path(const char *path);
 AH5_PUBLIC char *AH5_join_path(char *base, const char *head);
 AH5_PUBLIC char *AH5_trim_path(char *path);
 AH5_PUBLIC char AH5_setpath(char **dest, const char *src);
-
-AH5_PUBLIC void AH5_print_err_dset(const char *category, const char *path);
-AH5_PUBLIC void AH5_print_err_tble(const char *category, const char *path);
-AH5_PUBLIC void AH5_print_err_attr(const char *category, const char *path, const char *attr_name);
-AH5_PUBLIC void AH5_print_err_path(const char *category, const char *path);
-AH5_PUBLIC void AH5_print_err_inv_attr(const char *category, const char *path,
-                                       const char *attr_name);
-AH5_PUBLIC void AH5_print_err_func_not_implemented(const char *category, const char *path,
-    const char *func_name);
-AH5_PUBLIC void AH5_print_wrn_attr(const char *category, const char *path, const char *attr_name);
-AH5_PUBLIC void AH5_print_wrn_outputs(const char *path);
-
-// Some helpers macros of manage error.
-#define AH5_PRINT_ERR_FUNC_NOT_IMPLEMENTED(category, path) \
-  AH5_print_err_func_not_implemented(category, path, (__FUNCTION__))
-
 
 #ifdef __cplusplus
 }

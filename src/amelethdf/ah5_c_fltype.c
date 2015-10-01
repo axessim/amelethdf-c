@@ -1,4 +1,5 @@
 #include "ah5_c_fltype.h"
+#include "ah5_log.h"
 
 
 // Read singleInteger, return AH5_TRUE (all OK) or AH5_FALSE (no malloc)

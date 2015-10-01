@@ -1,4 +1,5 @@
 #include "ah5_c_mesh.h"
+#include "ah5_log.h"
 
 
 /**

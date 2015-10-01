@@ -1,5 +1,5 @@
 #include "ah5_dataset.h"
-
+#include "ah5_log.h"
 
 // Read 1D int dataset
 char AH5_read_int_dataset(hid_t file_id, const char *path, const hsize_t mn, int **rdata)
@@ -50,7 +50,7 @@ char AH5_read_cpx_dataset(hid_t file_id, const char *path, const hsize_t mn, AH5
   float *buf = NULL;
 
   *rdata = (AH5_complex_t *) malloc((size_t) mn * sizeof(AH5_complex_t));
-  buf = (float *) malloc((size_t) mn * 200 * sizeof(float));  /*XXX(nmt) Why 200?*/
+  buf = (float *) malloc((size_t) mn * 2 * sizeof(float));
   type_id = AH5_H5Tcreate_cpx_memtype();
 
   dset_id = H5Dopen(file_id, path, H5P_DEFAULT);
@@ -63,7 +63,8 @@ char AH5_read_cpx_dataset(hid_t file_id, const char *path, const hsize_t mn, AH5
   }
   H5Dclose(dset_id);
   H5Tclose(type_id);
-  if (buf != NULL) free(buf);
+  if (buf != NULL)
+    free(buf);
   if (!success)
   {
     free(*rdata);
@@ -315,10 +316,10 @@ char AH5_write_str_array(hid_t loc_id, const char *dset_name, const int rank, co
   if (H5Dwrite(dataset_id, strtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, wdata) < 0) return AH5_FALSE;
 
   // Release the dataset
-  if (H5Dclose (dataset_id) < 0) AH5Warning("Fail to close dataset.\n");
+  if (H5Dclose (dataset_id) < 0) AH5_log_warn("Fail to close dataset.");
 
   // Release dataspace
-  if (H5Sclose(dataspace_id) < 0) AH5Warning("Fail to close dataspace.\n");
+  if (H5Sclose(dataspace_id) < 0) AH5_log_warn("Fail to close dataspace.");
 
   return AH5_TRUE;
 }

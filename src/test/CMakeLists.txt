@@ -9,6 +9,7 @@ FOREACH (test_file ${tests_src})
   SET(test_exec "c_${test_exec}")
   
   ADD_DEFINITIONS("-DAH5_DATA_DIR=${AMELETHDF_EXEMPLES_DIR}")
+  ADD_DEFINITIONS("-DAH5_TEST_DATA_DIR=${AMELETHDF_TEST_DATA_DIR}")
   ADD_EXECUTABLE (${test_exec} ${test_file})
   TARGET_LINK_LIBRARIES (${test_exec} ${AMELETHDF_TESTS_LINK_LIBS})
 

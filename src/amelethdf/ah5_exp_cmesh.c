@@ -10,6 +10,7 @@
 
 #include "ah5_exp_cmesh.h"
 #include "ah5_exp_algo.h"
+#include "ah5_log.h"
 
 #if !__GNUC__
 # define __compar_fn_t int (*)(const void* p1, const void* p2)

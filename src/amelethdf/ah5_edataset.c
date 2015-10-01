@@ -1,4 +1,5 @@
 #include "ah5_edataset.h"
+#include "ah5_log.h"
 
 hid_t AH5_Get_cpx_type()
 {

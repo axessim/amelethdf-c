@@ -1,4 +1,5 @@
 #include "ah5_c_link.h"
+#include "ah5_log.h"
 
 
 // Init link instance
