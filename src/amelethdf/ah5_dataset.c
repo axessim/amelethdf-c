@@ -174,7 +174,7 @@ char AH5_write_cpx_dataset(hid_t loc_id, const char *dset_name, const hsize_t le
         buf[2*i] = creal(wdata[i]);
         buf[2*i+1] = cimag(wdata[i]);
       }
-      
+
       if (H5Dwrite(dset, cpx_memtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf) >= 0)
         success = AH5_TRUE;
 
