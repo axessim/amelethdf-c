@@ -739,8 +739,8 @@ char AH5_read_ssom_pie_table(hid_t file_id, const char *path, AH5_ssom_pie_table
         field_names[0] = (char *) malloc((size_t) nfields * AH5_TABLE_FIELD_NAME_LENGTH * sizeof(char));
         for (i = 0; i < nfields; i++)
           field_names[i] = field_names[0] + i * AH5_TABLE_FIELD_NAME_LENGTH;
-        field_sizes = (size_t *) malloc((size_t) nfields * sizeof(size_t *));
-        field_offsets = (size_t *) malloc((size_t) nfields * sizeof(size_t *));
+        field_sizes = (size_t *) malloc((size_t) nfields * sizeof(size_t));
+        field_offsets = (size_t *) malloc((size_t) nfields * sizeof(size_t));
 
         if (H5TBget_field_info(file_id, path, field_names, field_sizes, field_offsets, &type_size) >= 0)
         {
@@ -1023,8 +1023,8 @@ char AH5_read_usom_pie_table(hid_t file_id, const char *path, AH5_usom_pie_table
         field_names[0] = (char *) malloc((size_t) nfields * AH5_TABLE_FIELD_NAME_LENGTH * sizeof(char));
         for (i = 0; i < nfields; i++)
           field_names[i] = field_names[0] + i * AH5_TABLE_FIELD_NAME_LENGTH;
-        field_sizes = (size_t *) malloc((size_t) nfields * sizeof(size_t *));
-        field_offsets = (size_t *) malloc((size_t) nfields * sizeof(size_t *));
+        field_sizes = (size_t *) malloc((size_t) nfields * sizeof(size_t));
+        field_offsets = (size_t *) malloc((size_t) nfields * sizeof(size_t));
 
         if (H5TBget_field_info(file_id, path, field_names, field_sizes, field_offsets, &type_size) >= 0)
           if (strcmp(field_names[0], "index") == 0)

@@ -306,8 +306,8 @@ char AH5_read_ft_rationalfunction (hid_t file_id, const char *path,
       field_names[0] = (char *) malloc((size_t) nfields * AH5_TABLE_FIELD_NAME_LENGTH * sizeof(char));
       for (i = 0; i < nfields; i++)
         field_names[i] = field_names[0] + i * AH5_TABLE_FIELD_NAME_LENGTH;
-      field_sizes = (size_t *) malloc((size_t ) nfields * sizeof(size_t *));
-      field_offsets = (size_t *) malloc((size_t) nfields * sizeof(size_t *));
+      field_sizes = (size_t *) malloc((size_t ) nfields * sizeof(size_t));
+      field_offsets = (size_t *) malloc((size_t) nfields * sizeof(size_t));
 
       if (H5TBget_field_info(file_id, path, field_names, field_sizes, field_offsets, &type_size) >= 0)
         if (strcmp(field_names[0], AH5_F_TYPE) == 0 && strcmp(field_names[1], AH5_F_A) == 0

@@ -19,7 +19,7 @@ SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/resources/cmake") # For custom cmake 
 IF (AMELETHDF_BUILD_DOCS)
   INCLUDE(DoxygenTarget)
 ENDIF ()
-IF (AMELETHDF_ENABLE_COVERAGE)
+IF (AMELETHDF_ENABLE_COVERAGE AND CMAKE_COMPILER_IS_GNUCXX)
   INCLUDE(CodeCoverage)
 ENDIF ()
 
@@ -94,6 +94,10 @@ ENDIF ()
 #-------------------------------------------------------------
 # Configure compilateur
 #-------------------------------------------------------------
+if ( "${CMAKE_C_COMPILER}" MATCHES "clang$" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "Clang" )
+  set ( CMAKE_COMPILER_IS_CLANG 1 )
+endif()
+
 # Compileur configurqtion for GCC
 SET(GCC_4_8_COMPILE_FLAGS      "-std=gnu90")
 SET(GCC_COMPILE_FLAGS          "-Wall -W -Wextra -fPIC")
@@ -122,9 +126,25 @@ ELSEIF (MSVC10)
   SET(CMAKE_C_FLAGS_DEBUG    "${CMAKE_C_FLAGS_DEBUG} ${VS_DEBUG_COMPILE_FLAGS}")
   SET(CMAKE_C_FLAGS_RELEASE  "${CMAKE_C_FLAGS_RELEASE} ${VS_RELEASE_COMPILE_FLAGS}")
   # SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${VS_LINKER_FLAGS}" )
-ELSE (MSVC10)
+ELSEIF (CMAKE_COMPILER_IS_CLANG)
+  
+ELSE ()
   MESSAGE( STATUS "Unsupported compiler defaut configuration is used!")
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
+
+
+#-------------------------------------------------------------
+# Static analysis
+#-------------------------------------------------------------
+FUNCTION(add_static_analysis target)
+  IF(CMAKE_COMPILER_IS_CLANG)
+    GET_TARGET_PROPERTY(SRCs ${target} SOURCES)
+    ADD_LIBRARY(${target}_analyze OBJECT EXCLUDE_FROM_ALL ${SRCs})
+    SET_TARGET_PROPERTIES(${target}_analyze PROPERTIES
+      COMPILE_OPTIONS "--analyze"
+      EXCLUDE_FROM_DEFAULT_BUILD true)
+  ENDIF()
+ENDFUNCTION()
 
 
 #-------------------------------------------------------------
