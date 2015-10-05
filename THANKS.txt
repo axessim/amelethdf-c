@@ -1,0 +1,9 @@
+
+Vladimír Šeděnka who implemented the original C Amelet-HDF library.
+Nathanaël Muot various bug fixes, and code contributions.
+Didier Roisse bug fixes, packaging and testing.
+Thomas Strub bug fixes, and code contributions.
+Cyril Giraudon
+
+Institutions
+------------
