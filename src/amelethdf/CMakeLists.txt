@@ -40,4 +40,4 @@ ENDIF()
 FILE(GLOB_RECURSE amelethdf_header *.h)
 INSTALL(FILES ${amelethdf_header} DESTINATION "include")
 
-# add_static_analysis(amelethdfc)
+add_static_analysis(amelethdfc)

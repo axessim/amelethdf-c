@@ -95,7 +95,7 @@ ENDIF ()
 #-------------------------------------------------------------
 # Configure compilateur
 #-------------------------------------------------------------
-if ( "${CMAKE_C_COMPILER}" MATCHES "clang$" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "Clang" )
+if ( "${CMAKE_C_COMPILER}" MATCHES "clang" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "Clang" )
   set ( CMAKE_COMPILER_IS_CLANG 1 )
 endif()
 
@@ -151,7 +151,7 @@ ENDFUNCTION()
 #-------------------------------------------------------------
 # Generat configure file
 #-------------------------------------------------------------
-STRING(COMPARE EQUAL "${CMAKE_BUILD_TYPE}" "DEBUG" AMELETHDF_DEBUG)
+STRING(COMPARE EQUAL "${CMAKE_BUILD_TYPE}" "Debug" AMELETHDF_DEBUG)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/src/amelethdf/ah5_config.h.cmake 
   ${CMAKE_CURRENT_BINARY_DIR}/src/amelethdf/ah5_config.h)
 INSTALL(FILES
@@ -215,7 +215,7 @@ ADD_SUBDIRECTORY(hl)
 # Coverage
 #-------------------------------------------------------------
 IF (AMELETHDF_ENABLE_COVERAGE AND CMAKE_COMPILER_IS_GNUCXX)
-  IF (CMAKE_BUILD_TYPE STREQUAL "DEBUG" OR CMAKE_BUILD_TYPE STREQUAL "Coverage")
+  IF (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "Coverage")
     SETUP_TARGET_FOR_COVERAGE(coverage ctest coverage)
   ENDIF ()
 ENDIF ()
@@ -230,7 +230,7 @@ SET(AMELETHDF_EXPORT_INCLUDE_DIRS ${AMELETHDF_HL_INCLUDE_DIRS})
 SET(AMELETHDF_EXPORT_LIBRARY_DIRS 
   ${PROJECT_BINARY_DIR}/src/amelethdf
   ${PROJECT_BINARY_DIR}/hl/src)
-SET(AMELETHDF_EXPORT_LIBRARIES amelethdfc_hl amelethdfc hdf5_hl hdf5)
+SET(AMELETHDF_EXPORT_LIBRARIES amelethdfc_hl amelethdfc ${AMELETHDF_DEP_LINK_LIBS})
 
 # Add all targets to the build-tree export set
 EXPORT(TARGETS amelethdfc amelethdfc_hl 

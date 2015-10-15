@@ -23,9 +23,11 @@ This project requires:
   * cmake cross-platform builder
 
   * Reasonably conformant C compiler:
-    GCC 4.6 - Microsoft Visual C++ 2010 [Express] 32 or 64
+    - GCC 4.6 recomanded 4.8
+    - Microsoft Visual C++ 2010 [Express] 32 or 64 
+    - Clang 3.4
 
-  * HDF5 Libraries [HEADERS and LIBRARIES] in version 1.8.10.
+  * HDF5 Libraries [HEADERS and LIBRARIES] in version 1.8.12.
     (see http://www.hdfgroup.org/HDF5/release/obtain5.html)
     The main HDF5 dependance are Zlib, SZip and MPI. 
 
@@ -39,7 +41,7 @@ files, and support programs.
     cd amelet-hdf
     cmake . -DCMAKE_INSTALL_PREFIX:PATH=/usr/local/amelet-hdf <more configure_flags>
     make
-    make doc
+    make docs
     make test      # or "ctest ." for more stuff
     make install
 
