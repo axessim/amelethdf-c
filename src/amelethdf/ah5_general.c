@@ -1,4 +1,6 @@
+
 #include "ah5_general.h"
+#include "ah5_attribute.h"
 
 #include <ctype.h>
 
@@ -49,6 +51,16 @@ hid_t AH5_create(const char *name, unsigned flags, const char *entry_point)
 hid_t AH5_open(const char *name, unsigned flags)
 {
   return H5Fopen(name, flags, H5P_DEFAULT);
+}
+
+// Read and copies the entry point.
+char* AH5_read_entrypoint(hid_t file_id, char *entrypoint) {
+  char *tmp = NULL;
+  
+  AH5_read_str_attr(file_id, ".", "entryPoint", &tmp);
+  strcpy(entrypoint, tmp);
+  
+  free(tmp);
 }
 
 // Set complex number

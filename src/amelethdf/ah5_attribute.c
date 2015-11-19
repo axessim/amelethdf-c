@@ -3,7 +3,7 @@
 
 
 // Read integer attribute <attr_name> given by address <path>
-char AH5_read_int_attr(hid_t loc_id, const char *path, char *attr, int *rdata)
+char AH5_read_int_attr(hid_t loc_id, const char *path, const char *attr, int *rdata)
 {
   char success = AH5_FALSE;
 
@@ -18,7 +18,7 @@ char AH5_read_int_attr(hid_t loc_id, const char *path, char *attr, int *rdata)
 
 
 // Read float attribute <attr_name> given by address <path>
-char AH5_read_flt_attr(hid_t loc_id, const char *path, char *attr_name, float *rdata)
+char AH5_read_flt_attr(hid_t loc_id, const char *path, const char *attr_name, float *rdata)
 {
   char success = AH5_FALSE;
 
@@ -33,7 +33,7 @@ char AH5_read_flt_attr(hid_t loc_id, const char *path, char *attr_name, float *r
 
 
 // Read complex attribute <attr_name> given by address <path>
-char AH5_read_cpx_attr(hid_t loc_id, const char *path, char *attr_name, AH5_complex_t *rdata)
+char AH5_read_cpx_attr(hid_t loc_id, const char *path, const char *attr_name, AH5_complex_t *rdata)
 {
   hid_t attr_id, type_id;
   float buf[2];
@@ -59,7 +59,7 @@ char AH5_read_cpx_attr(hid_t loc_id, const char *path, char *attr_name, AH5_comp
 
 
 // Read string attribute <attr_name> given by address <path>
-char AH5_read_str_attr(hid_t loc_id, const char *path, char *attr_name, char **rdata)
+char AH5_read_str_attr(hid_t loc_id, const char *path, const char *attr_name, char **rdata)
 {
   hid_t attr_id, filetype, memtype;
   size_t sdim;
@@ -72,6 +72,7 @@ char AH5_read_str_attr(hid_t loc_id, const char *path, char *attr_name, char **r
       filetype = H5Aget_type(attr_id);
       sdim = H5Tget_size(filetype);
       sdim++;  // make a space for null terminator
+      // XXX allocate memory into an input argument is dangerous thing.
       *rdata = (char *) malloc(sdim * sizeof(char));
       memtype = H5Tcopy(H5T_C_S1);
       H5Tset_size(memtype, sdim);
@@ -180,7 +181,7 @@ char AH5_read_opt_attrs(hid_t loc_id, const char *path, AH5_opt_attrs_t *opt_att
 
 
 // Write int attribute <attr_name> given by address <path>
-char AH5_write_int_attr(hid_t loc_id, const char *path, char *attr_name, const int wdata)
+char AH5_write_int_attr(hid_t loc_id, const char *path, const char *attr_name, const int wdata)
 {
   char success = AH5_FALSE;
 
@@ -193,7 +194,7 @@ char AH5_write_int_attr(hid_t loc_id, const char *path, char *attr_name, const i
 
 
 // Write float attribute <attr_name> given by address <path>
-char AH5_write_flt_attr(hid_t loc_id, const char *path, char *attr_name, const float wdata)
+char AH5_write_flt_attr(hid_t loc_id, const char *path, const char *attr_name, const float wdata)
 {
   char success = AH5_FALSE;
 
@@ -206,7 +207,7 @@ char AH5_write_flt_attr(hid_t loc_id, const char *path, char *attr_name, const f
 
 
 // Write complex attribute <attr_name> given by address <path>
-char AH5_write_cpx_attr(hid_t loc_id, const char *path, char *attr_name, const AH5_complex_t wdata)
+char AH5_write_cpx_attr(hid_t loc_id, const char *path, const char *attr_name, const AH5_complex_t wdata)
 {
   char success = AH5_FALSE;
   hid_t attr_id = 0, cpx_filetype, cpx_memtype, object_id, space;
@@ -241,7 +242,7 @@ char AH5_write_cpx_attr(hid_t loc_id, const char *path, char *attr_name, const A
 
 
 // Write string attribute <attr_name> given by address <path>
-char AH5_write_str_attr(hid_t loc_id, const char *path, char *attr_name, const char *wdata)
+char AH5_write_str_attr(hid_t loc_id, const char *path, const char *attr_name, const char *wdata)
 {
   char success = AH5_FALSE;
 
@@ -300,28 +301,28 @@ char AH5_write_opt_attrs(hid_t file_id, const char *path, AH5_opt_attrs_t *opt_a
 
 
 // Print integer attribute
-void AH5_print_int_attr(char *name, int value, int space)
+void AH5_print_int_attr(const char *name, int value, int space)
 {
   printf("%*s-@%s: %i\n", space, "", name, value);
 }
 
 
 // Print float attribute
-void AH5_print_flt_attr(char *name, float value, int space)
+void AH5_print_flt_attr(const char *name, float value, int space)
 {
   printf("%*s-@%s: %g\n", space, "", name, value);
 }
 
 
 // Print complex attribute
-void AH5_print_cpx_attr(char *name, AH5_complex_t value, int space)
+void AH5_print_cpx_attr(const char *name, AH5_complex_t value, int space)
 {
   printf("%*s-@%s: %g%+gi\n", space, "", name, creal(value), cimag(value));
 }
 
 
 // Print string attribute
-void AH5_print_str_attr(char *name, char *value, int space)
+void AH5_print_str_attr(const char *name, char *value, int space)
 {
   printf("%*s-@%s: %s\n", space, "", name, value);
 }

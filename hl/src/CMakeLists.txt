@@ -9,7 +9,16 @@ ADD_LIBRARY(amelethdfc_hl SHARED ${amelethdf_src})
 SET_TARGET_PROPERTIES(amelethdfc_hl PROPERTIES 
   OUTPUT_NAME "amelethdfc_hl")
 
-TARGET_LINK_LIBRARIES(amelethdfc_hl  ${AMELETHDF_HL_DEP_LINK_LIBS})
+TARGET_LINK_LIBRARIES(amelethdfc_hl ${AMELETHDF_HL_DEP_LINK_LIBS})
+
+IF (WIN32)
+  SET_TARGET_PROPERTIES(amelethdfc_hl PROPERTIES 
+    OUTPUT_NAME "amelethdfc_hl")
+ELSE ()
+  ADD_LIBRARY(amelethdfc_hl_static STATIC ${amelethdf_src})
+  SET_TARGET_PROPERTIES(amelethdfc_hl amelethdfc_hl_static PROPERTIES 
+    OUTPUT_NAME "amelethdfc_hl")
+ENDIF ()
 
 INSTALL(TARGETS amelethdfc_hl
   EXPORT  AmeletHDFLibraryDepends
@@ -18,6 +27,15 @@ INSTALL(TARGETS amelethdfc_hl
   ARCHIVE       DESTINATION "${INSTALL_LIB_DIR}"
   PUBLIC_HEADER DESTINATION "${INSTALL_INCLUDE_DIR}"
   )
+IF (UNIX)
+  INSTALL(TARGETS amelethdfc_hl_static
+    EXPORT  AmeletHDFLibraryDepends
+    RUNTIME       DESTINATION "${INSTALL_BIN_DIR}"
+    LIBRARY       DESTINATION "${INSTALL_LIB_DIR}"
+    ARCHIVE       DESTINATION "${INSTALL_LIB_DIR}"
+    PUBLIC_HEADER DESTINATION "${INSTALL_INCLUDE_DIR}"
+    )
+ENDIF()
 
 FILE(GLOB_RECURSE amelethdf_header *.h)
 INSTALL(FILES ${amelethdf_header} DESTINATION "include")
