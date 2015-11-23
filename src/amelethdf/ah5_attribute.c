@@ -2,6 +2,48 @@
 #include "ah5_log.h"
 
 
+
+AH5_opt_attrs_t *AH5_init_opt_attrs(AH5_opt_attrs_t *attrs, hsize_t nb_attrs)
+{
+  if (attrs)
+  {
+    attrs->nb_instances = nb_attrs;
+    attrs->instances = NULL;
+
+    if (nb_attrs)
+      attrs->instances = (AH5_opt_attrs_t*)malloc(nb_attrs*sizeof(AH5_opt_attrs_t));
+  }
+
+  return attrs;
+}
+
+
+AH5_attr_instance_t *AH5_init_attr(AH5_attr_instance_t *attr, const char *name, const H5T_class_t type)
+{
+  if (attr)
+  {
+    if (name)
+      AH5_setpath(&attr->name, name);
+    attr->type = type;
+  }
+
+  return attr;
+}
+
+
+AH5_attr_instance_t *AH5_init_attr_str(AH5_attr_instance_t *attr, const char *name, const char *val)
+{
+  if (attr)
+  {
+    AH5_init_attr(attr, name, AH5_TYPE_STRING);
+    attr->value.s = (char*)malloc((strlen(val)+1) * sizeof(char));
+    strcpy(attr->value.s, val);
+  }
+  
+  return attr;
+}
+
+
 // Read integer attribute <attr_name> given by address <path>
 char AH5_read_int_attr(hid_t loc_id, const char *path, const char *attr, int *rdata)
 {

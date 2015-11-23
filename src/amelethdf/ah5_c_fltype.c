@@ -1,5 +1,218 @@
 #include "ah5_c_fltype.h"
+#include "ah5_general.h"
 #include "ah5_log.h"
+
+
+/*******************************************************************************
+ * Init functions
+ ******************************************************************************/
+/** 
+ * Initialized and allocates datasetx
+ * 
+ * @param[in,out] data a valid datasetx instance
+ * @param[in] data_size the dataset number of data
+ * @param[in] type_class the datasetx type (one of AH5_TYPE_*)
+ * 
+ * @return On success, a pointer to the datasetx. If the function failed to
+ * allocate memory, a null pointer is returned.
+ */
+AH5_datasetx_t *AH5_init_datasetx(
+    AH5_datasetx_t *data, hsize_t data_size, H5T_class_t type_class) {
+  if (data)
+  {
+    data->f = NULL;
+
+    if (data_size)
+    {
+      switch (type_class)
+      {
+        case AH5_TYPE_FLOAT:
+          data->f = (float*)malloc(data_size * sizeof(float));
+          break;
+        case AH5_TYPE_INTEGER:
+          data->i = (int*)malloc(data_size * sizeof(int));
+          break;
+        default:
+          // TODO(nmt) print warning data not allocated.
+          return NULL;
+          break;
+      }
+    }
+  
+    return data;
+  }
+
+  return data;
+}
+
+
+/** 
+ * 
+ * 
+ * @param data 
+ * @param data_size 
+ * @param strlen 
+ * 
+ * @return 
+ */
+AH5_datasetx_t *AH5_init_datasetx_str(AH5_datasetx_t *data, hsize_t data_size, hsize_t strlen)
+{
+  int i;
+  
+  if (data)
+  {
+    data->s = NULL;
+    if (data_size && strlen)
+    {
+      data->s = (char**)malloc(data_size * sizeof(char*));
+      *data->s = (char*)malloc((size_t) data_size * strlen * sizeof(char));
+      for (i = 1; i < data_size; i++)
+        data->s[i] = data->s[0] + i * strlen;
+    }
+  }
+
+  return data;
+}
+
+
+
+/** 
+ * Initialized and allocates the floating type vector
+ * 
+ * @param[in,out] flt a valid vector instance
+ * @param[in] path the floating type dataset's name
+ * @param[in] nb_values number of values into vector
+ * @param[in] type_class the vector type (@see AH5_init_datasetx)
+ * 
+ * @return On success, a pointer to the vector. If the function failed to
+ * allocate memory, a null pointer is returned.
+ */
+AH5_vector_t *AH5_init_ft_vector(
+    AH5_vector_t *flt, const char *path, hsize_t nb_values, H5T_class_t type_class) {
+  if (flt)
+  {
+    flt->path = NULL;
+    
+    if (path)
+      AH5_setpath(&flt->path, path);
+
+    AH5_init_opt_attrs(&flt->opt_attrs, 0);
+
+    flt->nb_values = nb_values;
+    AH5_init_datasetx(&flt->values, nb_values, type_class);
+  }
+
+  return flt;
+}
+
+
+/** 
+ * Initialized and allocates the floating type dataset
+ * 
+ * @param[in,out] flt a valid dataset instance
+ * @param[in] path the floating type dataset's name
+ * @param[in] nb_dims the number of dimension
+ * @param[in] dims the dimension size
+ * @param[in] type_class the data type (@see AH5_init_datasetx)
+ * 
+ * @return On success, a pointer to the dataset. If the function failed to
+ * allocate memory, a null pointer is returned.
+ */
+AH5_dataset_t *AH5_init_ft_dataset(
+    AH5_dataset_t *flt, const char *path, int nb_dims, const hsize_t *dims,
+    H5T_class_t type_class) {
+  int i;
+  hsize_t data_size = 1;
+
+  if (flt)
+  {
+    flt->nb_dims = nb_dims;
+    flt->dims = NULL;
+    AH5_init_opt_attrs(&flt->opt_attrs, 0);
+    flt->path = NULL;
+    
+    if (path)
+      AH5_setpath(&flt->path, path);
+    
+    if (flt->nb_dims)
+    {
+      flt->dims = (hsize_t*)malloc(nb_dims * sizeof(hsize_t));
+      memcpy(flt->dims, dims, nb_dims * sizeof(hsize_t));
+    
+      for (i = 0; i < nb_dims; ++i)
+        data_size *= dims[i];
+    
+      flt->type_class = type_class;
+      AH5_init_datasetx(&flt->values, data_size, type_class);
+    }
+  }
+
+  return flt;
+}
+
+
+/** 
+ * Initialized and allocates the floating type arrayset
+ * 
+ * @param[in,out] flt a valid arrayset instance
+ * @param[in] name the floating type arrayset's name
+ * @param[in] nb_dims the number of dimension
+ * @param[in] dims the dimension size
+ * @param[in] type_class the data type (@see AH5_init_datasetx)
+ * 
+ * @return On success, a pointer to the arrayset. If the function failed to
+ * allocate memory, a null pointer is returned.
+ */
+AH5_arrayset_t *AH5_init_ft_arrayset(
+    AH5_arrayset_t *flt, const char *path, int nb_dims, const hsize_t *dims,
+    H5T_class_t type_class) {
+  int i;
+
+  if (flt)
+  {
+    flt->path = NULL;
+    flt->dims = NULL;
+    flt->nb_dims = nb_dims;
+    
+    if (path)
+      AH5_setpath(&flt->path, path);
+
+    AH5_init_opt_attrs(&flt->opt_attrs, 0);
+    
+    if (nb_dims)
+    {
+      AH5_init_ft_dataset(&flt->data, "data", nb_dims, dims, type_class);
+    
+      flt->dims = (AH5_vector_t*)malloc(nb_dims * sizeof(AH5_vector_t));
+      for (i = 0; i < nb_dims; ++i)
+      {
+        flt->dims[i].path = malloc(5*sizeof(char));
+        snprintf(flt->dims[i].path, 5, "dim%d", i+1);
+        flt->dims[i].nb_values = dims[nb_dims-i-1];
+        flt->dims[i].values.f = NULL;
+      }
+    }
+  }
+
+  return flt;
+}
+
+
+AH5_vector_t *AH5_ft_arrayset_set_meshdim(AH5_vector_t *flt, const char *mesh_path)
+{
+  if (flt)
+  {
+    flt->type_class = AH5_TYPE_STRING;
+    flt->nb_values = 1;
+    AH5_init_opt_attrs(&flt->opt_attrs, 1);
+    AH5_init_attr_str(flt->opt_attrs.instances, AH5_A_PHYSICAL_NATURE, AH5_V_MESH_ENTITY);
+    AH5_init_datasetx_str(&flt->values, 1, strlen(mesh_path) + 1);
+    strcpy(flt->values.s[0], mesh_path);
+  }
+  
+  return flt;
+}
+
 
 
 // Read singleInteger, return AH5_TRUE (all OK) or AH5_FALSE (no malloc)
@@ -988,7 +1201,7 @@ char AH5_write_ft_dataset (hid_t file_id, AH5_dataset_t *dataset)
         success = AH5_TRUE;
       break;
     case H5T_STRING:
-      if (AH5_write_str_dataset(file_id, dataset->path, total_size, strlen(dataset->values.s),
+      if (AH5_write_str_dataset(file_id, dataset->path, total_size, strlen(dataset->values.s[0]),
                                 dataset->values.s))
         success = AH5_TRUE;
       break;

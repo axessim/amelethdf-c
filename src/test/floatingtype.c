@@ -9,6 +9,140 @@
 //! Test suite counter.
 int tests_run = 0;
 
+
+char *test_init_datasetx()
+{
+  AH5_datasetx_t data;
+
+  mu_assert("bad input", !AH5_init_datasetx(NULL, 0, H5T_FLOAT));
+  mu_assert("bad input", !AH5_init_datasetx(&data, 1, H5T_NATIVE_LDOUBLE));
+  mu_assert("empty", AH5_init_datasetx(&data, 0, H5T_FLOAT));
+  mu_assert_eq_ptr("empty", data.f, NULL);
+  
+  mu_assert("valid float", AH5_init_datasetx(&data, 5, H5T_FLOAT));
+  mu_assert_ne("valid float", data.f, NULL);
+  free(data.f);
+
+  mu_assert("valid int", AH5_init_datasetx(&data, 5, H5T_INTEGER));
+  mu_assert_ne("valid int", data.i, NULL);
+  free(data.i);
+  
+  return MU_FINISHED_WITHOUT_ERRORS;
+}
+
+
+char *test_init_vector()
+{
+  AH5_vector_t vec;
+
+  mu_assert("bad input", !AH5_init_ft_vector(NULL, NULL, 0, H5T_FLOAT));
+
+  mu_assert("set path", AH5_init_ft_vector(&vec, "name", 0, H5T_FLOAT));
+  mu_assert_str_equal("set path", vec.path, "name");
+  mu_assert_eq("empty vec", vec.nb_values, 0);
+  mu_assert_eq_ptr("empty vec", vec.values.f, NULL);
+  mu_assert_eq_ptr("empty vec", vec.values.i, NULL);
+  free(vec.path);
+  
+  vec.path = NULL;
+  mu_assert("init without name", AH5_init_ft_vector(&vec, NULL, 10, H5T_FLOAT));
+  mu_assert_eq_ptr("vec name", vec.path, NULL);
+  mu_assert_eq("vec size", vec.nb_values, 10);
+  mu_assert_ne("vec value", vec.values.f, NULL);
+  free(vec.values.f);
+
+  mu_assert("init", AH5_init_ft_vector(&vec, "name", 10, H5T_FLOAT));
+  AH5_free_ft_vector(&vec);
+  
+  return MU_FINISHED_WITHOUT_ERRORS;
+}
+
+
+char *test_init_dataset()
+{
+  AH5_dataset_t flt;
+  hsize_t dims1d[] = {5};
+  hsize_t dims2d[] = {3, 2};
+
+  mu_assert("bad input", !AH5_init_ft_dataset(NULL, NULL, 0, NULL, H5T_FLOAT));
+  mu_assert("empty", AH5_init_ft_dataset(&flt, NULL, 0, NULL, H5T_FLOAT));
+  mu_assert_eq("empty", flt.nb_dims, 0);
+  mu_assert_eq_ptr("empty", flt.path, NULL);
+  mu_assert_eq_ptr("empty", flt.dims, NULL);
+
+  mu_assert("1d float", AH5_init_ft_dataset(&flt, "name", 1, dims1d, H5T_FLOAT));
+  mu_assert_str_equal("1d float", flt.path, "name");
+  mu_assert_eq("1d float", flt.nb_dims, 1);
+  mu_assert_eq("1d float", flt.dims[0], 5);
+  mu_assert_ne("1d float", flt.values.f, NULL);
+  AH5_free_ft_dataset(&flt);
+
+  mu_assert("2d float", AH5_init_ft_dataset(&flt, "name", 2, dims2d, H5T_INTEGER));
+  mu_assert_str_equal("2d float", flt.path, "name");
+  mu_assert_eq("2d float", flt.nb_dims, 2);
+  mu_assert_eq("2d float", flt.dims[0], 3);
+  mu_assert_eq("2d float", flt.dims[1], 2);
+  mu_assert_ne("2d float", flt.values.i, NULL);
+  AH5_free_ft_dataset(&flt);
+
+  return MU_FINISHED_WITHOUT_ERRORS;
+}
+
+
+char *test_init_arrayset()
+{
+  AH5_arrayset_t flt;
+  hsize_t dims1d[] = {5};
+  hsize_t dims2d[] = {3, 2};
+
+  mu_assert("bad input", !AH5_init_ft_arrayset(NULL, NULL, 0, NULL, H5T_FLOAT));
+  mu_assert("empty", AH5_init_ft_arrayset(&flt, NULL, 0, NULL, H5T_FLOAT));
+  mu_assert_eq("empty", flt.nb_dims, 0);
+  mu_assert_eq_ptr("empty", flt.path, NULL);
+  mu_assert_eq_ptr("empty", flt.dims, NULL);
+
+  mu_assert("1d float", AH5_init_ft_arrayset(&flt, "name", 1, dims1d, H5T_FLOAT));
+  mu_assert_str_equal("1d float", flt.path, "name");
+  mu_assert_eq("1d float", flt.nb_dims, 1);
+  mu_assert_ne("1d float", flt.dims, NULL);
+  mu_assert_str_equal("1d float", flt.dims[0].path, "dim1");
+  mu_assert_eq("1d float", flt.dims[0].nb_values, 5);
+  mu_assert_eq_ptr("1d float", flt.dims[0].values.f, NULL);
+  mu_assert_str_equal("1d float", flt.data.path, "data");
+  mu_assert_eq("1d float", flt.data.nb_dims, 1);
+  mu_assert_eq("1d float", flt.data.dims[0], 5);
+  mu_assert_ne("1d float", flt.data.values.f, NULL);
+
+  AH5_ft_arrayset_set_meshdim(flt.dims, "/mesh/path");
+  mu_assert_str_equal("data on mesh", flt.dims->values.s[0], "/mesh/path");
+  mu_assert_eq("data on mesh", flt.dims->nb_values, 1);
+  mu_assert_eq("data on mesh", flt.dims->type_class, AH5_TYPE_STRING);
+  
+  AH5_free_ft_arrayset(&flt);
+
+  mu_assert("2d float", AH5_init_ft_arrayset(&flt, "name", 2, dims2d, H5T_INTEGER));
+  mu_assert_str_equal("2d float", flt.path, "name");
+  mu_assert_eq("2d float", flt.nb_dims, 2);
+  mu_assert_ne("2d float", flt.dims, NULL);
+  mu_assert_str_equal("2d float", flt.dims[0].path, "dim1");
+  mu_assert_eq("2d float", flt.dims[0].nb_values, 2);
+  mu_assert_eq_ptr("2d float", flt.dims[0].values.f, NULL);
+  mu_assert_str_equal("2d float", flt.dims[1].path, "dim2");
+  mu_assert_eq("2d float", flt.dims[1].nb_values, 3);
+  mu_assert_eq_ptr("2d float", flt.dims[1].values.f, NULL);
+  mu_assert_str_equal("2d float", flt.data.path, "data");
+  mu_assert_eq("2d float", flt.nb_dims, 2);
+  mu_assert_ne("2d float", flt.dims, NULL);
+  mu_assert_eq("2d float", flt.data.nb_dims, 2);
+  mu_assert_eq("2d float", flt.data.dims[0], 3);
+  mu_assert_eq("2d float", flt.data.dims[1], 2);
+  mu_assert_ne("2d float", flt.data.values.i, NULL);
+  AH5_free_ft_arrayset(&flt);
+  
+  return MU_FINISHED_WITHOUT_ERRORS;
+}
+
+
 char *test_write_single_flotingtype()
 {
   hid_t file_id;
@@ -242,6 +376,10 @@ char *all_tests()
   mu_run_test(test_write_ft_vector);
   mu_run_test(test_write_ft_dataset);
   mu_run_test(test_write_ft_arrayset);
+  mu_run_test(test_init_datasetx);
+  mu_run_test(test_init_vector);
+  mu_run_test(test_init_dataset);
+  mu_run_test(test_init_arrayset);
 
   return MU_FINISHED_WITHOUT_ERRORS;
 }

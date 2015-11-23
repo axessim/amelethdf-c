@@ -28,6 +28,11 @@ typedef struct _AH5_opt_attrs_t
   AH5_attr_instance_t *instances;
 } AH5_opt_attrs_t;
 
+
+AH5_PUBLIC AH5_opt_attrs_t *AH5_init_opt_attrs(AH5_opt_attrs_t *attrs, hsize_t nb_attrs);
+AH5_PUBLIC AH5_attr_instance_t *AH5_init_attr(AH5_attr_instance_t *attr, const char *name, const H5T_class_t type);
+AH5_PUBLIC AH5_attr_instance_t *AH5_init_attr_str(AH5_attr_instance_t *attr, const char *name, const char *val);
+
 AH5_PUBLIC char AH5_read_int_attr(hid_t file_id, const char *path, const char *attr, int *rdata);
 AH5_PUBLIC char AH5_read_flt_attr(hid_t file_id, const char *path, const char *attr_name, float *rdata);
 AH5_PUBLIC char AH5_read_cpx_attr(hid_t file_id, const char *path, const char *attr_name, AH5_complex_t *rdata);

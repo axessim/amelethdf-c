@@ -206,6 +206,14 @@ typedef struct _AH5_ft_t
   AH5_ft_data_t   data;
 } AH5_ft_t;
 
+
+AH5_PUBLIC AH5_datasetx_t *AH5_init_datasetx(AH5_datasetx_t *data, hsize_t data_size, H5T_class_t type_class);
+AH5_PUBLIC AH5_datasetx_t *AH5_init_datasetx_str(AH5_datasetx_t *data, hsize_t data_size, hsize_t strlen);
+AH5_PUBLIC AH5_vector_t *AH5_init_ft_vector(AH5_vector_t *flt, const char *path, hsize_t nb_values, H5T_class_t type_class);
+AH5_PUBLIC AH5_dataset_t *AH5_init_ft_dataset(AH5_dataset_t *flt, const char *path, int nb_dims, const hsize_t *dims, H5T_class_t type_class);
+AH5_PUBLIC AH5_arrayset_t *AH5_init_ft_arrayset(AH5_arrayset_t *flt, const char *path, int nb_dims, const hsize_t *dims, H5T_class_t type_class);
+AH5_PUBLIC AH5_vector_t *AH5_ft_arrayset_set_meshdim(AH5_vector_t *flt, const char *mesh_path);
+
 AH5_PUBLIC char AH5_read_ft_singleinteger (hid_t file_id, const char *path,
     AH5_singleinteger_t *singleinteger);
 AH5_PUBLIC char AH5_read_ft_singlereal (hid_t file_id, const char *path,
