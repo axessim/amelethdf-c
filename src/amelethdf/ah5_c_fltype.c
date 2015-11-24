@@ -2,6 +2,9 @@
 #include "ah5_general.h"
 #include "ah5_log.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+
 
 /*******************************************************************************
  * Init functions
