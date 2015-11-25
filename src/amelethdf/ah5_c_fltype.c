@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#if WIN32
+#define snprintf sprintf_s
+#endif
 
 /*******************************************************************************
  * Init functions
