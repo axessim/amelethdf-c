@@ -401,13 +401,16 @@ AH5_umesh_t *AH5_init_umesh(
     umesh->som_tables = NULL;
 
     /*allocate elements.*/
-    if (success && nb_elementnodes && nb_elementtypes && nb_nodes)
+    if (success && nb_nodes)
     {
-      umesh->elementnodes = (int *)malloc(nb_elementnodes*sizeof(int));
-      success &= (umesh->elementnodes != NULL);
+      if (nb_elementnodes && nb_elementtypes)
+      {
+        umesh->elementnodes = (int *)malloc(nb_elementnodes*sizeof(int));
+        success &= (umesh->elementnodes != NULL);
 
-      umesh->elementtypes = (char *)malloc(nb_elementtypes*sizeof(char));
-      success &= (umesh->elementtypes != NULL);
+        umesh->elementtypes = (char *)malloc(nb_elementtypes*sizeof(char));
+        success &= (umesh->elementtypes != NULL);
+      }
 
       umesh->nb_nodes[1] = 3;
       umesh->nodes = (float *)malloc(3*nb_nodes*sizeof(float));

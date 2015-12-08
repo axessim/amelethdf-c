@@ -140,6 +140,17 @@ char *test_init_functions()
   mu_assert_eq("check mesh field", umesh.nb_groups, 0);
   mu_assert_eq_ptr("check mesh field", umesh.groups, NULL);
 
+  mu_assert_eq_ptr(
+    "empty mesh", AH5_init_umesh(&umesh, 0, 0, 3, 0, 0, 0), &umesh);
+  mu_assert_eq("check mesh field", umesh.nb_elementnodes, 0);
+  mu_assert_eq_ptr("check mesh field", umesh.elementnodes, NULL);
+  mu_assert_eq("check mesh field", umesh.nb_elementtypes, 0);
+  mu_assert_eq_ptr("check mesh field", umesh.elementtypes, NULL);
+  mu_assert_eq("check mesh field", umesh.nb_nodes[0], 3);
+  mu_assert_eq("check mesh field", umesh.nb_nodes[1], 3);
+  mu_assert_eq("check mesh field", umesh.nb_groups, 0);
+  mu_assert_eq_ptr("check mesh field", umesh.groups, NULL);
+
   AH5_free_umesh(&umesh);
   mu_assert_eq("check mesh field", umesh.nb_elementnodes, 0);
   mu_assert_eq_ptr("check mesh field", umesh.elementnodes, NULL);
