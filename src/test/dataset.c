@@ -132,18 +132,18 @@ char *test_read_complex_dataset()
 char *test_write_string_dataset()
 {
 #define DIM0 4
-#define SDIM 8
+#define SDIM 7
 
   hid_t file_id, filetype, memtype, space, dset;
   size_t sdim;
   hsize_t dims[1] = {DIM0};
   int ndims, i, j;
   /*char wdata[DIM0][SDIM] =*/
-  char *wdata[] = {"Parting", "is such",
-                   "sweet  ",
-                   "sorrow."
-                  };
+  char *wdata[] = {"Parting", "is such", "sweet  ", "sorrow."};
   char **rdata;
+  hsize_t read_dataset_size;
+  size_t read_length;
+  H5T_class_t read_type;
 
   // Write a simple mesh test.
   file_id = AH5_auto_test_file();
@@ -158,16 +158,24 @@ char *test_write_string_dataset()
   space = H5Dget_space(dset);
   ndims = H5Sget_simple_extent_dims(space, dims, NULL);
   rdata = (char **) malloc(dims[0] * sizeof (char *));
-  rdata[0] = (char *) malloc(dims[0] * sdim * sizeof (char));
+  rdata[0] = (char *) malloc(dims[0] * (sdim + 1) * sizeof (char));
   for (i=1; i<dims[0]; i++)
-    rdata[i] = rdata[0] + i * sdim;
+    rdata[i] = rdata[0] + i * (sdim + 1);
   memtype = H5Tcopy(H5T_C_S1);
-  mu_assert("HDF5 error in H5Tset_size.", H5Tset_size(memtype, sdim) >= 0);
+  mu_assert("HDF5 error in H5LTget_dataset_info",
+            H5LTget_dataset_info(file_id, "/dataset_name",
+                                 &read_dataset_size,
+                                 &read_type,
+                                 &read_length) >= 0);
+  mu_assert("Read dataset size does not match.", read_dataset_size == DIM0);
+  mu_assert("Read data type does not match.", read_type == H5T_STRING);
+  mu_assert("Read string length does not match.", read_length == SDIM);
+  mu_assert("HDF5 error in H5Tset_size.", H5Tset_size(memtype, read_length+1) >= 0);
   mu_assert("HDF5 error in H5Dread.",
             H5Dread(dset, memtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, rdata[0]) >= 0);
   for (i = 0; i < dims[0]; i++)
   {
-    printf("%s %s\n", wdata[i], rdata[i]);
+    printf("'%s' == '%s'\n", wdata[i], rdata[i]);
     /*mu_assert_str_equal("Check the first str dataset values.", wdata[i], rdata[i]);*/
     j = 0;
     while (wdata[i][j] != ' ' && wdata[i][j] != '\0')
@@ -209,8 +217,11 @@ char *test_write_string_dataset()
   {
     /*mu_assert_str_equal("Check the first str dataset values.", wdata[i], rdata[i]);*/
     j = 0;
-    while (wdata[i][j] != ' ' && wdata[i][j] != '\0')
+    while (wdata[i][j] != ' ' && wdata[i][j] != '\0' && rdata[i][j] != '\0')
     {
+      if (wdata[i][j] != rdata[i][j]) {
+        printf("'%d' '%d'\n", wdata[i][j], rdata[i][j]);
+      }
       mu_assert_equal("Check the first str dataset values.", wdata[i][j], rdata[i][j]);
       ++j;
     }
