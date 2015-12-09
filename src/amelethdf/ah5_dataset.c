@@ -203,17 +203,17 @@ char AH5_write_str_dataset(hid_t loc_id, const char *dset_name, const hsize_t le
   hsize_t dims[1] = {len}, k;
   char *buf = NULL;
 
-  buf = (char *) malloc((size_t) len*(slen-1)+1 * sizeof(char));
+  buf = (char *) malloc((size_t) len*(slen)+1 * sizeof(char));
   buf[0] = '\0';
   for (k = 0; k < len; k++)
   {
-    strcat(buf + (k*(slen-1)), wdata[k]);
+    strcat(buf + (k*(slen)), wdata[k]);
   }
 
   filetype = H5Tcopy(AH5_NATIVE_STRING);
   H5Tset_size(filetype, slen);
   memtype = H5Tcopy(H5T_C_S1);
-  H5Tset_size(memtype, slen-1);
+  H5Tset_size(memtype, slen);
   space = H5Screate_simple(1, dims, NULL);
 
   if ((dset = H5Dcreate(loc_id, dset_name, filetype, space, H5P_DEFAULT, H5P_DEFAULT,

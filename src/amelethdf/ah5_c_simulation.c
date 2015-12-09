@@ -63,9 +63,8 @@ char AH5_read_sim_instance (hid_t file_id, const char *path, AH5_sim_instance_t 
   }
   if (!success2)
   {
-    AH5_print_err_dset(AH5_C_SIMULATION, path2);
+    AH5_print_wrn_outputs(path);
     sim_instance->nb_outputs = 0;
-    rdata = AH5_FALSE;
   }
 
   return rdata;

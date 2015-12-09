@@ -12,13 +12,13 @@
 /*******************************************************************************
  * Init functions
  ******************************************************************************/
-/** 
+/**
  * Initialized and allocates datasetx
- * 
+ *
  * @param[in,out] data a valid datasetx instance
  * @param[in] data_size the dataset number of data
  * @param[in] type_class the datasetx type (one of AH5_TYPE_*)
- * 
+ *
  * @return On success, a pointer to the datasetx. If the function failed to
  * allocate memory, a null pointer is returned.
  */
@@ -44,7 +44,7 @@ AH5_datasetx_t *AH5_init_datasetx(
           break;
       }
     }
-  
+
     return data;
   }
 
@@ -52,19 +52,19 @@ AH5_datasetx_t *AH5_init_datasetx(
 }
 
 
-/** 
- * 
- * 
- * @param data 
- * @param data_size 
- * @param strlen 
- * 
- * @return 
+/**
+ *
+ *
+ * @param data
+ * @param data_size
+ * @param strlen
+ *
+ * @return
  */
 AH5_datasetx_t *AH5_init_datasetx_str(AH5_datasetx_t *data, hsize_t data_size, hsize_t strlen)
 {
   int i;
-  
+
   if (data)
   {
     data->s = NULL;
@@ -82,14 +82,14 @@ AH5_datasetx_t *AH5_init_datasetx_str(AH5_datasetx_t *data, hsize_t data_size, h
 
 
 
-/** 
+/**
  * Initialized and allocates the floating type vector
- * 
+ *
  * @param[in,out] flt a valid vector instance
  * @param[in] path the floating type dataset's name
  * @param[in] nb_values number of values into vector
  * @param[in] type_class the vector type (@see AH5_init_datasetx)
- * 
+ *
  * @return On success, a pointer to the vector. If the function failed to
  * allocate memory, a null pointer is returned.
  */
@@ -98,7 +98,7 @@ AH5_vector_t *AH5_init_ft_vector(
   if (flt)
   {
     flt->path = NULL;
-    
+
     if (path)
       AH5_setpath(&flt->path, path);
 
@@ -112,15 +112,15 @@ AH5_vector_t *AH5_init_ft_vector(
 }
 
 
-/** 
+/**
  * Initialized and allocates the floating type dataset
- * 
+ *
  * @param[in,out] flt a valid dataset instance
  * @param[in] path the floating type dataset's name
  * @param[in] nb_dims the number of dimension
  * @param[in] dims the dimension size
  * @param[in] type_class the data type (@see AH5_init_datasetx)
- * 
+ *
  * @return On success, a pointer to the dataset. If the function failed to
  * allocate memory, a null pointer is returned.
  */
@@ -136,18 +136,18 @@ AH5_dataset_t *AH5_init_ft_dataset(
     flt->dims = NULL;
     AH5_init_opt_attrs(&flt->opt_attrs, 0);
     flt->path = NULL;
-    
+
     if (path)
       AH5_setpath(&flt->path, path);
-    
+
     if (flt->nb_dims)
     {
       flt->dims = (hsize_t*)malloc(nb_dims * sizeof(hsize_t));
       memcpy(flt->dims, dims, nb_dims * sizeof(hsize_t));
-    
+
       for (i = 0; i < nb_dims; ++i)
         data_size *= dims[i];
-    
+
       flt->type_class = type_class;
       AH5_init_datasetx(&flt->values, data_size, type_class);
     }
@@ -157,15 +157,15 @@ AH5_dataset_t *AH5_init_ft_dataset(
 }
 
 
-/** 
+/**
  * Initialized and allocates the floating type arrayset
- * 
+ *
  * @param[in,out] flt a valid arrayset instance
  * @param[in] name the floating type arrayset's name
  * @param[in] nb_dims the number of dimension
  * @param[in] dims the dimension size
  * @param[in] type_class the data type (@see AH5_init_datasetx)
- * 
+ *
  * @return On success, a pointer to the arrayset. If the function failed to
  * allocate memory, a null pointer is returned.
  */
@@ -179,16 +179,16 @@ AH5_arrayset_t *AH5_init_ft_arrayset(
     flt->path = NULL;
     flt->dims = NULL;
     flt->nb_dims = nb_dims;
-    
+
     if (path)
       AH5_setpath(&flt->path, path);
 
     AH5_init_opt_attrs(&flt->opt_attrs, 0);
-    
+
     if (nb_dims)
     {
       AH5_init_ft_dataset(&flt->data, "data", nb_dims, dims, type_class);
-    
+
       flt->dims = (AH5_vector_t*)malloc(nb_dims * sizeof(AH5_vector_t));
       for (i = 0; i < nb_dims; ++i)
       {
@@ -215,7 +215,7 @@ AH5_vector_t *AH5_ft_arrayset_set_meshdim(AH5_vector_t *flt, const char *mesh_pa
     AH5_init_datasetx_str(&flt->values, 1, strlen(mesh_path) + 1);
     strcpy(flt->values.s[0], mesh_path);
   }
-  
+
   return flt;
 }
 
@@ -1076,8 +1076,8 @@ char AH5_write_ft_vector (hid_t file_id, AH5_vector_t *vector)
         success = AH5_TRUE;
       break;
     case H5T_STRING:
-      if (AH5_write_str_dataset(file_id, vector->path, vector->nb_values, strlen(vector->values.s[0])+1,
-                                vector->values.s))
+      if (AH5_write_str_dataset(file_id, vector->path, vector->nb_values,
+                                strlen(vector->values.s[0]), vector->values.s))
         success = AH5_TRUE;
       break;
     default:
@@ -2058,4 +2058,3 @@ void AH5_free_floatingtype (AH5_ft_t *floatingtype)
   }
   floatingtype->type = FT_INVALID;
 }
-
