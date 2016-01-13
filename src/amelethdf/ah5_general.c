@@ -1,6 +1,7 @@
 
 #include "ah5_general.h"
 #include "ah5_attribute.h"
+#include "ah5_log.h"
 
 #include <ctype.h>
 
@@ -61,10 +62,10 @@ void AH5_close(hid_t file_id)
 // Read and copies the entry point.
 char* AH5_read_entrypoint(hid_t file_id, char *entrypoint) {
   char *tmp = NULL;
-  
+
   AH5_read_str_attr(file_id, ".", "entryPoint", &tmp);
   strcpy(entrypoint, tmp);
-  
+
   free(tmp);
 }
 
@@ -292,31 +293,35 @@ char AH5_path_valid(hid_t loc_id, const char *path)
 {
   char *temp;
   int i, len, slashes = 0;
+  char warn = AH5_FALSE;
 
   len = (int) strlen(path);
-  if (len >= AH5_ABSOLUTE_PATH_LENGTH)
-    return AH5_FALSE;
-
-  temp = strdup(path);
-  for (i = (int) strlen(path); i > 0; i--)
-  {
-    if (temp[i] == '/')
-    {
-      if ((len - i) > AH5_ELEMENT_NAME_LENGTH)
-      {
-        free(temp);
-        return AH5_FALSE;
-      }
-      len = i;
-      temp[i] = '\0';
-      slashes++;  /* count number of slashes excluding the first one */
-    }
+  if (len >= AH5_ABSOLUTE_PATH_LENGTH) {
+    AH5_log_warn("Path `%s` is too long (> %d).\n", path, AH5_ABSOLUTE_PATH_LENGTH);
+    warn = AH5_TRUE;
   }
 
-  if ((len + 1) > AH5_ELEMENT_NAME_LENGTH)
+  temp = strdup(path);
+  if (warn == AH5_FALSE) {
+    for (i = (int) strlen(path); i > 0; i--)
+    {
+      if (temp[i] == '/')
+      {
+        if ((len - i) > AH5_ELEMENT_NAME_LENGTH && warn == AH5_FALSE)
+        {
+          AH5_log_warn("Name in `%s` is too long (> %d).\n", path, AH5_ELEMENT_NAME_LENGTH);
+          warn = AH5_TRUE;
+        }
+        len = i;
+        temp[i] = '\0';
+        slashes++;  /* count number of slashes excluding the first one */
+      }
+    }
+  }
+  if ((len + 1) > AH5_ELEMENT_NAME_LENGTH && warn == AH5_FALSE)
   {
-    free(temp);
-    return AH5_FALSE;
+    AH5_log_warn("Path `%s` is not valid.\n", path);
+    warn = AH5_TRUE;
   }
 
   if (strcmp(path, ".") == 0)
