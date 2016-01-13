@@ -53,6 +53,11 @@ hid_t AH5_open(const char *name, unsigned flags)
   return H5Fopen(name, flags, H5P_DEFAULT);
 }
 
+void AH5_close(hid_t file_id)
+{
+  H5Fclose(file_id);
+}
+
 // Read and copies the entry point.
 char* AH5_read_entrypoint(hid_t file_id, char *entrypoint) {
   char *tmp = NULL;

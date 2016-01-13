@@ -8,6 +8,7 @@
  * 
  */
 
+#include "ah5_internal.h"
 #include "ah5_c_mesh.h"
 #include "ah5_log.h"
 
@@ -22,6 +23,11 @@
  *
  * @return On success, a pointer to the mesh group. If the function failed to
  * allocate memory, a null pointer is returned.
+ *
+ * groupgroupnames[0] -> {0, ..., lenght, length+1, ... 2*length, 2*length+1, ... 3*length}
+ * groupgroupnames[1] --------------------^
+ * groupgroupnames[2] --------------------------------------------^
+ *
  */
 AH5_PUBLIC AH5_groupgroup_t *AH5_init_groupgroup(
   AH5_groupgroup_t *groupgroup, const char *path, hsize_t nb, size_t length)
@@ -2288,6 +2294,79 @@ void AH5_free_mesh(AH5_mesh_t *mesh)
   AH5_init_mesh(mesh, 0);
 }
 
+
+// Copy a mesh's groupgroup
+AH5_groupgroup_t * AH5_copy_groupgroup(AH5_groupgroup_t *dest, const AH5_groupgroup_t *src)
+{
+  if (src && dest)
+  {
+    AH5_init_groupgroup(dest, src->path, src->nb_groupgroupnames, strlen(src->groupgroupnames[0]));
+    AH5_COPY_STRING_ARRAY_FIELD(dest, src, groupgroupnames);
+  }
+  
+  return dest;
+}
+
+
+// Copy an unstructured group
+AH5_ugroup_t * AH5_copy_ugroup(AH5_ugroup_t *dest, const AH5_ugroup_t *src)
+{
+  AH5_group_type_t type;
+  AH5_group_entitytype_t entitytype;
+  
+  if (src && dest)
+  {
+    if (strcmp(src->type, AH5_V_ELEMENT) == 0)
+    {
+      type = GROUP_ELEMENT;
+      if (strcmp(src->entitytype, AH5_V_EDGE) == 0)
+        entitytype = GROUP_EDGE;
+      else if (strcmp(src->entitytype, AH5_V_FACE) == 0)
+        entitytype = GROUP_FACE;
+      else if (strcmp(src->entitytype, AH5_V_VOLUME) == 0)
+        entitytype = GROUP_VOLUME;
+    }
+    else
+    {
+      type = GROUP_NODE;
+    }
+    
+    if (!AH5_init_umsh_group(
+            dest, src->path, src->nb_groupelts, type, entitytype))
+      return NULL;
+
+    AH5_COPY_ARRAY_FIELD(dest, src, groupelts);
+  }
+  return dest;
+}
+
+
+// Copy an unstructured mesh
+AH5_umesh_t * AH5_copy_umesh(AH5_umesh_t *dest, const AH5_umesh_t *src)
+{
+  unsigned i;
+  
+  if (src && dest)
+  {
+    AH5_init_umesh(
+        dest, src->nb_elementnodes, src->nb_elementtypes, src->nb_nodes[AH5_UMESH_NODES_SIZE],
+        src->nb_groups, src->nb_groupgroups, src->nb_som_tables);
+
+    AH5_COPY_ARRAY_FIELD(dest, src, elementnodes);
+    AH5_COPY_ARRAY_FIELD(dest, src, elementtypes);
+    memcpy(dest->nodes, src->nodes,
+           src->nb_nodes[0] * src->nb_nodes[1] * sizeof(*src->nodes));
+
+    for (i = 0; i < src->nb_groups; ++i)
+      AH5_copy_ugroup(dest->groups + i, src->groups + i);
+    for (i = 0; i < src->nb_groupgroups; ++i)
+      AH5_copy_groupgroup(dest->groupgroups + i, src->groupgroups + i);
+    // TODO(nmt) Copy selector on mesh
+  }
+  return dest;
+}
+
+
 // Return the nodes number associated to the given element type or 0.
 int AH5_element_size(char element_type)
 {
@@ -2299,14 +2378,18 @@ int AH5_element_size(char element_type)
     size = 2;
     break;
 
-  case UELE_BAR3:
-  case UELE_TRI3:
+    case UELE_BAR3:
+    case UELE_TRI3:
     size = 3;
     break;
 
   case UELE_QUAD4:
   case UELE_TETRA4:
     size = 4;
+    break;
+
+  case UELE_PYRA5:
+    size = 5;
     break;
 
   case UELE_TRI6:
@@ -2317,6 +2400,14 @@ int AH5_element_size(char element_type)
   case UELE_QUAD8:
   case UELE_HEXA8:
     size = 8;
+    break;
+
+  case UELE_TETRA10:
+    size = 10;
+    break;
+
+  case UELE_HEXA20:
+    size = 20;
     break;
 
   default:

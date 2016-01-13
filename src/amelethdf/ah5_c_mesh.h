@@ -292,6 +292,11 @@ AH5_PUBLIC void AH5_free_mlk_instance(AH5_mlk_instance_t *mlk_instance);
 AH5_PUBLIC void AH5_free_msh_group(AH5_msh_group_t *msh_group);
 AH5_PUBLIC void AH5_free_mesh(AH5_mesh_t *mesh);
 
+// Copy AH5 mesh structure general prototype:
+// AH5_XXX_t * AH5_copy_XXX(AH5_XXX_t *destination, const AH5_XXX_t *source);
+// return destination on success.
+AH5_PUBLIC AH5_umesh_t * AH5_copy_umesh(AH5_umesh_t *destination, const AH5_umesh_t *source);
+
 // Define some useful tools for manege / used / make mesh;
 AH5_PUBLIC int AH5_element_size(char element_type);
 

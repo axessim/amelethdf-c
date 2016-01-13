@@ -112,6 +112,16 @@ AH5_PUBLIC hid_t AH5_create(const char *name, unsigned flags, const char *entry_
 AH5_PUBLIC hid_t AH5_open(const char *name, unsigned flags);
 
 
+  /** 
+   * Close a Amelet-HDF file
+   * 
+   * @param file_id 
+   * 
+   * @return 
+   */
+AH5_PUBLIC void AH5_close(hid_t file_id);
+
+
 /** 
  * Read the AmeletHDF entry point and copies into the array pointed by
  * entrypoint, including the terminating null character (and stopping at that
