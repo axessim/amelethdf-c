@@ -207,6 +207,7 @@ char AH5_write_str_dataset(hid_t loc_id, const char *dset_name, const hsize_t le
   buf[0] = '\0';
   for (k = 0; k < len; k++)
   {
+    buf[k * slen] = '\0';
     strcat(buf + (k*(slen)), wdata[k]);
   }
 
