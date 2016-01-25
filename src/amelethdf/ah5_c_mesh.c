@@ -15,6 +15,80 @@
 #include <assert.h>
 
 
+char AH5_write_group_entitytype(
+    AH5_group_entitytype_t entitytype, char **ctype, char **centitytype)
+{
+  char dimension = -1;
+
+  *ctype = NULL;
+  *centitytype = NULL;
+  
+  switch (entitytype)
+  {
+    case AH5_GROUP_NODE:
+      *ctype = AH5_V_NODE;
+      dimension = 0;
+      break;
+      
+    case AH5_GROUP_EDGE:
+      *ctype = AH5_V_EDGE;
+      *centitytype = AH5_V_ELEMENT;
+      dimension = 1;
+      break;
+      
+    case AH5_GROUP_FACE:
+      *ctype = AH5_V_EDGE;
+      *centitytype = AH5_V_FACE;
+      dimension = 2;
+      break;
+      
+    case AH5_GROUP_VOLUME:
+      *ctype = AH5_V_VOLUME;
+      *centitytype = AH5_V_ELEMENT;
+      dimension = 3;
+      break;
+    default:
+      dimension = -1;
+  }
+
+  return dimension;
+}
+
+
+char AH5_read_group_entitytype(
+    char *ctype, char *centitytype, AH5_group_entitytype_t *entitytype)
+{
+  char success = AH5_TRUE;
+  
+  if (strcmp(ctype, AH5_V_NODE) == 0)
+  {
+    *entitytype = AH5_GROUP_NODE;
+  }
+  else
+  {
+    if (strcmp(centitytype, AH5_V_EDGE) == 0)
+    {
+      *entitytype = AH5_GROUP_EDGE;
+    }
+    else if (strcmp(centitytype, AH5_V_FACE) == 0)
+    {
+      *entitytype = AH5_GROUP_FACE;
+    }
+    else if (strcmp(centitytype, AH5_V_VOLUME) == 0)
+    {
+      *entitytype = AH5_GROUP_VOLUME;
+    }
+    else
+    {
+      *entitytype = AH5_GROUP_ENTITYTYPE_UNDEF;
+      success = AH5_FALSE;
+    }
+  }
+
+  return success;
+}
+
+
 /**
  * Initialized and allocates mesh group.
  *
@@ -31,7 +105,7 @@
  * groupgroupnames[2] --------------------------------------------^
  *
  */
-AH5_PUBLIC AH5_groupgroup_t *AH5_init_groupgroup(
+AH5_groupgroup_t *AH5_init_groupgroup(
   AH5_groupgroup_t *groupgroup, const char *path, hsize_t nb, size_t length)
 {
   char success = AH5_TRUE;
@@ -85,7 +159,7 @@ AH5_PUBLIC AH5_groupgroup_t *AH5_init_groupgroup(
  * @return On success, a pointer to the axis. If the function failed to
  * allocate memory, a null pointer is returned.
  */
-AH5_PUBLIC AH5_axis_t *AH5_init_axis(AH5_axis_t *axis, hsize_t nb_nodes)
+AH5_axis_t *AH5_init_axis(AH5_axis_t *axis, hsize_t nb_nodes)
 {
   if (axis)
   {
@@ -116,19 +190,17 @@ AH5_PUBLIC AH5_axis_t *AH5_init_axis(AH5_axis_t *axis, hsize_t nb_nodes)
  * @return On success, a pointer to the mesh group. If the function failed to
  * allocate memory, a null pointer is returned.
  */
-AH5_PUBLIC AH5_sgroup_t *AH5_init_smsh_group(
+AH5_sgroup_t *AH5_init_smsh_group(
   AH5_sgroup_t *group, const char *path, hsize_t nb_eles,
-  AH5_group_type_t type, AH5_group_entitytype_t entitytype)
+  AH5_group_entitytype_t entitytype)
 {
   char success = AH5_TRUE;
-  char *ctype, *centitytype = NULL;
   hsize_t i;
 
   if (group)
   {
     group->path = NULL;
-    group->type = NULL;
-    group->entitytype = NULL;
+    group->entitytype = AH5_GROUP_ENTITYTYPE_UNDEF;
     group->dims[1] = 0;
     group->dims[0] = nb_eles;
     group->elements = NULL;
@@ -139,55 +211,17 @@ AH5_PUBLIC AH5_sgroup_t *AH5_init_smsh_group(
 
     if (nb_eles)
     {
-      /*compute the group type and entitytype*/
-      switch (type)
-      {
-      case GROUP_ELEMENT:
-        ctype = AH5_V_ELEMENT;
-        group->dims[1] = 6;
-        switch (entitytype)
-        {
-        case GROUP_EDGE:
-          centitytype = AH5_V_EDGE;
-          break;
-        case GROUP_FACE:
-          centitytype = AH5_V_FACE;
-          break;
-        case GROUP_VOLUME:
-          centitytype = AH5_V_VOLUME;
-          break;
-        default:
-          success = AH5_FALSE;
-        }
-        break;
-
-      case GROUP_NODE:
-        ctype = AH5_V_NODE;
+      group->entitytype = entitytype;
+      if (entitytype == AH5_GROUP_NODE)
         group->dims[1] = 3;
-        break;
-
-      default:
-        success = AH5_FALSE;
-      }
-
-      /*if valid group type build it.*/
-      if (!success)
-        return NULL;
-
-
+      else
+        group->dims[1] = 6;
       group->dims[0] = nb_eles;
-      group->type = (char *)malloc(strlen(ctype)+1);
-      strcpy(group->type, ctype);
-      if (centitytype)
-      {
-        group->entitytype = (char *)malloc(strlen(centitytype)+1);
-        strcpy(group->entitytype, centitytype);
-      }
-
+      
       group->elements = (int *)malloc(group->dims[0]*group->dims[1]*sizeof(int));
       success &= (group->elements != NULL);
 
-      if (success && type == GROUP_ELEMENT && entitytype == GROUP_FACE)
+      if (success && entitytype == AH5_GROUP_FACE)
       {
         group->normals = (char **)malloc(nb_eles*sizeof(char *));
         if (group->normals != NULL)
@@ -210,8 +244,6 @@ AH5_PUBLIC AH5_sgroup_t *AH5_init_smsh_group(
       /*release memory in error.*/
       if (!success)
       {
-        free(group->type);
-        free(group->entitytype);
         free(group->elements);
         return NULL;
       }
@@ -236,16 +268,14 @@ AH5_PUBLIC AH5_sgroup_t *AH5_init_smsh_group(
  */
 AH5_PUBLIC AH5_ugroup_t *AH5_init_umsh_group(
   AH5_ugroup_t *group, const char *path, hsize_t nb_eles,
-  AH5_group_type_t type, AH5_group_entitytype_t entitytype)
+  AH5_group_entitytype_t entitytype)
 {
   char success = AH5_TRUE;
-  char *ctype, *centitytype = NULL;
 
   if (group)
   {
     group->path = NULL;
-    group->type = NULL;
-    group->entitytype = NULL;
+    group->entitytype = entitytype;
     group->nb_groupelts = nb_eles;
     group->groupelts = NULL;
 
@@ -254,54 +284,10 @@ AH5_PUBLIC AH5_ugroup_t *AH5_init_umsh_group(
 
     if (nb_eles)
     {
-      /*compute the group type and entitytype*/
-      switch (type)
-      {
-      case GROUP_ELEMENT:
-        ctype = AH5_V_ELEMENT;
-        switch (entitytype)
-        {
-        case GROUP_EDGE:
-          centitytype = AH5_V_EDGE;
-          break;
-        case GROUP_FACE:
-          centitytype = AH5_V_FACE;
-          break;
-        case GROUP_VOLUME:
-          centitytype = AH5_V_VOLUME;
-          break;
-        default:
-          success = AH5_FALSE;
-        }
-        break;
-
-      case GROUP_NODE:
-        ctype = AH5_V_NODE;
-        break;
-
-      default:
-        success = AH5_FALSE;
-      }
-
-      /*if valid group type build it.*/
-      if (!success)
-        return NULL;
-
-
-      group->type = (char *)malloc(strlen(ctype)+1);
-      strcpy(group->type, ctype);
-      if (centitytype)
-      {
-        group->entitytype = (char *)malloc(strlen(centitytype)+1);
-        strcpy(group->entitytype, centitytype);
-      }
-
       group->groupelts = (int *)malloc(nb_eles*sizeof(int));
       /*release memory in error.*/
       if (group->groupelts == NULL)
       {
-        free(group->type);
-        free(group->entitytype);
         return NULL;
       }
     }
@@ -663,9 +649,10 @@ char AH5_read_smsh_group(hid_t file_id, const char *path, AH5_sgroup_t *sgroup)
   size_t length;
   int nb_dims;
 
+  char *type = NULL, *entitytype = NULL;
+
   sgroup->path = strdup(path);
-  sgroup->type = NULL;
-  sgroup->entitytype = NULL;
+  sgroup->entitytype = AH5_GROUP_ENTITYTYPE_UNDEF;
   sgroup->normals = NULL;
   sgroup->elements = NULL;
 
@@ -673,23 +660,31 @@ char AH5_read_smsh_group(hid_t file_id, const char *path, AH5_sgroup_t *sgroup)
   {
     sgroup->dims[0] = 1;
     sgroup->dims[1] = 1;
-    if (!AH5_read_str_attr(file_id, path, AH5_A_TYPE, &(sgroup->type)))
+    if (!AH5_read_str_attr(file_id, path, AH5_A_TYPE, &type))
     {
       AH5_print_err_attr(AH5_C_MESH, path, AH5_A_TYPE);
       success2 = AH5_FALSE;
     }
-    if (!AH5_read_str_attr(file_id, path, AH5_A_ENTITY_TYPE, &(sgroup->entitytype)))
-      if (strcmp(sgroup->type, AH5_V_NODE) != 0)
+    if (!AH5_read_str_attr(file_id, path, AH5_A_ENTITY_TYPE, &entitytype))
+    {
+      if (strcmp(type, AH5_V_NODE) != 0)
       {
         AH5_print_err_attr(AH5_C_MESH, path, AH5_A_ENTITY_TYPE);
         success2 = AH5_FALSE;
       }
+    }
+
+    AH5_read_group_entitytype(type, entitytype, &(sgroup->entitytype));
+    free(type);
+    free(entitytype);
+    
     if (H5LTget_dataset_ndims(file_id, path, &nb_dims) >= 0)
       if (nb_dims == 2)
         if (H5LTget_dataset_info(file_id, path, sgroup->dims, &type_class, &length) >= 0)
           if (sgroup->dims[1] >= 1 && sgroup->dims[1] <= 6 && type_class == H5T_INTEGER && length == 4)
             if (AH5_read_int_dataset(file_id, path, sgroup->dims[0] * sgroup->dims[1], &(sgroup->elements)))
               success1 = AH5_TRUE;
+
     if (!success1)
     {
       AH5_print_err_dset(AH5_C_MESH, path);
@@ -702,35 +697,36 @@ char AH5_read_smsh_group(hid_t file_id, const char *path, AH5_sgroup_t *sgroup)
     else
     {
       if (success2)
-        if (strcmp(sgroup->type, AH5_V_ELEMENT) == 0)
-          if (strcmp(sgroup->entitytype, AH5_V_FACE) == 0)
+      {
+        if (sgroup->entitytype == AH5_GROUP_FACE)
+        {
+          /* path = <mesh_path>/group/<group_name> */
+          normalpath = malloc((strlen(path) + strlen(AH5_G_NORMAL) - strlen(AH5_G_GROUP) + 1)
+                              * sizeof(*normalpath));
+          strcpy(normalpath, path);
+          temp = strstr(path, "/group/");
+          normalpath[temp-path] = '\0';  /* get <mesh_path> */
+          temp = AH5_get_name_from_path(path);  /* temp = <group_name> */
+          strcat(normalpath, AH5_G_NORMAL);
+          strcat(normalpath, "/");
+          strcat(normalpath, temp);
+          /* normalpath = <mesh_path>/normal/<group_name> */
+          
+          if (AH5_path_valid(file_id, normalpath))
+            if (H5LTget_dataset_ndims(file_id, normalpath, &nb_dims) >= 0)
+              if (nb_dims <= 1)
+                if (H5LTget_dataset_info(file_id, normalpath, dims, &type_class, &length) >= 0)
+                  if (dims[0] == sgroup->dims[0] && type_class == H5T_STRING && length == 2)
+                    if(AH5_read_str_dataset(file_id, normalpath, dims[0], length, &(sgroup->normals)))
+                      success3 = AH5_TRUE;
+          if (!success3)
           {
-            /* path = <mesh_path>/group/<group_name> */
-            normalpath = malloc((strlen(path) + strlen(AH5_G_NORMAL) - strlen(AH5_G_GROUP) + 1)
-                                * sizeof(*normalpath));
-            strcpy(normalpath, path);
-            temp = strstr(path, "/group/");
-            normalpath[temp-path] = '\0';  /* get <mesh_path> */
-            temp = AH5_get_name_from_path(path);  /* temp = <group_name> */
-            strcat(normalpath, AH5_G_NORMAL);
-            strcat(normalpath, "/");
-            strcat(normalpath, temp);
-            /* normalpath = <mesh_path>/normal/<group_name> */
-
-            if (AH5_path_valid(file_id, normalpath))
-              if (H5LTget_dataset_ndims(file_id, normalpath, &nb_dims) >= 0)
-                if (nb_dims <= 1)
-                  if (H5LTget_dataset_info(file_id, normalpath, dims, &type_class, &length) >= 0)
-                    if (dims[0] == sgroup->dims[0] && type_class == H5T_STRING && length == 2)
-                      if(AH5_read_str_dataset(file_id, normalpath, dims[0], length, &(sgroup->normals)))
-                        success3 = AH5_TRUE;
-            if (!success3)
-            {
-              AH5_print_err_dset(AH5_C_MESH, normalpath);
-              rdata = AH5_FALSE;
-            }
-            free(normalpath);
+            AH5_print_err_dset(AH5_C_MESH, normalpath);
+            rdata = AH5_FALSE;
           }
+          free(normalpath);
+        }
+      }
     }
   }
   else
@@ -1005,17 +1001,17 @@ char AH5_read_umsh_group(hid_t file_id, const char *path, AH5_ugroup_t *ugroup)
   char rdata = AH5_FALSE;
   size_t length;
   int nb_dims;
+  char *type, *entitytype;
 
   ugroup->nb_groupelts = 1; /* see H5LTget_dataset_info() below */
   ugroup->path = strdup(path);
-  ugroup->type = NULL;
-  ugroup->entitytype = NULL;
+  ugroup->entitytype = AH5_GROUP_ENTITYTYPE_UNDEF;
   ugroup->groupelts = NULL;
 
   if (AH5_path_valid(file_id, path))
   {
-    if(!AH5_read_str_attr(file_id, path, AH5_A_TYPE, &(ugroup->type)))
-      AH5_print_err_attr (AH5_C_MESH, path, AH5_A_TYPE);
+    if(!AH5_read_str_attr(file_id, path, AH5_A_TYPE, &type))
+      AH5_print_err_attr(AH5_C_MESH, path, AH5_A_TYPE);
     else
     {
       if (H5LTget_dataset_ndims(file_id, path, &nb_dims) >= 0)
@@ -1026,12 +1022,17 @@ char AH5_read_umsh_group(hid_t file_id, const char *path, AH5_ugroup_t *ugroup)
                 rdata = AH5_TRUE;
       //XXX Why not point to the constant value (AH5_V_ELEMENT, ...)?
       //      Does not forgot to update free function.
-      if(!AH5_read_str_attr(file_id, path, AH5_A_ENTITY_TYPE, &(ugroup->entitytype)))
-        if (strcmp(ugroup->type, AH5_V_NODE) != 0)
+      if(!AH5_read_str_attr(file_id, path, AH5_A_ENTITY_TYPE, &entitytype))
+      {
+        if (strcmp(type, AH5_V_NODE) != 0)
         {
           AH5_print_err_attr(AH5_C_MESH, path, AH5_A_ENTITY_TYPE);
           rdata = AH5_FALSE;
         }
+      }
+      AH5_read_group_entitytype(type, entitytype, &(ugroup->entitytype));
+      free(type);
+      free(entitytype);
     }
   }
   if (!rdata)
@@ -1650,6 +1651,7 @@ char AH5_write_umsh_group(hid_t loc_id, const AH5_ugroup_t *ugroup, hsize_t nb_u
   hsize_t i;
   hid_t grp;
   char *basename;
+  char *ctype, *centitytype;
 
   // NMT: I prefer build an empty group, because I am not sure that everyone check that the group exist before to open it.
   if (AH5_path_valid(loc_id, AH5_CATEGORY_NAME(AH5_G_GROUP)))
@@ -1664,10 +1666,11 @@ char AH5_write_umsh_group(hid_t loc_id, const AH5_ugroup_t *ugroup, hsize_t nb_u
       basename = AH5_get_name_from_path(ugroup[i].path);
       if (AH5_write_int_dataset(grp, basename, ugroup[i].nb_groupelts, ugroup[i].groupelts))
       {
-        if (AH5_write_str_attr(grp, basename, AH5_A_TYPE, ugroup[i].type))
+        AH5_write_group_entitytype(ugroup[i].entitytype, &ctype, &centitytype);
+        if (AH5_write_str_attr(grp, basename, AH5_A_TYPE, ctype))
           success = AH5_TRUE;
-        if (strcmp(ugroup[i].type, AH5_V_NODE))
-          success = AH5_write_str_attr(grp, basename, AH5_A_ENTITY_TYPE, ugroup[i].entitytype);
+        if (strcmp(ctype, AH5_V_NODE))
+          success = AH5_write_str_attr(grp, basename, AH5_A_ENTITY_TYPE, centitytype);
       }
       if (!success)
         return success;
@@ -1837,16 +1840,18 @@ char AH5_write_mesh(hid_t file_id, const AH5_mesh_t *mesh)
 void AH5_print_smesh(const AH5_smesh_t *smesh, int space)
 {
   hsize_t i;
-
+  char *ctype, *centitytype;
+  
   AH5_print_str_attr(AH5_A_TYPE, AH5_V_STRUCTURED, space + 4);
   printf("%*s-groups: %lu\n", space + 2, "", (long unsigned) smesh->nb_groups);
   for (i = 0; i < smesh->nb_groups; i++)
   {
     printf("%*sName: %s\n", space + 5, "", AH5_get_name_from_path(smesh->groups[i].path));
-    if (smesh->groups[i].type != NULL)
-      AH5_print_str_attr(AH5_A_TYPE, smesh->groups[i].type, space + 8);
-    if (smesh->groups[i].entitytype != NULL)
-      AH5_print_str_attr(AH5_A_ENTITY_TYPE, smesh->groups[i].entitytype, space + 8);
+    AH5_write_group_entitytype(smesh->groups[i].entitytype, &ctype, &centitytype);
+    if (ctype != NULL)
+      AH5_print_str_attr(AH5_A_TYPE, ctype, space + 8);
+    if (centitytype != NULL)
+      AH5_print_str_attr(AH5_A_ENTITY_TYPE, centitytype, space + 8);
     if (smesh->groups[i].normals != NULL)
       printf("%*s-normals: yes\n", space + 8, "");
   }
@@ -2116,12 +2121,7 @@ void AH5_free_smesh(AH5_smesh_t *smesh)
       if (smesh->groups[i].path != NULL)
         free(smesh->groups[i].path);  // free group name
 
-      //XXX Why release 'type' and 'entitype'. Why not point to the constant value (AH5_V_ELEMENT, ...)?
-      if (smesh->groups[i].type != NULL)
-        free(smesh->groups[i].type);  // free group type
-
-      if (smesh->groups[i].entitytype != NULL)
-        free(smesh->groups[i].entitytype);  // free group entitytype
+      smesh->groups[i].entitytype = AH5_GROUP_ENTITYTYPE_UNDEF;
     }
     free(smesh->groups);  // free space for pointers to groups
     smesh->groups = NULL;
@@ -2193,8 +2193,6 @@ void AH5_free_umesh(AH5_umesh_t *umesh)
     for (i = 0; i < umesh->nb_groups; i++)    // for each group...
     {
       free(umesh->groups[i].path);  // free group name
-      free(umesh->groups[i].type);
-      free(umesh->groups[i].entitytype);
       free(umesh->groups[i].groupelts);  // free group values (no need to assign NULL & set nb_groupelts to 0
     }
     free(umesh->groups);  // free space for pointers to groups
@@ -2357,28 +2355,12 @@ AH5_groupgroup_t * AH5_copy_groupgroup(AH5_groupgroup_t *dest, const AH5_groupgr
 // Copy an unstructured group
 AH5_ugroup_t * AH5_copy_ugroup(AH5_ugroup_t *dest, const AH5_ugroup_t *src)
 {
-  AH5_group_type_t type;
   AH5_group_entitytype_t entitytype;
   
   if (src && dest)
-  {
-    if (strcmp(src->type, AH5_V_ELEMENT) == 0)
-    {
-      type = GROUP_ELEMENT;
-      if (strcmp(src->entitytype, AH5_V_EDGE) == 0)
-        entitytype = GROUP_EDGE;
-      else if (strcmp(src->entitytype, AH5_V_FACE) == 0)
-        entitytype = GROUP_FACE;
-      else if (strcmp(src->entitytype, AH5_V_VOLUME) == 0)
-        entitytype = GROUP_VOLUME;
-    }
-    else
-    {
-      type = GROUP_NODE;
-    }
-    
+  { 
     if (!AH5_init_umsh_group(
-            dest, src->path, src->nb_groupelts, type, entitytype))
+            dest, src->path, src->nb_groupelts, src->entitytype))
       return NULL;
 
     AH5_COPY_ARRAY_FIELD(dest, src, groupelts);
@@ -2420,39 +2402,39 @@ int AH5_element_size(char element_type)
 
   switch (element_type)
   {
-  case UELE_BAR2:
+  case AH5_UELE_BAR2:
     size = 2;
     break;
 
-    case UELE_BAR3:
-    case UELE_TRI3:
+  case AH5_UELE_BAR3:
+  case AH5_UELE_TRI3:
     size = 3;
     break;
 
-  case UELE_QUAD4:
-  case UELE_TETRA4:
+  case AH5_UELE_QUAD4:
+  case AH5_UELE_TETRA4:
     size = 4;
     break;
 
-  case UELE_PYRA5:
+  case AH5_UELE_PYRA5:
     size = 5;
     break;
 
-  case UELE_TRI6:
-  case UELE_PENTA6:
+  case AH5_UELE_TRI6:
+  case AH5_UELE_PENTA6:
     size = 6;
     break;
 
-  case UELE_QUAD8:
-  case UELE_HEXA8:
+  case AH5_UELE_QUAD8:
+  case AH5_UELE_HEXA8:
     size = 8;
     break;
 
-  case UELE_TETRA10:
+  case AH5_UELE_TETRA10:
     size = 10;
     break;
 
-  case UELE_HEXA20:
+  case AH5_UELE_HEXA20:
     size = 20;
     break;
 

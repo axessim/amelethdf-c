@@ -29,30 +29,23 @@ typedef struct _AH5_axis_t
   float           *nodes;
 } AH5_axis_t;
 
-typedef enum _AH5_group_type_t
-{
-  GROUP_TYPE_INVALID = -1,
-  GROUP_NODE = 1,
-  GROUP_ELEMENT = 2
-} AH5_group_type_t;
-
 typedef enum _AH5_group_entitytype_t
 {
-  GROUP_ENTITYTYPE_INVALID = -1,
-  GROUP_ENTITYTYPE_UNDEF = 0,
-  GROUP_EDGE = 1,
-  GROUP_FACE = 2,
-  GROUP_VOLUME = 3
+  AH5_GROUP_ENTITYTYPE_INVALID = -1,
+  AH5_GROUP_ENTITYTYPE_UNDEF = 0,
+  AH5_GROUP_NODE = 1,
+  AH5_GROUP_EDGE = 2,
+  AH5_GROUP_FACE = 3,
+  AH5_GROUP_VOLUME = 4
 } AH5_group_entitytype_t;
 
 typedef struct _AH5_sgroup_t
 {
-  char            *path;
-  char            *type;        //TODO Need a enum
-  char            *entitytype;  //TODO Need a enum
-  hsize_t         dims[2];
-  int             *elements;
-  char            **normals;
+  char                   *path;
+  AH5_group_entitytype_t entitytype;
+  hsize_t                dims[2];
+  int                    *elements;
+  char                   **normals;
 } AH5_sgroup_t;
 
 typedef struct _AH5_smesh_t
@@ -70,11 +63,10 @@ typedef struct _AH5_smesh_t
 
 typedef struct _AH5_ugroup_t
 {
-  char            *path;
-  char            *type;       //TODO Need a enum
-  char            *entitytype; //TODO Need a enum
-  hsize_t         nb_groupelts;
-  int             *groupelts;
+  char                   *path;
+  AH5_group_entitytype_t entitytype;
+  hsize_t                nb_groupelts;
+  int                    *groupelts;
 } AH5_ugroup_t;
 
 typedef enum _AH5_usom_class_t
@@ -114,19 +106,19 @@ typedef struct _AH5_usom_table_t
 
 typedef enum _AH5_uelement_type_t
 {
-  UELE_INVALID            = -1,
-  UELE_BAR2               = 1,
-  UELE_BAR3               = 2,
-  UELE_TRI3               = 11,
-  UELE_TRI6               = 12,
-  UELE_QUAD4              = 13,
-  UELE_QUAD8              = 14,
-  UELE_TETRA4             = 101,
-  UELE_PYRA5              = 102,
-  UELE_PENTA6             = 103,
-  UELE_HEXA8              = 104,
-  UELE_TETRA10            = 108,
-  UELE_HEXA20             = 109
+  AH5_UELE_INVALID            = -1,
+  AH5_UELE_BAR2               = 1,
+  AH5_UELE_BAR3               = 2,
+  AH5_UELE_TRI3               = 11,
+  AH5_UELE_TRI6               = 12,
+  AH5_UELE_QUAD4              = 13,
+  AH5_UELE_QUAD8              = 14,
+  AH5_UELE_TETRA4             = 101,
+  AH5_UELE_PYRA5              = 102,
+  AH5_UELE_PENTA6             = 103,
+  AH5_UELE_HEXA8              = 104,
+  AH5_UELE_TETRA10            = 108,
+  AH5_UELE_HEXA20             = 109
 } AH5_uelement_type_t;
 
 /**
@@ -215,9 +207,9 @@ AH5_PUBLIC AH5_groupgroup_t *AH5_init_groupgroup(AH5_groupgroup_t *groupgroup, c
     hsize_t nb, size_t length);
 AH5_PUBLIC AH5_axis_t *AH5_init_axis(AH5_axis_t *axis, hsize_t nb_nodes);
 AH5_PUBLIC AH5_sgroup_t *AH5_init_smsh_group(AH5_sgroup_t *group, const char *path, hsize_t nb_eles,
-    AH5_group_type_t type, AH5_group_entitytype_t entitytype);
+    AH5_group_entitytype_t entitytype);
 AH5_PUBLIC AH5_ugroup_t *AH5_init_umsh_group(AH5_ugroup_t *group, const char *path, hsize_t nb_eles,
-    AH5_group_type_t type, AH5_group_entitytype_t entitytype);
+    AH5_group_entitytype_t entitytype);
 
 AH5_PUBLIC AH5_smesh_t *AH5_init_smesh(AH5_smesh_t *smesh, hsize_t nb_groups,
                                        hsize_t nb_groupgroups, hsize_t nb_som_tables);

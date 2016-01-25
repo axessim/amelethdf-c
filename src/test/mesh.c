@@ -22,9 +22,9 @@ void build_umesh_1(AH5_umesh_t *umesh)
   // init element
   umesh->nb_elementtypes = 3;
   umesh->elementtypes = (char *)malloc(umesh->nb_elementtypes*sizeof(char));
-  umesh->elementtypes[0] = UELE_TETRA4;
-  umesh->elementtypes[1] = UELE_TETRA4;
-  umesh->elementtypes[2] = UELE_TRI3;
+  umesh->elementtypes[0] = AH5_UELE_TETRA4;
+  umesh->elementtypes[1] = AH5_UELE_TETRA4;
+  umesh->elementtypes[2] = AH5_UELE_TRI3;
 
   umesh->nb_elementnodes = 4+4+3;
   umesh->elementnodes = (int *)malloc(umesh->nb_elementnodes*sizeof(int));
@@ -47,10 +47,7 @@ void build_umesh_1(AH5_umesh_t *umesh)
   umesh->groups = (AH5_ugroup_t *) malloc(umesh->nb_groups * sizeof(AH5_ugroup_t));
   umesh->groups[0].path = (char *) malloc(5 * sizeof(char));
   strcpy(umesh->groups[0].path, "name");
-  umesh->groups[0].type = (char *) malloc( 8 * sizeof(char));
-  strcpy(umesh->groups[0].type, "element");
-  umesh->groups[0].entitytype = (char *) malloc( 5 * sizeof(char));
-  strcpy(umesh->groups[0].entitytype, "face");
+  umesh->groups[0].entitytype = AH5_GROUP_FACE;
   umesh->groups[0].nb_groupelts = 1;
   umesh->groups[0].groupelts = (int *) malloc(umesh->groups[0].nb_groupelts * sizeof(int));
   umesh->groups[0].groupelts[0] = 2;
@@ -185,52 +182,46 @@ char *test_init_functions()
 
   /*Check umesh group*/
   mu_assert_eq_ptr(
-    "null mesh", AH5_init_umsh_group(NULL, NULL, 1, GROUP_NODE, GROUP_EDGE), NULL);
+    "null mesh", AH5_init_umsh_group(NULL, NULL, 1, AH5_GROUP_EDGE), NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_umsh_group(umesh.groups, "group name", 1, GROUP_NODE,
-                                      GROUP_ENTITYTYPE_UNDEF),
+    "empty mesh", AH5_init_umsh_group(umesh.groups, "group name", 1, AH5_GROUP_NODE),
     umesh.groups);
   mu_assert_str_equal("check field", umesh.groups->path, "group name");
-  mu_assert_str_equal("check field", umesh.groups->type, "node");
-  mu_assert_eq_ptr("check field", umesh.groups->entitytype, NULL);
+  mu_assert_eq("check field", umesh.groups->entitytype, AH5_GROUP_NODE);
   mu_assert_eq("check field", umesh.groups->nb_groupelts, 1);
   mu_assert_ne("check field", umesh.groups->groupelts, NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_umsh_group(umesh.groups+1, "group 1", 1, GROUP_ELEMENT, GROUP_EDGE),
+    "empty mesh", AH5_init_umsh_group(umesh.groups+1, "group 1", 1, AH5_GROUP_EDGE),
     umesh.groups + 1);
   mu_assert_str_equal("check field", umesh.groups[1].path, "group 1");
-  mu_assert_str_equal("check field", umesh.groups[1].type, "element");
-  mu_assert_str_equal("check field", umesh.groups[1].entitytype, "edge");
+  mu_assert_eq("check field", umesh.groups[1].entitytype, AH5_GROUP_EDGE);
   mu_assert_eq("check field", umesh.groups[1].nb_groupelts, 1);
   mu_assert_ne("check field", umesh.groups[1].groupelts, NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_umsh_group(umesh.groups+2, "group 2", 10, GROUP_ELEMENT, GROUP_FACE),
+    "empty mesh", AH5_init_umsh_group(umesh.groups+2, "group 2", 10, AH5_GROUP_FACE),
     umesh.groups + 2);
   mu_assert_str_equal("check field", umesh.groups[2].path, "group 2");
-  mu_assert_str_equal("check field", umesh.groups[2].type, "element");
-  mu_assert_str_equal("check field", umesh.groups[2].entitytype, "face");
+  mu_assert_eq("check field", umesh.groups[2].entitytype, AH5_GROUP_FACE);
   mu_assert_eq("check field", umesh.groups[2].nb_groupelts, 10);
   mu_assert_ne("check field", umesh.groups[2].groupelts, NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_umsh_group(umesh.groups+3, "group 3", 1, GROUP_ELEMENT, GROUP_VOLUME),
+    "empty mesh", AH5_init_umsh_group(umesh.groups+3, "group 3", 1, AH5_GROUP_VOLUME),
     umesh.groups + 3);
   mu_assert_str_equal("check field", umesh.groups[3].path, "group 3");
-  mu_assert_str_equal("check field", umesh.groups[3].type, "element");
-  mu_assert_str_equal("check field", umesh.groups[3].entitytype, "volume");
+  mu_assert_eq("check field", umesh.groups[3].entitytype, AH5_GROUP_VOLUME);
   mu_assert_eq("check field", umesh.groups[3].nb_groupelts, 1);
   mu_assert_ne("check field", umesh.groups[3].groupelts, NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_umsh_group(umesh.groups+3, NULL, 1, GROUP_ELEMENT, GROUP_ENTITYTYPE_UNDEF),
+    "empty mesh", AH5_init_umsh_group(umesh.groups+3, NULL, 1, AH5_GROUP_ENTITYTYPE_UNDEF),
     NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_umsh_group(umesh.groups+3, NULL, 1, GROUP_TYPE_INVALID,
-                                      GROUP_ENTITYTYPE_UNDEF),
+    "empty mesh", AH5_init_umsh_group(umesh.groups+3, NULL, 1, AH5_GROUP_ENTITYTYPE_INVALID),
     NULL);
 
   /*Check group of group*/
@@ -299,55 +290,50 @@ char *test_init_functions()
 
   /*Check smesh group*/
   mu_assert_eq_ptr(
-    "null mesh", AH5_init_smsh_group(NULL, NULL, 1, GROUP_NODE, GROUP_EDGE), NULL);
+    "null mesh", AH5_init_smsh_group(NULL, NULL, 1, AH5_GROUP_EDGE), NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_smsh_group(smesh.groups, "group 0", 1, GROUP_NODE, GROUP_ENTITYTYPE_UNDEF),
+    "empty mesh", AH5_init_smsh_group(smesh.groups, "group 0", 1, AH5_GROUP_NODE),
     smesh.groups);
   mu_assert_str_equal("check field", smesh.groups->path, "group 0");
-  mu_assert_str_equal("check field", smesh.groups->type, "node");
-  mu_assert_eq_ptr("check field", smesh.groups->entitytype, NULL);
+  mu_assert_eq("check field", smesh.groups->entitytype, AH5_GROUP_NODE);
   mu_assert_eq("check field", smesh.groups->dims[0], 1);
   mu_assert_ne("check field", smesh.groups->elements, NULL);
   mu_assert_eq("check field", smesh.groups->normals, NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_smsh_group(smesh.groups+1, "group 1", 1, GROUP_ELEMENT, GROUP_EDGE),
+    "empty mesh", AH5_init_smsh_group(smesh.groups+1, "group 1", 1, AH5_GROUP_EDGE),
     smesh.groups + 1);
   mu_assert_str_equal("check field", smesh.groups[1].path, "group 1");
-  mu_assert_str_equal("check field", smesh.groups[1].type, "element");
-  mu_assert_str_equal("check field", smesh.groups[1].entitytype, "edge");
+  mu_assert_eq("check field", smesh.groups[1].entitytype, AH5_GROUP_EDGE);
   mu_assert_eq("check field", smesh.groups[1].dims[0], 1);
   mu_assert_ne("check field", smesh.groups[1].elements, NULL);
   mu_assert_eq("check field", smesh.groups[1].normals, NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_smsh_group(smesh.groups+2, "group 2", 10, GROUP_ELEMENT, GROUP_FACE),
+    "empty mesh", AH5_init_smsh_group(smesh.groups+2, "group 2", 10, AH5_GROUP_FACE),
     smesh.groups + 2);
   mu_assert_str_equal("check field", smesh.groups[2].path, "group 2");
-  mu_assert_str_equal("check field", smesh.groups[2].type, "element");
-  mu_assert_str_equal("check field", smesh.groups[2].entitytype, "face");
+  mu_assert_eq("check field", smesh.groups[2].entitytype, AH5_GROUP_FACE);
   mu_assert_eq("check field", smesh.groups[2].dims[0], 10);
   mu_assert_ne("check field", smesh.groups[2].elements, NULL);
   mu_assert_ne("check field", smesh.groups[2].normals, NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_smsh_group(smesh.groups+3, "group 3", 1, GROUP_ELEMENT, GROUP_VOLUME),
+    "empty mesh", AH5_init_smsh_group(smesh.groups+3, "group 3", 1, AH5_GROUP_VOLUME),
     smesh.groups + 3);
   mu_assert_str_equal("check field", smesh.groups[3].path, "group 3");
-  mu_assert_str_equal("check field", smesh.groups[3].type, "element");
-  mu_assert_str_equal("check field", smesh.groups[3].entitytype, "volume");
+  mu_assert_eq("check field", smesh.groups[3].entitytype, AH5_GROUP_VOLUME);
   mu_assert_eq("check field", smesh.groups[3].dims[0], 1);
   mu_assert_ne("check field", smesh.groups[3].elements, NULL);
   mu_assert_eq("check field", smesh.groups[3].normals, NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_smsh_group(smesh.groups+3, NULL, 1, GROUP_ELEMENT, GROUP_ENTITYTYPE_UNDEF),
+    "empty mesh", AH5_init_smsh_group(smesh.groups+3, NULL, 1, AH5_GROUP_ENTITYTYPE_UNDEF),
     NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_smsh_group(smesh.groups+3, NULL, 1, GROUP_TYPE_INVALID,
-                                      GROUP_ENTITYTYPE_UNDEF),
+    "empty mesh", AH5_init_smsh_group(smesh.groups+3, NULL, 1, AH5_GROUP_ENTITYTYPE_INVALID),
     NULL);
 
   mu_assert_eq_ptr(
@@ -479,8 +465,6 @@ char *test_write_unstructured_mesh_group()
 
   // Check some bad usages.
   ugrp.path = NULL;
-  ugrp.type = NULL;
-  ugrp.entitytype = NULL;
   ugrp.groupelts = NULL;
   ugrp.nb_groupelts = 0;
 
@@ -491,8 +475,7 @@ char *test_write_unstructured_mesh_group()
 
   // Write a simple group by relative path name.
   ugrp.path = "grp_name";
-  ugrp.type = AH5_V_ELEMENT;
-  ugrp.entitytype = AH5_V_FACE;
+  ugrp.entitytype = AH5_GROUP_FACE;
   ugrp.nb_groupelts = 10;
   ugrp.groupelts = (int *)malloc(ugrp.nb_groupelts*sizeof(int));
   for (i = 0; i < ugrp.nb_groupelts; i++)
@@ -606,9 +589,7 @@ char *test_write_unstructured_nodes_mesh()
   umesh.groups = (AH5_ugroup_t *)malloc(umesh.nb_groups * sizeof(AH5_ugroup_t));
   umesh.groups[0].path = (char *)malloc(5 * sizeof(char));
   strcpy(umesh.groups[0].path, "name");
-  umesh.groups[0].type = (char *)malloc( 5 * sizeof(char));
-  strcpy(umesh.groups[0].type, "node");
-  umesh.groups[0].entitytype = NULL;
+  umesh.groups[0].entitytype = AH5_GROUP_NODE;
   umesh.groups[0].nb_groupelts = 5;
   umesh.groups[0].groupelts = (int *)malloc(umesh.groups[0].nb_groupelts * sizeof(int));
   for (i = 0; i < umesh.groups[0].nb_groupelts; ++i)
@@ -742,31 +723,31 @@ char *test_read_umesh()
 const char *test_element_size()
 {
   mu_assert_eq(
-    "Check element_size", AH5_element_size(UELE_INVALID), 0);
+    "Check element_size", AH5_element_size(AH5_UELE_INVALID), 0);
   mu_assert_eq(
-    "Check element_size", AH5_element_size(UELE_BAR2), 2);
+    "Check element_size", AH5_element_size(AH5_UELE_BAR2), 2);
   mu_assert_eq(
-    "Check element_size", AH5_element_size(UELE_BAR3), 3);
+    "Check element_size", AH5_element_size(AH5_UELE_BAR3), 3);
   mu_assert_eq(
-    "Check element_size", AH5_element_size(UELE_TRI3), 3);
+    "Check element_size", AH5_element_size(AH5_UELE_TRI3), 3);
   mu_assert_eq(
-    "Check element_size", AH5_element_size(UELE_TRI6), 6);
+    "Check element_size", AH5_element_size(AH5_UELE_TRI6), 6);
   mu_assert_eq(
-    "Check element_size", AH5_element_size(UELE_QUAD4), 4);
+    "Check element_size", AH5_element_size(AH5_UELE_QUAD4), 4);
   mu_assert_eq(
-    "Check element_size", AH5_element_size(UELE_QUAD8), 8);
+    "Check element_size", AH5_element_size(AH5_UELE_QUAD8), 8);
   mu_assert_eq(
-    "Check element_size", AH5_element_size(UELE_TETRA4), 4);
+    "Check element_size", AH5_element_size(AH5_UELE_TETRA4), 4);
   mu_assert_eq(
-    "Check element_size", AH5_element_size(UELE_PYRA5), 5);
+    "Check element_size", AH5_element_size(AH5_UELE_PYRA5), 5);
   mu_assert_eq(
-    "Check element_size", AH5_element_size(UELE_PENTA6), 6);
+    "Check element_size", AH5_element_size(AH5_UELE_PENTA6), 6);
   mu_assert_eq(
-    "Check element_size", AH5_element_size(UELE_HEXA8), 8);
+    "Check element_size", AH5_element_size(AH5_UELE_HEXA8), 8);
   mu_assert_eq(
-    "Check element_size", AH5_element_size(UELE_TETRA10), 10);
+    "Check element_size", AH5_element_size(AH5_UELE_TETRA10), 10);
   mu_assert_eq(
-    "Check element_size", AH5_element_size(UELE_HEXA20), 20);
+    "Check element_size", AH5_element_size(AH5_UELE_HEXA20), 20);
 
   return MU_FINISHED_WITHOUT_ERRORS;
 }
