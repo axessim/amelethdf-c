@@ -78,7 +78,7 @@ AH5_PUBLIC AH5_complex_t AH5_set_complex(float real, float imag);
 
 typedef struct _AH5_children_t
 {
-  char            **childnames;
+  char            **childnames; /// the list of children name (the names are not contiguous in memory)
   hsize_t         nb_children;
 } AH5_children_t;
 
@@ -128,8 +128,7 @@ AH5_PUBLIC void AH5_close(hid_t file_id);
  * point).
  *
  * To avoid overflows, the size of the array pointed by entrypoint shall be
- * long enough to contain the entry point. The AH5_ABSOLUTE_PATH_LENGTH is
- * usually the right value.
+ * long enough to contain the entry point.
  * 
  * @param file_id open AmeletHDF file id
  * @param entrypoint Pointer to the destination array where the entry point
@@ -138,6 +137,18 @@ AH5_PUBLIC void AH5_close(hid_t file_id);
  * @return entry point is returned.
  */
 AH5_PUBLIC char* AH5_read_entrypoint(hid_t file_id, char *entrypoint);
+
+
+/** 
+ * Returns the C string length of the Amelet-HDF entry point.
+ *
+ * @see strlen
+ *
+ * @param file_id A valid opened Amelet-HDF file.
+ * 
+ * @return the length of entry point.
+ */
+AH5_PUBLIC size_t AH5_read_entrypoint_strlen(hid_t file_id);
 
 AH5_PUBLIC hid_t AH5_H5Tcreate_cpx_memtype(void);
 AH5_PUBLIC hid_t AH5_H5Tcreate_cpx_filetype(void);

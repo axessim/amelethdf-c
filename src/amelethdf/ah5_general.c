@@ -49,25 +49,38 @@ hid_t AH5_create(const char *name, unsigned flags, const char *entry_point)
   return file_id;
 }
 
+
 hid_t AH5_open(const char *name, unsigned flags)
 {
   return H5Fopen(name, flags, H5P_DEFAULT);
 }
+
 
 void AH5_close(hid_t file_id)
 {
   H5Fclose(file_id);
 }
 
+
 // Read and copies the entry point.
-char* AH5_read_entrypoint(hid_t file_id, char *entrypoint) {
+char* AH5_read_entrypoint(hid_t file_id, char *entrypoint)
+{
   char *tmp = NULL;
 
   AH5_read_str_attr(file_id, ".", "entryPoint", &tmp);
   strcpy(entrypoint, tmp);
 
   free(tmp);
+
+  return entrypoint;
 }
+
+
+size_t AH5_read_entrypoint_strlen(hid_t file_id)
+{
+  return AH5_read_str_attr_len(file_id, ".", "entryPoint");
+}
+
 
 // Set complex number
 AH5_complex_t AH5_set_complex(float real, float imag)
@@ -84,6 +97,7 @@ AH5_complex_t AH5_set_complex(float real, float imag)
   return rdata;
 }
 
+
 hid_t AH5_H5Tcreate_cpx_memtype(void)
 {
   hid_t cpx_memtype;
@@ -95,6 +109,7 @@ hid_t AH5_H5Tcreate_cpx_memtype(void)
   return cpx_memtype;
 }
 
+
 hid_t AH5_H5Tcreate_cpx_filetype(void)
 {
   hid_t cpx_filetype;
@@ -105,7 +120,6 @@ hid_t AH5_H5Tcreate_cpx_filetype(void)
 
   return cpx_filetype;
 }
-
 
 
 /*
@@ -195,7 +209,6 @@ char *AH5_trim_zeros(const char *version)
   }
   return rdata;
 }
-
 
 
 /** Join path. Append to 'base' the new node 'name' and return 'base'
@@ -292,36 +305,16 @@ char *AH5_trim_path(char *path)
 char AH5_path_valid(hid_t loc_id, const char *path)
 {
   char *temp;
-  int i, len, slashes = 0;
-  char warn = AH5_FALSE;
-
-  len = (int) strlen(path);
-  if (len >= AH5_ABSOLUTE_PATH_LENGTH) {
-    AH5_log_warn("Path `%s` is too long (> %d).\n", path, AH5_ABSOLUTE_PATH_LENGTH);
-    warn = AH5_TRUE;
-  }
+  int i, slashes = 0;
 
   temp = strdup(path);
-  if (warn == AH5_FALSE) {
-    for (i = (int) strlen(path); i > 0; i--)
-    {
-      if (temp[i] == '/')
-      {
-        if ((len - i) > AH5_ELEMENT_NAME_LENGTH && warn == AH5_FALSE)
-        {
-          AH5_log_warn("Name in `%s` is too long (> %d).\n", path, AH5_ELEMENT_NAME_LENGTH);
-          warn = AH5_TRUE;
-        }
-        len = i;
-        temp[i] = '\0';
-        slashes++;  /* count number of slashes excluding the first one */
-      }
-    }
-  }
-  if ((len + 1) > AH5_ELEMENT_NAME_LENGTH && warn == AH5_FALSE)
+  for (i = (int) strlen(path); i > 0; i--)
   {
-    AH5_log_warn("Path `%s` is not valid.\n", path);
-    warn = AH5_TRUE;
+    if (temp[i] == '/')
+    {
+      temp[i] = '\0';
+      slashes++;  /* count number of slashes excluding the first one */
+    }
   }
 
   if (strcmp(path, ".") == 0)
@@ -357,6 +350,7 @@ char AH5_path_valid(hid_t loc_id, const char *path)
   free(temp);
   return AH5_TRUE;
 }
+
 
 /**
  * Set the given path into dest.
@@ -422,7 +416,7 @@ AH5_children_t AH5_read_children_name(hid_t file_id, const char *path)
   hsize_t i, j = 0;
   ssize_t size;
   hid_t group_id;
-  char temp[AH5_ELEMENT_NAME_LENGTH], *temp2;
+  char *temp;
 
   children.childnames = NULL;
   /*
@@ -430,7 +424,6 @@ AH5_children_t AH5_read_children_name(hid_t file_id, const char *path)
       - number of children must be greater than zero
       - element name
           - must be readable
-          - must be shorter than AH5_ELEMENT_NAME_LENGTH
           - must NOT be same as "_param"
   */
   if (AH5_path_valid(file_id, path) || strcmp(path, "/") == 0)
@@ -439,22 +432,16 @@ AH5_children_t AH5_read_children_name(hid_t file_id, const char *path)
     H5Gget_info(group_id, &ginfo);
     if (ginfo.nlinks > 0)
     {
+      temp = malloc(sizeof(*temp));
       children.childnames = (char **) malloc((size_t) ginfo.nlinks * sizeof(char *));
       for (i = 0; i < ginfo.nlinks; i++)
       {
         size = H5Lget_name_by_idx(group_id, ".", H5_INDEX_NAME, H5_ITER_INC, i, NULL, 0, H5P_DEFAULT);
         if (size < 0)
-          printf("***** ERROR: Cannot read all children of \"%s\". *****\n\n", path);
-        else if (size >= AH5_ELEMENT_NAME_LENGTH)
+          AH5_log_error("Cannot read all children of \"%s\". *****\n\n", path);
+        else 
         {
-          temp2 = (char *) malloc ((size + 1) * sizeof(char));
-          H5Lget_name_by_idx(group_id, ".", H5_INDEX_NAME, H5_ITER_INC, i, temp2, size + 1, H5P_DEFAULT);
-          printf("***** ERROR: Maximum name length (%i) exceeded in \"%s/%s\". *****\n\n",
-                 AH5_ELEMENT_NAME_LENGTH - 1, path, temp2);
-          free(temp2);
-        }
-        else
-        {
+          temp = realloc(temp, (size + 1) * sizeof(*temp));
           H5Lget_name_by_idx(group_id, ".", H5_INDEX_NAME, H5_ITER_INC, i, temp, size + 1, H5P_DEFAULT);
           if (strcmp(temp, "_param") != 0)  // exclude parameterized attributes
           {
@@ -464,6 +451,7 @@ AH5_children_t AH5_read_children_name(hid_t file_id, const char *path)
           }
         }
       }
+      free(temp);
       if (j == 0)
         free(children.childnames);
     }
@@ -500,57 +488,4 @@ char *AH5_get_base_from_path(const char *path)
   rdata = strdup(temp);  // strndup wasn't available
   free(temp);
   return rdata;
-}
-
-
-void AH5_print_err_dset(const char *category, const char *path)
-{
-  AH5_log_error("(%s): Cannot read dataset \"%s\".", category, path);
-}
-
-
-void AH5_print_err_tble(const char *category, const char *path)
-{
-  AH5_log_error("(%s): Cannot read table \"%s\".", category, path);
-}
-
-
-void AH5_print_err_attr(const char *category, const char *path, const char *attr_name)
-{
-  AH5_log_error("(%s): Cannot read mandatory attribute \"%s[@%s]\".",
-                category, path, attr_name);
-}
-
-
-void AH5_print_err_path(const char *category, const char *path)
-{
-  AH5_log_error("(%s): Cannot read path \"%s\".", category, path);
-}
-
-
-void AH5_print_err_inv_attr(const char *category, const char *path, const char *attr_name)
-{
-  AH5_log_error("(%s): Invalid attribute value in \"%s[@%s]\".",
-                category, path, attr_name);
-}
-
-
-void AH5_print_err_func_not_implemented(const char *category, const char *path,
-                                        const char *func_name)
-{
-  AH5_log_error("(%s): Problem in %s... function '%s' not implemented yet!",
-                category, path, func_name);
-}
-
-
-void AH5_print_wrn_attr(const char *category, const char *path, const char *attr_name)
-{
-  AH5_log_warn("(%s): Invalid attribute value in \"%s[@%s]\".",
-               category, path, attr_name);
-}
-
-
-void AH5_print_wrn_outputs(const char *path)
-{
-  AH5_log_warn("Ths simulation \"%s\" does not contains outputs.", path);
 }

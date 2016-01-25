@@ -41,7 +41,7 @@ char AH5_read_lsm_transformation (hid_t file_id, const char *path,
 char AH5_read_lsm_instance (hid_t file_id, const char *path, AH5_lsm_instance_t *lsm_instance)
 {
   char mandatory[][AH5_ATTR_LENGTH] = {AH5_A_DIMENSION}, rdata = AH5_TRUE;
-  char path2[AH5_ABSOLUTE_PATH_LENGTH];
+  char *path2;
   AH5_children_t children;
   hsize_t i;
 
@@ -63,11 +63,13 @@ char AH5_read_lsm_instance (hid_t file_id, const char *path, AH5_lsm_instance_t 
                                         AH5_lsm_transf_t));
       for (i = 0; i < children.nb_children; i++)
       {
+        path2 = malloc((strlen(path) + strlen(children.childnames[i]) + 1) * sizeof(*path2));
         strcpy(path2, path);
         strcat(path2, children.childnames[i]);
         if (!AH5_read_lsm_transformation(file_id, path2, lsm_instance->transformations + i))
           rdata = AH5_FALSE;
         free(children.childnames[i]);
+        free(path2);
       }
       free(children.childnames);
     }
@@ -84,7 +86,8 @@ char AH5_read_lsm_instance (hid_t file_id, const char *path, AH5_lsm_instance_t 
 // Read localizationSystem category
 char AH5_read_localization_system (hid_t file_id, AH5_localization_system_t *localization_system)
 {
-  char path[AH5_ABSOLUTE_PATH_LENGTH], rdata = AH5_TRUE;
+  char *path;
+  char rdata = AH5_TRUE;
   AH5_children_t children;
   hsize_t i;
 
@@ -100,11 +103,13 @@ char AH5_read_localization_system (hid_t file_id, AH5_localization_system_t *loc
                                        sizeof(AH5_lsm_instance_t));
       for (i = 0; i < children.nb_children; i++)
       {
+        path = malloc((strlen(AH5_C_LOCALIZATION_SYSTEM) + strlen(children.childnames[i]) + 1) * sizeof(*path));
         strcpy(path, AH5_C_LOCALIZATION_SYSTEM);
         strcat(path, children.childnames[i]);
         if(!AH5_read_lsm_instance(file_id, path, localization_system->instances + i))
           rdata = AH5_FALSE;
         free(children.childnames[i]);
+        free(path);
       }
       free(children.childnames);
     }

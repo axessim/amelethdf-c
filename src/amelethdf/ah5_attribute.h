@@ -36,6 +36,7 @@ AH5_PUBLIC AH5_attr_instance_t *AH5_init_attr_str(AH5_attr_instance_t *attr, con
 AH5_PUBLIC char AH5_read_int_attr(hid_t file_id, const char *path, const char *attr, int *rdata);
 AH5_PUBLIC char AH5_read_flt_attr(hid_t file_id, const char *path, const char *attr_name, float *rdata);
 AH5_PUBLIC char AH5_read_cpx_attr(hid_t file_id, const char *path, const char *attr_name, AH5_complex_t *rdata);
+AH5_PUBLIC size_t AH5_read_str_attr_len(hid_t file_id, const char *path, const char *attr_name);
 AH5_PUBLIC char AH5_read_str_attr(hid_t file_id, const char *path, const char *attr_name, char **rdata);
 AH5_PUBLIC char AH5_read_opt_attrs(hid_t file_id, const char *path, AH5_opt_attrs_t *opt_attrs,
                                    char mandatory_attrs[][AH5_ATTR_LENGTH], size_t nb_mandatory_attrs);

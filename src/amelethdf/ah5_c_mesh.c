@@ -12,6 +12,8 @@
 #include "ah5_c_mesh.h"
 #include "ah5_log.h"
 
+#include <assert.h>
+
 
 /**
  * Initialized and allocates mesh group.
@@ -44,8 +46,7 @@ AH5_PUBLIC AH5_groupgroup_t *AH5_init_groupgroup(
     if (path)
       AH5_setpath(&groupgroup->path, path);
 
-    if (length == 0)
-      length = AH5_ELEMENT_NAME_LENGTH + 1;
+    assert(length > 0);
     ++length; // make a space for the null terminator
 
     if (nb)
@@ -656,7 +657,7 @@ char AH5_read_smesh_axis(hid_t file_id, const char *path, AH5_axis_t *axis)
 char AH5_read_smsh_group(hid_t file_id, const char *path, AH5_sgroup_t *sgroup)
 {
   char *temp, success1 = AH5_FALSE, success2 = AH5_TRUE, success3 = AH5_FALSE, rdata = AH5_TRUE;
-  char normalpath[AH5_ABSOLUTE_PATH_LENGTH];
+  char *normalpath;
   hsize_t dims[2] = {1, 1};
   H5T_class_t type_class;
   size_t length;
@@ -705,6 +706,8 @@ char AH5_read_smsh_group(hid_t file_id, const char *path, AH5_sgroup_t *sgroup)
           if (strcmp(sgroup->entitytype, AH5_V_FACE) == 0)
           {
             /* path = <mesh_path>/group/<group_name> */
+            normalpath = malloc((strlen(path) + strlen(AH5_G_NORMAL) - strlen(AH5_G_GROUP) + 1)
+                                * sizeof(*normalpath));
             strcpy(normalpath, path);
             temp = strstr(path, "/group/");
             normalpath[temp-path] = '\0';  /* get <mesh_path> */
@@ -726,6 +729,7 @@ char AH5_read_smsh_group(hid_t file_id, const char *path, AH5_sgroup_t *sgroup)
               AH5_print_err_dset(AH5_C_MESH, normalpath);
               rdata = AH5_FALSE;
             }
+            free(normalpath);
           }
     }
   }
@@ -862,7 +866,7 @@ char AH5_read_ssom_pie_table(hid_t file_id, const char *path, AH5_ssom_pie_table
 // Read structured mesh
 char AH5_read_smesh(hid_t file_id, const char *path, AH5_smesh_t *smesh)
 {
-  char path2[AH5_ABSOLUTE_PATH_LENGTH], path3[AH5_ABSOLUTE_PATH_LENGTH];
+  char *path2, *path3;
   AH5_children_t children;
   char *type, success, rdata = AH5_TRUE;
   hsize_t i;
@@ -874,6 +878,8 @@ char AH5_read_smesh(hid_t file_id, const char *path, AH5_smesh_t *smesh)
   if (AH5_path_valid(file_id, path))
   {
     // X Axis
+    path2 = malloc((strlen(path) + strlen(AH5_G_CARTESIAN_GRID) + strlen(AH5_G_X) + 1)
+                   * sizeof(*path2));
     strcpy(path2, path);
     strcat(path2, AH5_G_CARTESIAN_GRID);
     strcat(path2, AH5_G_X);
@@ -895,6 +901,7 @@ char AH5_read_smesh(hid_t file_id, const char *path, AH5_smesh_t *smesh)
     /* problem can be two-dimensional */
 
     // groups
+    path2 = realloc(path2, (strlen(path) + strlen(AH5_G_GROUP) + 1) * sizeof(*path2));
     strcpy(path2, path);
     strcat(path2, AH5_G_GROUP);
     children = AH5_read_children_name(file_id, path2);
@@ -902,8 +909,10 @@ char AH5_read_smesh(hid_t file_id, const char *path, AH5_smesh_t *smesh)
     if (children.nb_children > 0)
     {
       smesh->groups = (AH5_sgroup_t *) malloc((size_t) children.nb_children * sizeof(AH5_sgroup_t));
+      path3 = malloc((strlen(path2) + 1) * sizeof(*path3));
       for (i = 0; i < children.nb_children; i++)
       {
+        path3 = realloc(path3, (strlen(path2) + strlen(children.childnames[i]) + 1) * sizeof(*path3));
         strcpy(path3, path2);
         strcat(path3, children.childnames[i]);
         if (!AH5_read_smsh_group(file_id, path3, smesh->groups + i))
@@ -911,9 +920,11 @@ char AH5_read_smesh(hid_t file_id, const char *path, AH5_smesh_t *smesh)
         free(children.childnames[i]);
       }
       free(children.childnames);
+      free(path3);
     }
 
     // read groupGroup if exists
+    path2 = realloc(path2, (strlen(path) + strlen(AH5_G_GROUPGROUP) + 1) * sizeof(*path2));
     strcpy(path2, path);
     strcat(path2, AH5_G_GROUPGROUP);
     children = AH5_read_children_name(file_id, path2);
@@ -922,8 +933,10 @@ char AH5_read_smesh(hid_t file_id, const char *path, AH5_smesh_t *smesh)
     {
       smesh->groupgroups = (AH5_groupgroup_t *) malloc((size_t) children.nb_children * sizeof(
                              AH5_groupgroup_t));
+      path3 = malloc((strlen(path2) + 1) * sizeof(*path3));
       for (i = 0; i < children.nb_children; i++)
       {
+        path3 = realloc(path3, (strlen(path2) + strlen(children.childnames[i]) + 1) * sizeof(*path3));
         strcpy(path3, path2);
         strcat(path3, children.childnames[i]);
         if (!AH5_read_groupgroup(file_id, path3, smesh->groupgroups + i))
@@ -931,9 +944,11 @@ char AH5_read_smesh(hid_t file_id, const char *path, AH5_smesh_t *smesh)
         free(children.childnames[i]);
       }
       free(children.childnames);
+      free(path3);
     }
 
     // read selectorOnMesh
+    path2 = realloc(path2, (strlen(path) + strlen(AH5_G_SELECTOR_ON_MESH) + 1) * sizeof(*path2));
     strcpy(path2, path);
     strcat(path2, AH5_G_SELECTOR_ON_MESH);
     children = AH5_read_children_name(file_id, path2);
@@ -942,9 +957,11 @@ char AH5_read_smesh(hid_t file_id, const char *path, AH5_smesh_t *smesh)
     {
       smesh->som_tables = (AH5_ssom_pie_table_t *) malloc((size_t) children.nb_children * sizeof(
                             AH5_ssom_pie_table_t));
+      path3 = malloc((strlen(path2) + 1) * sizeof(*path3));
       for (i = 0; i < children.nb_children; i++)
       {
         success = AH5_FALSE;
+        path3 = realloc(path3, (strlen(path2) + strlen(children.childnames[i]) + 1) * sizeof(*path3));
         strcpy(path3, path2);
         strcat(path3, children.childnames[i]);
         if (AH5_read_str_attr(file_id, path3, AH5_A_TYPE, &type))
@@ -967,7 +984,10 @@ char AH5_read_smesh(hid_t file_id, const char *path, AH5_smesh_t *smesh)
         free(children.childnames[i]);
       }
       free(children.childnames);
+      free(path3);
     }
+
+    free(path2);
   }
   else
   {
@@ -1168,7 +1188,7 @@ char AH5_read_umesh_som_table(hid_t file_id, const char *path, AH5_usom_table_t 
 // Read unstructured mesh
 char AH5_read_umesh(hid_t file_id, const char *path, AH5_umesh_t *umesh)
 {
-  char path2[AH5_ABSOLUTE_PATH_LENGTH], path3[AH5_ABSOLUTE_PATH_LENGTH];
+  char *path2, *path3;
   char rdata = AH5_TRUE, success = AH5_FALSE;
   hsize_t i;
   int nb_dims;
@@ -1188,6 +1208,7 @@ char AH5_read_umesh(hid_t file_id, const char *path, AH5_umesh_t *umesh)
   {
     // Read m x 1 dataset "elementNodes" (32-bit signed integer)
     umesh->nb_elementnodes = 1;
+    path2 = malloc((strlen(path) + strlen(AH5_G_ELEMENT_NODES) + 1) * sizeof(*path2));
     strcpy(path2, path);
     strcat(path2, AH5_G_ELEMENT_NODES);
     if (AH5_path_valid(file_id, path2))
@@ -1208,6 +1229,7 @@ char AH5_read_umesh(hid_t file_id, const char *path, AH5_umesh_t *umesh)
 
     // Read m x 1 dataset "elementTypes" (8-bit signed char)
     umesh->nb_elementtypes = 1;
+    path2 = realloc(path2, (strlen(path) + strlen(AH5_G_ELEMENT_TYPES) + 1) * sizeof(*path2));
     strcpy(path2, path);
     strcat(path2, AH5_G_ELEMENT_TYPES);
     if (AH5_path_valid(file_id, path2))
@@ -1238,6 +1260,7 @@ char AH5_read_umesh(hid_t file_id, const char *path, AH5_umesh_t *umesh)
     umesh->nb_nodes[0] = 1;
     umesh->nb_nodes[1] = 1;
     // Read m x n dataset "nodes" (32-bit signed float)
+    path2 = realloc(path2, (strlen(path) + strlen(AH5_G_NODES) + 1) * sizeof(*path2));
     strcpy(path2, path);
     strcat(path2, AH5_G_NODES);
     if (AH5_path_valid(file_id, path2))
@@ -1256,6 +1279,7 @@ char AH5_read_umesh(hid_t file_id, const char *path, AH5_umesh_t *umesh)
     }
 
     // read groupGroup if exists
+    path2 = realloc(path2, (strlen(path) + strlen(AH5_G_GROUPGROUP) + 1) * sizeof(*path2));
     strcpy(path2, path);
     strcat(path2, AH5_G_GROUPGROUP);
     children = AH5_read_children_name(file_id, path2);
@@ -1264,8 +1288,10 @@ char AH5_read_umesh(hid_t file_id, const char *path, AH5_umesh_t *umesh)
     {
       umesh->groupgroups = (AH5_groupgroup_t *) malloc((size_t) children.nb_children * sizeof(
                              AH5_groupgroup_t));
+      path3 = malloc((strlen(path2) + 1) * sizeof(*path3));
       for (i = 0; i < children.nb_children; i++)
       {
+        path3 = realloc(path3, (strlen(path2) + strlen(children.childnames[i]) + 1) * sizeof(*path3));
         strcpy(path3, path2);
         strcat(path3, children.childnames[i]);
         if (!AH5_read_groupgroup(file_id, path3, umesh->groupgroups + i))
@@ -1273,9 +1299,11 @@ char AH5_read_umesh(hid_t file_id, const char *path, AH5_umesh_t *umesh)
         free(children.childnames[i]);
       }
       free(children.childnames);
+      free(path3);
     }
 
     // read group
+    path2 = realloc(path2, (strlen(path) + strlen(AH5_G_GROUP) + 1) * sizeof(*path2));
     strcpy(path2, path);
     strcat(path2, AH5_G_GROUP);
     children = AH5_read_children_name(file_id, path2);
@@ -1283,18 +1311,22 @@ char AH5_read_umesh(hid_t file_id, const char *path, AH5_umesh_t *umesh)
     if (children.nb_children > 0)
     {
       umesh->groups = (AH5_ugroup_t *) malloc((size_t) children.nb_children * sizeof(AH5_ugroup_t));
+      path3 = malloc((strlen(path2) + 1) * sizeof(*path3));
       for (i = 0; i < children.nb_children; i++)
       {
+        path3 = realloc(path3, (strlen(path2) + strlen(children.childnames[i]) + 1) * sizeof(*path3));
         strcpy(path3, path2);
         strcat(path3, children.childnames[i]);
         if (!AH5_read_umsh_group(file_id, path3, umesh->groups + i))
           rdata = AH5_FALSE;
         free(children.childnames[i]);
       }
+      free(path3);
       free(children.childnames);
     }
 
     // read selectorOnMesh
+    path2 = realloc(path2, (strlen(path) + strlen(AH5_G_SELECTOR_ON_MESH) + 1) * sizeof(*path2));
     strcpy(path2, path);
     strcat(path2, AH5_G_SELECTOR_ON_MESH);
     children = AH5_read_children_name(file_id, path2);
@@ -1303,16 +1335,21 @@ char AH5_read_umesh(hid_t file_id, const char *path, AH5_umesh_t *umesh)
     {
       umesh->som_tables = (AH5_usom_table_t *) malloc((size_t) children.nb_children * sizeof(
                             AH5_usom_table_t));
+      path3 = malloc((strlen(path2) + 1) * sizeof(*path3));
       for (i = 0; i < children.nb_children; i++)
       {
+        path3 = realloc(path3, (strlen(path2) + strlen(children.childnames[i]) + 1) * sizeof(*path3));
         strcpy(path3, path2);
         strcat(path3, children.childnames[i]);
         if (!AH5_read_umesh_som_table(file_id, path3, umesh->som_tables + i))
           rdata = AH5_FALSE;
         free(children.childnames[i]);
       }
+      free(path3);
       free(children.childnames);
     }
+
+    free(path2);
   }
   else
   {
@@ -1452,8 +1489,7 @@ char AH5_read_mlk_instance(hid_t file_id, const char *path, AH5_mlk_instance_t *
 // Read mesh group
 char AH5_read_msh_group(hid_t file_id, const char *path, AH5_msh_group_t *msh_group)
 {
-  char path2[AH5_ABSOLUTE_PATH_LENGTH], rdata = AH5_TRUE;
-  char path3[AH5_ABSOLUTE_PATH_LENGTH];
+  char *path2, *path3, rdata = AH5_TRUE;
   AH5_children_t children;
   hsize_t i, j = 0;
 
@@ -1472,10 +1508,12 @@ char AH5_read_msh_group(hid_t file_id, const char *path, AH5_msh_group_t *msh_gr
     {
       msh_group->msh_instances = (AH5_msh_instance_t *) malloc((size_t) msh_group->nb_msh_instances *
                                  sizeof(AH5_msh_instance_t));
+      path2 = malloc((strlen(path) + 1) * sizeof(*path2));
       for (i = 0; i < children.nb_children; i++)
       {
         if (strcmp(children.childnames[i], AH5_G_MESH_LINK) != 0)
         {
+          path2 = realloc(path2, (strlen(path) + strlen(children.childnames[i]) + 1) * sizeof(*path2));
           strcpy(path2, path);
           strcat(path2, children.childnames[i]);
           if (!AH5_read_msh_instance(file_id, path2, msh_group->msh_instances + j++))
@@ -1484,8 +1522,10 @@ char AH5_read_msh_group(hid_t file_id, const char *path, AH5_msh_group_t *msh_gr
         free(children.childnames[i]);
       }
       free(children.childnames);
+      free(path2);
     }
 
+    path2 = malloc((strlen(path) + strlen(AH5_G_MESH_LINK) + 1) * sizeof(*path2));
     strcpy(path2, path);
     strcat(path2, AH5_G_MESH_LINK);
     children = AH5_read_children_name(file_id, path2);
@@ -1494,8 +1534,10 @@ char AH5_read_msh_group(hid_t file_id, const char *path, AH5_msh_group_t *msh_gr
     {
       msh_group->mlk_instances = (AH5_mlk_instance_t *) malloc((size_t) children.nb_children * sizeof(
                                    AH5_mlk_instance_t));
+      path3 = malloc((strlen(path2) + 1) * sizeof(*path2));
       for (i = 0; i < children.nb_children; i++)
       {
+        path3 = realloc(path3, (strlen(path2) + strlen(children.childnames[i]) + 1) * sizeof(*path2));
         strcpy(path3, path2);
         strcat(path3, children.childnames[i]);
         if (!AH5_read_mlk_instance(file_id, path3, msh_group->mlk_instances + i))
@@ -1503,6 +1545,7 @@ char AH5_read_msh_group(hid_t file_id, const char *path, AH5_msh_group_t *msh_gr
         free(children.childnames[i]);
       }
       free(children.childnames);
+      free(path3);
     }
   }
   else
@@ -1517,7 +1560,7 @@ char AH5_read_msh_group(hid_t file_id, const char *path, AH5_msh_group_t *msh_gr
 // Read mesh category
 char AH5_read_mesh(hid_t file_id, AH5_mesh_t *mesh)
 {
-  char path[AH5_ABSOLUTE_PATH_LENGTH], rdata = AH5_TRUE;
+  char *path, rdata = AH5_TRUE;
   AH5_children_t children;
   hsize_t i;
 
@@ -1529,9 +1572,11 @@ char AH5_read_mesh(hid_t file_id, AH5_mesh_t *mesh)
     mesh->nb_groups = children.nb_children;
     if (children.nb_children > 0)
     {
+      path = malloc((strlen(AH5_C_MESH) + 1) * sizeof(*path));
       mesh->groups = (AH5_msh_group_t *) malloc((size_t) children.nb_children * sizeof(AH5_msh_group_t));
       for (i = 0; i < children.nb_children; i++)
       {
+        path = realloc(path, (strlen(AH5_C_MESH) + strlen(children.childnames[i]) + 1) * sizeof(*path));
         strcpy(path, AH5_C_MESH);
         strcat(path, children.childnames[i]);
         if (!AH5_read_msh_group(file_id, path, mesh->groups + i))
@@ -1539,6 +1584,7 @@ char AH5_read_mesh(hid_t file_id, AH5_mesh_t *mesh)
         free(children.childnames[i]);
       }
       free(children.childnames);
+      free(path);
     }
   }
   else

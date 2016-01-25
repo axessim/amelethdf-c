@@ -100,6 +100,26 @@ char AH5_read_cpx_attr(hid_t loc_id, const char *path, const char *attr_name, AH
 }
 
 
+// Read string length attribute <attr_name> given by address <path> without
+// null char (similar to strlen).
+size_t AH5_read_str_attr_len(hid_t loc_id, const char *path, const char *attr_name)
+{
+  hid_t attr_id, filetype, memtype;
+  size_t sdim = 0;
+
+  if (AH5_path_valid(loc_id, path) || strcmp(path, ".") == 0)
+    if (H5Aexists_by_name(loc_id, path, attr_name, H5P_DEFAULT) > 0)
+    {
+      attr_id = H5Aopen_by_name(loc_id, path, attr_name, H5P_DEFAULT, H5P_DEFAULT);
+      filetype = H5Aget_type(attr_id);
+      sdim = H5Tget_size(filetype);
+      H5Tclose(filetype);
+      H5Aclose(attr_id);
+    }
+  return sdim;
+}
+
+
 // Read string attribute <attr_name> given by address <path>
 char AH5_read_str_attr(hid_t loc_id, const char *path, const char *attr_name, char **rdata)
 {

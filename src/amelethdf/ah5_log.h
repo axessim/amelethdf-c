@@ -110,6 +110,7 @@ AH5_PUBLIC void AH5_print_err_func_not_implemented(const char *category, const c
 AH5_PUBLIC void AH5_print_wrn_attr(const char *category, const char *path, const char *attr_name);
 AH5_PUBLIC void AH5_print_wrn_outputs(const char *path);
 
+
 // Some helpers macros of manage error.
 #define AH5_PRINT_ERR_FUNC_NOT_IMPLEMENTED(category, path)              \
   AH5_print_err_func_not_implemented(category, path, (__FUNCTION__))

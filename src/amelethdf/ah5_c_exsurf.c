@@ -5,7 +5,7 @@
 // Read exchangeSurface group
 char AH5_read_exs_group (hid_t file_id, const char *path, AH5_exs_group_t *exs_group)
 {
-  char path2[AH5_ABSOLUTE_PATH_LENGTH], *temp, rdata = AH5_TRUE;
+  char *path2, *temp, rdata = AH5_TRUE;
   AH5_children_t children;
   hsize_t i;
 
@@ -62,10 +62,12 @@ char AH5_read_exs_group (hid_t file_id, const char *path, AH5_exs_group_t *exs_g
     exs_group->nb_instances = children.nb_children;
     if (children.nb_children > 0)
     {
+      path2 = malloc((strlen(path) + 1) * sizeof(*path2));
       exs_group->instances = (AH5_arrayset_t *) malloc((size_t) children.nb_children * sizeof(
                                AH5_arrayset_t));
       for (i = 0; i < children.nb_children; i++)
       {
+        path2 = realloc(path2, (strlen(path) + strlen(children.childnames[i]) + 1) * sizeof(*path2));
         strcpy(path2, path);
         strcat(path2, children.childnames[i]);
         if (!AH5_path_valid(file_id, path2))
@@ -75,6 +77,7 @@ char AH5_read_exs_group (hid_t file_id, const char *path, AH5_exs_group_t *exs_g
         free(children.childnames[i]);
       }
       free(children.childnames);
+      free(path);
     }
   }
   else
@@ -89,7 +92,7 @@ char AH5_read_exs_group (hid_t file_id, const char *path, AH5_exs_group_t *exs_g
 // Read exchangeSurface category
 char AH5_read_exchange_surface (hid_t file_id, AH5_exchange_surface_t *exchange_surface)
 {
-  char path[AH5_ABSOLUTE_PATH_LENGTH], rdata = AH5_TRUE;
+  char *path, rdata = AH5_TRUE;
   AH5_children_t children;
   hsize_t i;
 
@@ -101,10 +104,12 @@ char AH5_read_exchange_surface (hid_t file_id, AH5_exchange_surface_t *exchange_
     exchange_surface->nb_groups = children.nb_children;
     if (children.nb_children > 0)
     {
+      path = malloc((strlen(AH5_C_EXCHANGE_SURFACE) + 1) * sizeof(*path));
       exchange_surface->groups = (AH5_exs_group_t *) malloc((size_t) children.nb_children * sizeof(
                                    AH5_exs_group_t));
       for (i = 0; i < children.nb_children; i++)
       {
+        path = realloc(path,( strlen(AH5_C_EXCHANGE_SURFACE) + strlen(children.childnames[i]) + 1) * sizeof(*path));
         strcpy(path, AH5_C_EXCHANGE_SURFACE);
         strcat(path, children.childnames[i]);
         if (!AH5_read_exs_group(file_id, path, exchange_surface->groups + i))
@@ -112,6 +117,7 @@ char AH5_read_exchange_surface (hid_t file_id, AH5_exchange_surface_t *exchange_
         free(children.childnames[i]);
       }
       free(children.childnames);
+      free(path);
     }
   }
   else

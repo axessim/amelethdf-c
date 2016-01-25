@@ -25,7 +25,7 @@ void AH5_init_global_environment (AH5_global_environment_t *global_environment)
 char AH5_read_global_environment_instance (hid_t file_id, const char *path,
     AH5_gle_instance_t *gle_instance)
 {
-  char path2[AH5_ABSOLUTE_PATH_LENGTH], path3[AH5_ABSOLUTE_PATH_LENGTH], rdata = AH5_TRUE;
+  char *path2, *path3, rdata = AH5_TRUE;
   /*    char mandatory[][AH5_ATTR_LENGTH] = {}; */
 
   AH5_init_global_environment_instance(gle_instance);
@@ -34,14 +34,17 @@ char AH5_read_global_environment_instance (hid_t file_id, const char *path,
 
   if (AH5_path_valid(file_id, path))
   {
+    path2 = malloc((strlen(path) + strlen(AH5_G_LIMIT_CONDITIONS) + 1) * sizeof(*path2));
     strcpy(path2, path);
     strcat(path2, AH5_G_LIMIT_CONDITIONS);
     AH5_read_opt_attrs(file_id, path2, &(gle_instance->limit_conditions), NULL, 0);
 
-    strcpy(path2, path);
+    path3 = malloc((strlen(path) + strlen(AH5_G_TIME) + 1) * sizeof(*path3));
     strcpy(path3, path);
-    strcat(path2, AH5_G_FREQUENCY);
     strcat(path3, AH5_G_TIME);
+    path2 = realloc(path2, (strlen(path) + strlen(AH5_G_FREQUENCY) + 1) * sizeof(*path2));
+    strcpy(path2, path);
+    strcat(path2, AH5_G_FREQUENCY);
     if (AH5_path_valid(file_id, path2) && !AH5_path_valid(file_id, path3))
     {
       gle_instance->type = GE_FREQUENCY;
@@ -56,6 +59,9 @@ char AH5_read_global_environment_instance (hid_t file_id, const char *path,
     }
     else
       rdata = AH5_FALSE;
+
+    free(path2);
+    free(path3);
   }
   else
   {
@@ -69,7 +75,7 @@ char AH5_read_global_environment_instance (hid_t file_id, const char *path,
 // Read globalEnvironment category
 char AH5_read_global_environment (hid_t file_id, AH5_global_environment_t *global_environment)
 {
-  char path[AH5_ABSOLUTE_PATH_LENGTH], rdata = AH5_TRUE;
+  char *path, rdata = AH5_TRUE;
   AH5_children_t children;
   hsize_t i;
 
@@ -81,10 +87,12 @@ char AH5_read_global_environment (hid_t file_id, AH5_global_environment_t *globa
     global_environment->nb_instances = children.nb_children;
     if (children.nb_children > 0)
     {
+      path = malloc((strlen(AH5_C_GLOBAL_ENVIRONMENT) + 1) * sizeof(*path));
       global_environment->instances = (AH5_gle_instance_t *) malloc((size_t) children.nb_children *
                                       sizeof(AH5_gle_instance_t));
       for (i = 0; i < children.nb_children; i++)
       {
+        path = realloc(path, (strlen(AH5_C_GLOBAL_ENVIRONMENT) + strlen(children.childnames[i]) + 1) * sizeof(*path));
         strcpy(path, AH5_C_GLOBAL_ENVIRONMENT);
         strcat(path, children.childnames[i]);
         if (!AH5_read_global_environment_instance(file_id, path, global_environment->instances + i))
@@ -92,6 +100,7 @@ char AH5_read_global_environment (hid_t file_id, AH5_global_environment_t *globa
         free(children.childnames[i]);
       }
       free(children.childnames);
+      free(path);
     }
   }
   else
