@@ -15,10 +15,19 @@
 #include <assert.h>
 
 
-char AH5_write_group_entitytype(
+/** 
+ * Convert group entity type to ah5 C string type.
+ * 
+ * @param[in] entitytype the group type.
+ * @param[out] ctype (constant C string) the group type (node or element)
+ * @param[out] centitytype (constant C string) the group element type (NULL edge face or volume)
+ * 
+ * @return the entity type dimension
+ */
+int AH5_write_group_entitytype(
     AH5_group_entitytype_t entitytype, char **ctype, char **centitytype)
 {
-  char dimension = -1;
+  int dimension = -1;
 
   *ctype = NULL;
   *centitytype = NULL;
@@ -31,20 +40,20 @@ char AH5_write_group_entitytype(
       break;
       
     case AH5_GROUP_EDGE:
-      *ctype = AH5_V_EDGE;
-      *centitytype = AH5_V_ELEMENT;
+      *ctype = AH5_V_ELEMENT;
+      *centitytype = AH5_V_EDGE;
       dimension = 1;
       break;
       
     case AH5_GROUP_FACE:
-      *ctype = AH5_V_EDGE;
+      *ctype = AH5_V_ELEMENT;
       *centitytype = AH5_V_FACE;
       dimension = 2;
       break;
       
     case AH5_GROUP_VOLUME:
-      *ctype = AH5_V_VOLUME;
-      *centitytype = AH5_V_ELEMENT;
+      *ctype = AH5_V_ELEMENT;
+      *centitytype = AH5_V_VOLUME;
       dimension = 3;
       break;
     default:
@@ -55,37 +64,49 @@ char AH5_write_group_entitytype(
 }
 
 
-char AH5_read_group_entitytype(
-    char *ctype, char *centitytype, AH5_group_entitytype_t *entitytype)
+/** 
+ * Convert ah5 group type from C string type to group entity type.
+ * 
+ * @param[in] ctype (constant C string) the group type (node or element)
+ * @param[in] centitytype (constant C string) the group element type (NULL edge face or volume)
+ * @param[out] entitytype the group type.
+ * 
+ * @return 
+ */
+int AH5_read_group_entitytype(
+    const char *ctype, const char *centitytype, AH5_group_entitytype_t *entitytype)
 {
-  char success = AH5_TRUE;
+  int dimension = -1;
   
   if (strcmp(ctype, AH5_V_NODE) == 0)
   {
     *entitytype = AH5_GROUP_NODE;
+    dimension = 0;
   }
   else
   {
     if (strcmp(centitytype, AH5_V_EDGE) == 0)
     {
       *entitytype = AH5_GROUP_EDGE;
+      dimension = 1;
     }
     else if (strcmp(centitytype, AH5_V_FACE) == 0)
     {
       *entitytype = AH5_GROUP_FACE;
+      dimension = 2;
     }
     else if (strcmp(centitytype, AH5_V_VOLUME) == 0)
     {
       *entitytype = AH5_GROUP_VOLUME;
+      dimension = 3;
     }
     else
     {
       *entitytype = AH5_GROUP_ENTITYTYPE_UNDEF;
-      success = AH5_FALSE;
     }
   }
 
-  return success;
+  return dimension;
 }
 
 
@@ -150,6 +171,7 @@ AH5_groupgroup_t *AH5_init_groupgroup(
   return groupgroup;
 }
 
+
 /**
  * Initialized and allocates mesh axis.
  *
@@ -176,6 +198,7 @@ AH5_axis_t *AH5_init_axis(AH5_axis_t *axis, hsize_t nb_nodes)
 
   return axis;
 }
+
 
 /**
  * Initialized and allocates mesh group.
@@ -252,6 +275,7 @@ AH5_sgroup_t *AH5_init_smsh_group(
 
   return group;
 }
+
 
 /**
  * Initialized and allocates mesh group.
@@ -357,6 +381,7 @@ AH5_smesh_t *AH5_init_smesh(
   return smesh;
 }
 
+
 /**
  *  Initialized and allocates unstructured mesh.
  *
@@ -447,6 +472,7 @@ AH5_umesh_t *AH5_init_umesh(
   return umesh;
 }
 
+
 /**
  * Initialized and allocates mesh.
  *
@@ -476,6 +502,7 @@ AH5_msh_instance_t *AH5_init_msh_instance(
 
   return msh_instance;
 }
+
 
 /**
  * Initialized and allocates mesh link.
@@ -507,6 +534,7 @@ AH5_mlk_instance_t *AH5_init_mlk_instance(
 
   return mlk_instance;
 }
+
 
 /**
  * Initialized and allocates mesh group.
@@ -554,6 +582,7 @@ AH5_msh_group_t *AH5_init_msh_group(
   return msh_group;
 }
 
+
 /**
  * Initialized and allocates mesh category.
  *
@@ -580,6 +609,7 @@ AH5_mesh_t *AH5_init_mesh(AH5_mesh_t *mesh, hsize_t nb_groups)
 
   return mesh;
 }
+
 
 // Read groupGroup (both the un/structured)
 char AH5_read_groupgroup(hid_t file_id, const char *path, AH5_groupgroup_t *groupgroup)
@@ -736,6 +766,7 @@ char AH5_read_smsh_group(hid_t file_id, const char *path, AH5_sgroup_t *sgroup)
   }
   return rdata;
 }
+
 
 // Read table of type "pointInElement" from /selectorOnMesh (structured) (element: 32-bit unsigned int, vector: 32-bit signed float)
 char AH5_read_ssom_pie_table(hid_t file_id, const char *path, AH5_ssom_pie_table_t *ssom_pie_table)
