@@ -439,7 +439,7 @@ AH5_children_t AH5_read_children_name(hid_t file_id, const char *path)
         size = H5Lget_name_by_idx(group_id, ".", H5_INDEX_NAME, H5_ITER_INC, i, NULL, 0, H5P_DEFAULT);
         if (size < 0)
           AH5_log_error("Cannot read all children of \"%s\". *****\n\n", path);
-        else 
+        else
         {
           temp = realloc(temp, (size + 1) * sizeof(*temp));
           H5Lget_name_by_idx(group_id, ".", H5_INDEX_NAME, H5_ITER_INC, i, temp, size + 1, H5P_DEFAULT);

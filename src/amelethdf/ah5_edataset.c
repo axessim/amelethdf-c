@@ -1184,8 +1184,8 @@ char AH5_create_PEarrayset(hid_t loc_id,
 
   Earrayset->parent     = loc_id;
 
-  Earrayset->path = malloc(strlen(name));
-  strcpy(Earrayset->path, name);
+  Earrayset->path = malloc((strlen(name) + 1) * sizeof(*Earrayset->path));
+  strcpy(Earrayset->path, name + 1);
 
   Earrayset->nb_dims    = nb_dims;
 

@@ -68,7 +68,7 @@ char AH5_read_phm_vimp (hid_t file_id, const char *path, AH5_material_prop_t *ma
                       datasetok = AH5_TRUE;
                     }
           free(path2);
-          
+
           if (!datasetok)
             rdata = AH5_FALSE;
         }
@@ -79,7 +79,7 @@ char AH5_read_phm_vimp (hid_t file_id, const char *path, AH5_material_prop_t *ma
             rdata = AH5_FALSE;
           if (!AH5_read_flt_attr(file_id, path, AH5_A_ER_STATIC, &(material_prop->data.lorentz.stat)))
             rdata = AH5_FALSE;
-          
+
           path2 = malloc((strlen(path) + strlen(AH5_G_LIST_OF_FUNCTIONS) + 1) * sizeof(*path2));
           strcpy(path2, path);
           strcat(path2, AH5_G_LIST_OF_FUNCTIONS);
@@ -94,7 +94,7 @@ char AH5_read_phm_vimp (hid_t file_id, const char *path, AH5_material_prop_t *ma
                       datasetok = AH5_TRUE;
                     }
           free(path2);
-          
+
           if (!datasetok)
             rdata = AH5_FALSE;
         }
@@ -156,6 +156,7 @@ char AH5_read_phm_vimp (hid_t file_id, const char *path, AH5_material_prop_t *ma
 char AH5_read_phm_volume_instance (hid_t file_id, const char *path,
                                    AH5_volume_instance_t *volume_instance)
 {
+  const size_t path_len = strlen(path);
   char *path2, rdata = AH5_TRUE;
   /*    char mandatory[][AH5_ATTR_LENGTH] = {}; */
 
@@ -167,28 +168,32 @@ char AH5_read_phm_volume_instance (hid_t file_id, const char *path,
   volume_instance->magnetic_conductivity.type = MP_INVALID;
   volume_instance->volumetric_mass_density = AH5_V_VOLUMETRIC_MASS_DENSITY_UNDEFINE;
 
-  path2 = malloc((strlen(path) + AH5_MAX(
-      AH5_MAX(strlen(AH5_G_RELATIVE_PERMITTIVITY), strlen(AH5_G_RELATIVE_PERMEABILITY)),
-      AH5_MAX(strlen(AH5_G_ELECTRIC_CONDUCTIVITY), strlen(AH5_G_MAGNETIC_CONDUCTIVITY))) + 1)
-                 * sizeof(*path2));
-  
-  if (AH5_path_valid(file_id, path))
+  path2 = malloc((strlen(path) + 1) * sizeof(*path2));
+
+  if (AH5_path_valid(file_id, path) && path2)
   {
     AH5_read_opt_attrs(file_id, path, &(volume_instance->opt_attrs), NULL, 0);
-    strcpy(path2, path);
-    strcat(path2, AH5_G_RELATIVE_PERMITTIVITY);
+    path2 = realloc(path2, (path_len + strlen(AH5_G_RELATIVE_PERMITTIVITY) + 1) * sizeof(*path2));
+    strncpy(path2, path, path_len + 1);
+    strncat(path2, AH5_G_RELATIVE_PERMITTIVITY, strlen(AH5_G_RELATIVE_PERMITTIVITY));
     if (!AH5_read_phm_vimp(file_id, path2, &(volume_instance->relative_permittivity)))
       rdata = AH5_FALSE;
-    strcpy(path2, path);
-    strcat(path2, AH5_G_RELATIVE_PERMEABILITY);
+
+    path2 = realloc(path2, (path_len + strlen(AH5_G_RELATIVE_PERMEABILITY) + 1) * sizeof(*path2));
+    strncpy(path2, path, path_len + 1);
+    strncat(path2, AH5_G_RELATIVE_PERMEABILITY, strlen(AH5_G_RELATIVE_PERMEABILITY));
     if (!AH5_read_phm_vimp(file_id, path2, &(volume_instance->relative_permeability)))
       rdata = AH5_FALSE;
-    strcpy(path2, path);
-    strcat(path2, AH5_G_ELECTRIC_CONDUCTIVITY);
+
+    path2 = realloc(path2, (path_len + strlen(AH5_G_ELECTRIC_CONDUCTIVITY) + 1) * sizeof(*path2));
+    strncpy(path2, path, path_len + 1);
+    strncat(path2, AH5_G_ELECTRIC_CONDUCTIVITY, strlen(AH5_G_ELECTRIC_CONDUCTIVITY));
     if (!AH5_read_phm_vimp(file_id, path2, &(volume_instance->electric_conductivity)))
       rdata = AH5_FALSE;
-    strcpy(path2, path);
-    strcat(path2, AH5_G_MAGNETIC_CONDUCTIVITY);
+
+    path2 = realloc(path2, (path_len + strlen(AH5_G_MAGNETIC_CONDUCTIVITY) + 1) * sizeof(*path2));
+    strncpy(path2, path, path_len + 1);
+    strncat(path2, AH5_G_MAGNETIC_CONDUCTIVITY, strlen(AH5_G_MAGNETIC_CONDUCTIVITY));
     if (!AH5_read_phm_vimp(file_id, path2, &(volume_instance->magnetic_conductivity)))
       rdata = AH5_FALSE;
 
@@ -207,7 +212,7 @@ char AH5_read_phm_volume_instance (hid_t file_id, const char *path,
   }
 
   free(path2);
-  
+
   return rdata;
 }
 
@@ -500,7 +505,7 @@ char AH5_read_physicalmodel (hid_t file_id, AH5_physicalmodel_t *physicalmodel)
     children = AH5_read_children_name(file_id, path);
     physicalmodel->nb_volume_instances = children.nb_children;
     free(path);
-    
+
     if (children.nb_children > 0)
     {
       physicalmodel->volume_instances = (AH5_volume_instance_t *) malloc((size_t) children.nb_children *
@@ -526,7 +531,7 @@ char AH5_read_physicalmodel (hid_t file_id, AH5_physicalmodel_t *physicalmodel)
     children = AH5_read_children_name(file_id, path);
     physicalmodel->nb_surface_instances = children.nb_children;
     free(path);
-    
+
     if (children.nb_children > 0)
     {
       physicalmodel->surface_instances = (AH5_surface_instance_t *) malloc((
@@ -545,14 +550,14 @@ char AH5_read_physicalmodel (hid_t file_id, AH5_physicalmodel_t *physicalmodel)
       }
       free(children.childnames);
     }
-    
+
     path = malloc((strlen(AH5_C_PHYSICAL_MODEL) + strlen(AH5_G_INTERFACE) + 1) * sizeof(*path));
     strcpy(path, AH5_C_PHYSICAL_MODEL);
     strcat(path, AH5_G_INTERFACE);
     children = AH5_read_children_name(file_id, path);
     physicalmodel->nb_interface_instances = children.nb_children;
     free(path);
-    
+
     if (children.nb_children > 0)
     {
       physicalmodel->interface_instances = (AH5_interface_instance_t *) malloc((

@@ -802,22 +802,24 @@ char AH5_read_ft_arrayset (hid_t file_id, const char *path, AH5_arrayset_t *arra
   AH5_children_t children;
 
   path2 = malloc((strlen(path) + strlen(AH5_G_DATA) + 1) * sizeof(*path2));
-  strcpy(path2, path);
-  strcat(path2, AH5_G_DATA);
+  strncpy(path2, path, strlen(path) + 1);
+  strncat(path2, AH5_G_DATA, strlen(AH5_G_DATA));
   if (AH5_read_ft_dataset(file_id, path2, &(arrayset->data)))
   {
-    strcpy(path2, path);
-    strcat(path2, AH5_G_DS);
+    strncpy(path2, path, strlen(path) + 1);
+    strncat(path2, AH5_G_DS, strlen(AH5_G_DS));
     children = AH5_read_children_name(file_id, path2);
     arrayset->nb_dims = children.nb_children;
-    arrayset->dims = (AH5_vector_t *) malloc((size_t) children.nb_children * sizeof(AH5_vector_t));
+    arrayset->dims = malloc((size_t) children.nb_children * sizeof(*arrayset->dims));
     for (i = 0; i < children.nb_children; i++)
     {
       if (!invalid)
       {
-        strcpy(path2, path);
-        strcat(path2, AH5_G_DS);
-        strcat(path2, children.childnames[i]);
+        path2 = realloc(path2, (strlen(path) + strlen(AH5_G_DS) +
+                                strlen(children.childnames[i]) + 1) * sizeof(*path2));
+        strncpy(path2, path, strlen(path) + 1);
+        strncat(path2, AH5_G_DS, strlen(AH5_G_DS));
+        strncat(path2, children.childnames[i], strlen(children.childnames[i]));
         if(!AH5_read_ft_vector(file_id, path2, arrayset->dims + i))
         {
           invalid_nb = i;
@@ -837,6 +839,7 @@ char AH5_read_ft_arrayset (hid_t file_id, const char *path, AH5_arrayset_t *arra
     else
       rdata = AH5_TRUE;
   }
+  free(path2);
   if (rdata)
   {
     arrayset->path = strdup(path);
@@ -1289,7 +1292,7 @@ char AH5_write_ft_arrayset (hid_t file_id, AH5_arrayset_t *arrayset)
         }
         free(path2);
       }
-      
+
       free(arrayset->data.path);
       arrayset->data.path = tmp;
     }
