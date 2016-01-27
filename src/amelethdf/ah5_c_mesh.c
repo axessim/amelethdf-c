@@ -2,10 +2,10 @@
  * @file   ah5_c_mesh.c
  * @author Nathanaël MUOT <nathanael.muot@axessim.fr>
  * @date   Mon Nov 23 12:49:21 2015
- * 
+ *
  * @brief  AH5 mesh interface.
- * 
- * 
+ *
+ *
  */
 
 #include "ah5_internal.h"
