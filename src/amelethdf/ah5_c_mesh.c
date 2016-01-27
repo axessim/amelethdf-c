@@ -15,13 +15,13 @@
 #include <assert.h>
 
 
-/** 
+/**
  * Convert group entity type to ah5 C string type.
- * 
+ *
  * @param[in] entitytype the group type.
  * @param[out] ctype (constant C string) the group type (node or element)
  * @param[out] centitytype (constant C string) the group element type (NULL edge face or volume)
- * 
+ *
  * @return the entity type dimension
  */
 int AH5_write_group_entitytype(
@@ -31,26 +31,26 @@ int AH5_write_group_entitytype(
 
   *ctype = NULL;
   *centitytype = NULL;
-  
+
   switch (entitytype)
   {
     case AH5_GROUP_NODE:
       *ctype = AH5_V_NODE;
       dimension = 0;
       break;
-      
+
     case AH5_GROUP_EDGE:
       *ctype = AH5_V_ELEMENT;
       *centitytype = AH5_V_EDGE;
       dimension = 1;
       break;
-      
+
     case AH5_GROUP_FACE:
       *ctype = AH5_V_ELEMENT;
       *centitytype = AH5_V_FACE;
       dimension = 2;
       break;
-      
+
     case AH5_GROUP_VOLUME:
       *ctype = AH5_V_ELEMENT;
       *centitytype = AH5_V_VOLUME;
@@ -64,20 +64,20 @@ int AH5_write_group_entitytype(
 }
 
 
-/** 
+/**
  * Convert ah5 group type from C string type to group entity type.
- * 
+ *
  * @param[in] ctype (constant C string) the group type (node or element)
  * @param[in] centitytype (constant C string) the group element type (NULL edge face or volume)
  * @param[out] entitytype the group type.
- * 
- * @return 
+ *
+ * @return
  */
 int AH5_read_group_entitytype(
     const char *ctype, const char *centitytype, AH5_group_entitytype_t *entitytype)
 {
   int dimension = -1;
-  
+
   if (strcmp(ctype, AH5_V_NODE) == 0)
   {
     *entitytype = AH5_GROUP_NODE;
@@ -141,7 +141,7 @@ AH5_groupgroup_t *AH5_init_groupgroup(
     if (path)
       AH5_setpath(&groupgroup->path, path);
 
-    assert(length > 0);
+    // assert(length > 0);
     ++length; // make a space for the null terminator
 
     if (nb)
@@ -220,6 +220,11 @@ AH5_sgroup_t *AH5_init_smsh_group(
   char success = AH5_TRUE;
   hsize_t i;
 
+  if (entitytype == AH5_GROUP_ENTITYTYPE_UNDEF || entitytype == AH5_GROUP_ENTITYTYPE_INVALID)
+  {
+    return NULL;
+  }
+
   if (group)
   {
     group->path = NULL;
@@ -240,7 +245,7 @@ AH5_sgroup_t *AH5_init_smsh_group(
       else
         group->dims[1] = 6;
       group->dims[0] = nb_eles;
-      
+
       group->elements = (int *)malloc(group->dims[0]*group->dims[1]*sizeof(int));
       success &= (group->elements != NULL);
 
@@ -294,7 +299,11 @@ AH5_PUBLIC AH5_ugroup_t *AH5_init_umsh_group(
   AH5_ugroup_t *group, const char *path, hsize_t nb_eles,
   AH5_group_entitytype_t entitytype)
 {
-  char success = AH5_TRUE;
+
+  if (entitytype == AH5_GROUP_ENTITYTYPE_UNDEF || entitytype == AH5_GROUP_ENTITYTYPE_INVALID)
+  {
+    return NULL;
+  }
 
   if (group)
   {
@@ -302,9 +311,6 @@ AH5_PUBLIC AH5_ugroup_t *AH5_init_umsh_group(
     group->entitytype = entitytype;
     group->nb_groupelts = nb_eles;
     group->groupelts = NULL;
-
-    if (path)
-      AH5_setpath(&group->path, path);
 
     if (nb_eles)
     {
@@ -315,6 +321,9 @@ AH5_PUBLIC AH5_ugroup_t *AH5_init_umsh_group(
         return NULL;
       }
     }
+
+    if (path)
+      AH5_setpath(&group->path, path);
   }
 
   return group;
@@ -707,7 +716,7 @@ char AH5_read_smsh_group(hid_t file_id, const char *path, AH5_sgroup_t *sgroup)
     AH5_read_group_entitytype(type, entitytype, &(sgroup->entitytype));
     free(type);
     free(entitytype);
-    
+
     if (H5LTget_dataset_ndims(file_id, path, &nb_dims) >= 0)
       if (nb_dims == 2)
         if (H5LTget_dataset_info(file_id, path, sgroup->dims, &type_class, &length) >= 0)
@@ -741,7 +750,7 @@ char AH5_read_smsh_group(hid_t file_id, const char *path, AH5_sgroup_t *sgroup)
           strcat(normalpath, "/");
           strcat(normalpath, temp);
           /* normalpath = <mesh_path>/normal/<group_name> */
-          
+
           if (AH5_path_valid(file_id, normalpath))
             if (H5LTget_dataset_ndims(file_id, normalpath, &nb_dims) >= 0)
               if (nb_dims <= 1)
@@ -1872,7 +1881,7 @@ void AH5_print_smesh(const AH5_smesh_t *smesh, int space)
 {
   hsize_t i;
   char *ctype, *centitytype;
-  
+
   AH5_print_str_attr(AH5_A_TYPE, AH5_V_STRUCTURED, space + 4);
   printf("%*s-groups: %lu\n", space + 2, "", (long unsigned) smesh->nb_groups);
   for (i = 0; i < smesh->nb_groups; i++)
@@ -2378,7 +2387,7 @@ AH5_groupgroup_t * AH5_copy_groupgroup(AH5_groupgroup_t *dest, const AH5_groupgr
     AH5_init_groupgroup(dest, src->path, src->nb_groupgroupnames, strlen(src->groupgroupnames[0]));
     AH5_COPY_STRING_ARRAY_FIELD(dest, src, groupgroupnames);
   }
-  
+
   return dest;
 }
 
@@ -2387,9 +2396,9 @@ AH5_groupgroup_t * AH5_copy_groupgroup(AH5_groupgroup_t *dest, const AH5_groupgr
 AH5_ugroup_t * AH5_copy_ugroup(AH5_ugroup_t *dest, const AH5_ugroup_t *src)
 {
   AH5_group_entitytype_t entitytype;
-  
+
   if (src && dest)
-  { 
+  {
     if (!AH5_init_umsh_group(
             dest, src->path, src->nb_groupelts, src->entitytype))
       return NULL;
@@ -2404,7 +2413,7 @@ AH5_ugroup_t * AH5_copy_ugroup(AH5_ugroup_t *dest, const AH5_ugroup_t *src)
 AH5_umesh_t * AH5_copy_umesh(AH5_umesh_t *dest, const AH5_umesh_t *src)
 {
   unsigned i;
-  
+
   if (src && dest)
   {
     AH5_init_umesh(

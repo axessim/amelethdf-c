@@ -34,6 +34,7 @@ char AH5_read_sim_instance (hid_t file_id, const char *path, AH5_sim_instance_t 
         strlen(AH5_G_INPUTS), strlen(AH5_G_OUTPUTS), strlen(AH5_G_PARAMETER)) + 1)
                    * sizeof(*path1));
     strcpy(path1, path);
+    path1[strlen(path)] = '\0';
     strcat(path1, AH5_G_PARAMETER);
     AH5_read_opt_attrs(file_id, path1, &(sim_instance->parameter), NULL, 0);
 
@@ -54,7 +55,7 @@ char AH5_read_sim_instance (hid_t file_id, const char *path, AH5_sim_instance_t 
       sim_instance->nb_inputs = 0;
       rdata = AH5_FALSE;
     }
-    
+
     // outputs
     sim_instance->nb_outputs = 1;  // in case of single value
     strcpy(path1, path);
@@ -74,7 +75,7 @@ char AH5_read_sim_instance (hid_t file_id, const char *path, AH5_sim_instance_t 
 
     free(path1);
   }
-  
+
   return rdata;
 }
 
