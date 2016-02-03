@@ -111,6 +111,34 @@ AH5_PUBLIC hid_t AH5_create(const char *name, unsigned flags, const char *entry_
  */
 AH5_PUBLIC hid_t AH5_open(const char *name, unsigned flags);
 
+
+  /** 
+   * Close a Amelet-HDF file
+   * 
+   * @param file_id 
+   * 
+   * @return 
+   */
+AH5_PUBLIC void AH5_close(hid_t file_id);
+
+
+/** 
+ * Read the AmeletHDF entry point and copies into the array pointed by
+ * entrypoint, including the terminating null character (and stopping at that
+ * point).
+ *
+ * To avoid overflows, the size of the array pointed by entrypoint shall be
+ * long enough to contain the entry point. The AH5_ABSOLUTE_PATH_LENGTH is
+ * usually the right value.
+ * 
+ * @param file_id open AmeletHDF file id
+ * @param entrypoint Pointer to the destination array where the entry point
+ * is to be copied.
+ * 
+ * @return entry point is returned.
+ */
+AH5_PUBLIC char* AH5_read_entrypoint(hid_t file_id, char *entrypoint);
+
 AH5_PUBLIC hid_t AH5_H5Tcreate_cpx_memtype(void);
 AH5_PUBLIC hid_t AH5_H5Tcreate_cpx_filetype(void);
 

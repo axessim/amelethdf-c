@@ -46,7 +46,10 @@ extern "C" {
 #define AH5_NATIVE_INT                  H5T_STD_I32LE
 #define AH5_NATIVE_FLOAT                H5T_IEEE_F32LE
 #define AH5_NATIVE_STRING               H5T_FORTRAN_S1
-
+#define AH5_TYPE_FLOAT                  H5T_FLOAT
+#define AH5_TYPE_INTEGER                H5T_INTEGER
+#define AH5_TYPE_COMPLEX                H5T_COMPOUND
+#define AH5_TYPE_STRING                 H5T_STRING
 
 /* ah5_emsource.h */
 #define AH5_A_X                         "x"
@@ -144,6 +147,7 @@ extern "C" {
 #define AH5_V_RATIONAL                      "rational"
 #define AH5_V_DATASET                       "dataSet"
 #define AH5_V_ARRAYSET                      "arraySet"
+#define AH5_V_MESH_ENTITY                   "meshEntity"
 
 
 /* ah5_globenv.h */

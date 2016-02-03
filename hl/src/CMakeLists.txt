@@ -1,26 +1,26 @@
 # amelethdf/src/lib CMakeList.txt file
 
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR} ${AMELETHDF_DEP_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${AMELETHDF_HL_INCLUDE_DIRS})
 
 FILE(GLOB_RECURSE amelethdf_src *.c)
-ADD_DEFINITIONS(-DAMELETHDF_C_LIBRARY)
-ADD_LIBRARY(amelethdfc SHARED ${amelethdf_src})
 
+ADD_DEFINITIONS(-DAMELETHDF_C_HL_LIBRARY)
+ADD_LIBRARY(amelethdfc_hl SHARED ${amelethdf_src})
+SET_TARGET_PROPERTIES(amelethdfc_hl PROPERTIES 
+  OUTPUT_NAME "amelethdfc_hl")
+
+TARGET_LINK_LIBRARIES(amelethdfc_hl ${AMELETHDF_HL_DEP_LINK_LIBS})
 
 IF (WIN32)
-  SET_TARGET_PROPERTIES(amelethdfc PROPERTIES 
-    OUTPUT_NAME "amelethdfc")
+  SET_TARGET_PROPERTIES(amelethdfc_hl PROPERTIES 
+    OUTPUT_NAME "amelethdfc_hl")
 ELSE ()
-  ADD_LIBRARY(amelethdfc_static STATIC ${amelethdf_src})
-  SET_TARGET_PROPERTIES(amelethdfc amelethdfc_static PROPERTIES 
-    OUTPUT_NAME "amelethdfc")
+  ADD_LIBRARY(amelethdfc_hl_static STATIC ${amelethdf_src})
+  SET_TARGET_PROPERTIES(amelethdfc_hl amelethdfc_hl_static PROPERTIES 
+    OUTPUT_NAME "amelethdfc_hl")
 ENDIF ()
 
-
-  
-TARGET_LINK_LIBRARIES(amelethdfc ${AMELETHDF_DEP_LINK_LIBS})
-
-INSTALL(TARGETS amelethdfc 
+INSTALL(TARGETS amelethdfc_hl
   EXPORT  AmeletHDFLibraryDepends
   RUNTIME       DESTINATION "${INSTALL_BIN_DIR}"
   LIBRARY       DESTINATION "${INSTALL_LIB_DIR}"
@@ -28,7 +28,7 @@ INSTALL(TARGETS amelethdfc
   PUBLIC_HEADER DESTINATION "${INSTALL_INCLUDE_DIR}"
   )
 IF (UNIX)
-  INSTALL(TARGETS amelethdfc_static
+  INSTALL(TARGETS amelethdfc_hl_static
     EXPORT  AmeletHDFLibraryDepends
     RUNTIME       DESTINATION "${INSTALL_BIN_DIR}"
     LIBRARY       DESTINATION "${INSTALL_LIB_DIR}"
@@ -40,4 +40,3 @@ ENDIF()
 FILE(GLOB_RECURSE amelethdf_header *.h)
 INSTALL(FILES ${amelethdf_header} DESTINATION "include")
 
-add_static_analysis(amelethdfc)

@@ -62,7 +62,20 @@ void build_umesh_1(AH5_umesh_t *umesh)
   umesh->som_tables = NULL;
 }
 
-//! Test write groupgroup function.
+
+//! Test copy mesh
+char *test_copy_umesh()
+{
+  AH5_umesh_t msh1, msh2;
+
+  build_umesh_1(&msh1);
+
+  mu_assert("copy umesh", AH5_copy_umesh(&msh2, &msh1) != NULL);
+  
+  return MU_FINISHED_WITHOUT_ERRORS;
+}
+
+//! Test init functions function.
 char *test_init_functions()
 {
   AH5_mesh_t mesh;
@@ -135,6 +148,17 @@ char *test_init_functions()
   mu_assert_ne("check mesh field", umesh.elementnodes, NULL);
   mu_assert_eq("check mesh field", umesh.nb_elementtypes, 2);
   mu_assert_ne("check mesh field", umesh.elementtypes, NULL);
+  mu_assert_eq("check mesh field", umesh.nb_nodes[0], 3);
+  mu_assert_eq("check mesh field", umesh.nb_nodes[1], 3);
+  mu_assert_eq("check mesh field", umesh.nb_groups, 0);
+  mu_assert_eq_ptr("check mesh field", umesh.groups, NULL);
+
+  mu_assert_eq_ptr(
+    "empty mesh", AH5_init_umesh(&umesh, 0, 0, 3, 0, 0, 0), &umesh);
+  mu_assert_eq("check mesh field", umesh.nb_elementnodes, 0);
+  mu_assert_eq_ptr("check mesh field", umesh.elementnodes, NULL);
+  mu_assert_eq("check mesh field", umesh.nb_elementtypes, 0);
+  mu_assert_eq_ptr("check mesh field", umesh.elementtypes, NULL);
   mu_assert_eq("check mesh field", umesh.nb_nodes[0], 3);
   mu_assert_eq("check mesh field", umesh.nb_nodes[1], 3);
   mu_assert_eq("check mesh field", umesh.nb_groups, 0);
@@ -715,33 +739,33 @@ char *test_read_umesh()
 
 
 //! Test
-char *test_element_size()
+const char *test_element_size()
 {
-  mu_assert_str_equal(
+  mu_assert_eq(
     "Check element_size", AH5_element_size(UELE_INVALID), 0);
-  mu_assert_str_equal(
+  mu_assert_eq(
     "Check element_size", AH5_element_size(UELE_BAR2), 2);
-  mu_assert_str_equal(
+  mu_assert_eq(
     "Check element_size", AH5_element_size(UELE_BAR3), 3);
-  mu_assert_str_equal(
+  mu_assert_eq(
     "Check element_size", AH5_element_size(UELE_TRI3), 3);
-  mu_assert_str_equal(
+  mu_assert_eq(
     "Check element_size", AH5_element_size(UELE_TRI6), 6);
-  mu_assert_str_equal(
+  mu_assert_eq(
     "Check element_size", AH5_element_size(UELE_QUAD4), 4);
-  mu_assert_str_equal(
+  mu_assert_eq(
     "Check element_size", AH5_element_size(UELE_QUAD8), 8);
-  mu_assert_str_equal(
+  mu_assert_eq(
     "Check element_size", AH5_element_size(UELE_TETRA4), 4);
-  mu_assert_str_equal(
+  mu_assert_eq(
     "Check element_size", AH5_element_size(UELE_PYRA5), 5);
-  mu_assert_str_equal(
+  mu_assert_eq(
     "Check element_size", AH5_element_size(UELE_PENTA6), 6);
-  mu_assert_str_equal(
+  mu_assert_eq(
     "Check element_size", AH5_element_size(UELE_HEXA8), 8);
-  mu_assert_str_equal(
+  mu_assert_eq(
     "Check element_size", AH5_element_size(UELE_TETRA10), 10);
-  mu_assert_str_equal(
+  mu_assert_eq(
     "Check element_size", AH5_element_size(UELE_HEXA20), 20);
 
   return MU_FINISHED_WITHOUT_ERRORS;
@@ -751,6 +775,7 @@ char *test_element_size()
 // Run all tests
 char *all_tests()
 {
+  mu_run_test(test_copy_umesh);
   mu_run_test(test_write_groupgroup);
   mu_run_test(test_init_functions);
   mu_run_test(test_write_unstructured_mesh_group);
@@ -758,6 +783,7 @@ char *all_tests()
   mu_run_test(test_write_unstructured_nodes_mesh);
   mu_run_test(test_read_umesh);
   mu_run_test(test_write_mesh);
+  mu_run_test(test_element_size);
 
   return MU_FINISHED_WITHOUT_ERRORS;
 }

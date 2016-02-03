@@ -6,7 +6,7 @@ ENABLE_TESTING()
 PROJECT(AMELETHDF)
 
 MESSAGE("--------------------------------------------------")
-MESSAGE(STATUS "Configuring project AmeketHDF")
+MESSAGE(STATUS "Configuring project AmeketHDF HL")
 MESSAGE(STATUS "Host system is ${CMAKE_SYSTEM_NAME}")
 MESSAGE(STATUS "Configuration is ${CMAKE_BUILD_TYPE}")
 SITE_NAME(HOST_NAME)
@@ -47,6 +47,9 @@ SET(INSTALL_DATA_DIR share CACHE PATH
 SET(AMELETHDF_DEP_INCLUDE_DIRS "")
 SET(AMELETHDF_DEP_LINK_LIBS "")
 SET(AMELETHDF_DEP_LINK_LIBS_DIRS "")
+SET(AMELETHDF_HL_DEP_INCLUDE_DIRS "")
+SET(AMELETHDF_HL_DEP_LINK_LIBS "")
+SET(AMELETHDF_HL_DEP_LINK_LIBS_DIRS "")
 
 # HDF5 
 FIND_PACKAGE(HDF5 REQUIRED)
@@ -67,6 +70,7 @@ ENDIF()
 
 SET(AMELETHDF_DEP_INCLUDE_DIRS ${HDF5_INCLUDE_DIR} ${AMELETHDF_DEP_INCLUDE_DIRS})
 SET(AMELETHDF_DEP_LINK_LIBS hdf5 hdf5_hl ${HDF5_C_LIBRARIES} ${HDF5_HL_LIBRARIE} ${AMELETHDF_DEP_LINK_LIBS})
+LIST(REMOVE_ITEM AMELETHDF_DEP_LINK_LIBS hdf5_f90cstub hdf5_hl_f90cstub hdf5_fortran hdf5_hl_fortran hdf5_tools)
 
 # MPI if requested.
 # XXX Check MPI compatiblity with HDF5 MPI dependance (HDF5_MPI_C_INCLUDE_PATH and HDF5_MPI_C_LIBRARIES)
@@ -91,7 +95,7 @@ ENDIF ()
 #-------------------------------------------------------------
 # Configure compilateur
 #-------------------------------------------------------------
-if ( "${CMAKE_C_COMPILER}" MATCHES "clang$" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "Clang" )
+if ( "${CMAKE_C_COMPILER}" MATCHES "clang" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "Clang" )
   set ( CMAKE_COMPILER_IS_CLANG 1 )
 endif()
 
@@ -147,7 +151,7 @@ ENDFUNCTION()
 #-------------------------------------------------------------
 # Generat configure file
 #-------------------------------------------------------------
-STRING(COMPARE EQUAL "${CMAKE_BUILD_TYPE}" "DEBUG" AMELETHDF_DEBUG)
+STRING(COMPARE EQUAL "${CMAKE_BUILD_TYPE}" "Debug" AMELETHDF_DEBUG)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/src/amelethdf/ah5_config.h.cmake 
   ${CMAKE_CURRENT_BINARY_DIR}/src/amelethdf/ah5_config.h)
 INSTALL(FILES
@@ -166,6 +170,24 @@ SET(AMELETHDF_INCLUDE_DIRS
   ${CMAKE_CURRENT_SOURCE_DIR}/src/amelethdf
   ${AMELETHDF_DEP_INCLUDE_DIRS})
 
+# finalised hight level library depenance
+SET(AMELETHDF_HL_DEP_INCLUDE_DIRS 
+  ${AMELETHDF_INCLUDE_DIRS}
+  ${AMELETHDF_HL_DEP_INCLUDE_DIRS})
+SET(AMELETHDF_HL_DEP_LINK_LIBS 
+  amelethdfc 
+  ${AMELETHDF_DEP_LINK_LIBS})
+SET(AMELETHDF_HL_DEP_LINK_LIBS_DIRS 
+  ${AMELETHDF_DEP_LINK_LIBS_DIRS} 
+  ${AMELETHDF_HL_DEP_LINK_LIBS_DIRS})
+# 
+SET(AMELETHDF_HL_INCLUDE_DIRS 
+  ${CMAKE_CURRENT_SOURCE_DIR}/hl/src
+  ${AMELETHDF_HL_DEP_INCLUDE_DIRS})
+
+SET(AMELETHDF_HL_TOOLS_LINK_LIBS amelethdfc_hl ${AMELETHDF_HL_DEP_LINK_LIBS})
+SET(AMELETHDF_HL_TESTS_LINK_LIBS amelethdfc_hl ${AMELETHDF_HL_DEP_LINK_LIBS})
+
 SET(AMELETHDF_EXEMPLES_DIR "${CMAKE_SOURCE_DIR}/exemples")
 SET(AMELETHDF_TEST_DATA_DIR "${CMAKE_SOURCE_DIR}/src/test/data")
 
@@ -174,7 +196,7 @@ SET(AMELETHDF_TEST_DATA_DIR "${CMAKE_SOURCE_DIR}/src/test/data")
 #-------------------------------------------------------------
 IF (AMELETHDF_BUILD_DOCS)
   SET(DOXY_SOURCES_DIRS 
-    "${PROJECT_SOURCE_DIR}/src/amelethdf")
+    "${PROJECT_SOURCE_DIR}/src/amelethdf ${PROJECT_SOURCE_DIR}/hl/src")
   SET(DOXY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/docs)
   ADD_DOXYGEN(${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in)
   INSTALL(DIRECTORY ${PROJECT_BINARY_DIR}/docs/html 
@@ -187,12 +209,13 @@ ENDIF (AMELETHDF_BUILD_DOCS)
 # Walk sub dir
 #-------------------------------------------------------------
 ADD_SUBDIRECTORY(src)
+ADD_SUBDIRECTORY(hl)
 
 #-------------------------------------------------------------
 # Coverage
 #-------------------------------------------------------------
 IF (AMELETHDF_ENABLE_COVERAGE AND CMAKE_COMPILER_IS_GNUCXX)
-  IF (CMAKE_BUILD_TYPE STREQUAL "DEBUG" OR CMAKE_BUILD_TYPE STREQUAL "Coverage")
+  IF (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "Coverage")
     SETUP_TARGET_FOR_COVERAGE(coverage ctest coverage)
   ENDIF ()
 ENDIF ()
@@ -203,13 +226,14 @@ ENDIF ()
 # CMAKE CONFIGURE FILE into build-tree
 SET(AMELETHDF_CMAKE_DIR ${PROJECT_BINARY_DIR})
 SET(AMELETHDF_CMAKE_DIR_ABS ${AMELETHDF_CMAKE_DIR})                # The absolute path
-SET(AMELETHDF_EXPORT_INCLUDE_DIRS ${AMELETHDF_INCLUDE_DIRS})
+SET(AMELETHDF_EXPORT_INCLUDE_DIRS ${AMELETHDF_HL_INCLUDE_DIRS})
 SET(AMELETHDF_EXPORT_LIBRARY_DIRS 
-  ${PROJECT_BINARY_DIR}/src/amelethdf)
-SET(AMELETHDF_EXPORT_LIBRARIES amelethdfc hdf5_hl hdf5)
+  ${PROJECT_BINARY_DIR}/src/amelethdf
+  ${PROJECT_BINARY_DIR}/hl/src)
+SET(AMELETHDF_EXPORT_LIBRARIES amelethdfc_hl amelethdfc ${AMELETHDF_DEP_LINK_LIBS})
 
 # Add all targets to the build-tree export set
-EXPORT(TARGETS amelethdfc 
+EXPORT(TARGETS amelethdfc amelethdfc_hl 
   FILE "${AMELETHDF_CMAKE_DIR}/AmeletHDFLibraryDepends.cmake")
 # Export the package for use from the build-tree
 # (this registers the build-tree with a global CMake-registry)

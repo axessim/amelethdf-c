@@ -24,6 +24,18 @@ AH5_PUBLIC char AH5_write_flt_dataset(hid_t loc_id, const char *dset_name, const
                                       const float *wdata);
 AH5_PUBLIC char AH5_write_cpx_dataset(hid_t loc_id, const char *dset_name, const hsize_t len,
                                       const AH5_complex_t *wdata);
+
+/**
+ * Write a dataset made of c-strings of same length.
+ *
+ * @param loc_id id of the location
+ * @param dset_name name of the dataset
+ * @param len number of strings in the dataset
+ * @param slen Length (returned by strlen) of the strings
+ * @param wdata data to be stored.
+ *
+ * @return status of writing: AH5_TRUE if success.
+ */
 AH5_PUBLIC char AH5_write_str_dataset(hid_t loc_id, const char *dset_name, const hsize_t len,
                                       const size_t slen, char **wdata);
 
