@@ -213,6 +213,7 @@ char AH5_write_str_dataset(hid_t loc_id, const char *dset_name, const hsize_t le
 
   filetype = H5Tcopy(AH5_NATIVE_STRING);
   H5Tset_size(filetype, slen);
+  H5Tset_strpad(filetype, H5T_STR_NULLTERM);
   memtype = H5Tcopy(H5T_C_S1);
   H5Tset_size(memtype, slen);
   space = H5Screate_simple(1, dims, NULL);

@@ -305,7 +305,7 @@ AH5_PUBLIC AH5_ugroup_t *AH5_init_umsh_group(
 
     if (path)
       AH5_setpath(&group->path, path);
-
+    
     if (nb_eles)
     {
       group->groupelts = (int *)malloc(nb_eles*sizeof(int));
@@ -1690,7 +1690,7 @@ char AH5_write_umsh_group(hid_t loc_id, const AH5_ugroup_t *ugroup, hsize_t nb_u
   else
     grp = H5Gcreate(loc_id, AH5_CATEGORY_NAME(AH5_G_GROUP), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
-  for (i = 0; i < nb_ugroup; i++)
+  for (i = 0; i < nb_ugroup; ++i)
   {
     if (ugroup[i].nb_groupelts > 0)
     {
