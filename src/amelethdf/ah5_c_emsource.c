@@ -140,16 +140,26 @@ char AH5_read_els_generator (hid_t file_id, const char *path, AH5_generator_t *g
       rdata = AH5_FALSE;
     }
 
-    path2 = malloc((strlen(path)
-                    + AH5_MAX(strlen(AH5_G_INNER_IMPEDANCE), strlen(AH5_G_MAGNITUDE)) + 1)
-                   * sizeof(*path2));
-    strcpy(path2, path);
-    strcat(path2, AH5_G_INNER_IMPEDANCE);
+    path2 = malloc((strlen(path) + strlen(AH5_G_INNER_IMPEDANCE) + 1) * sizeof(*path2));
+    if (!path2)
+    {
+      AH5_print_err_path(AH5_C_ELECTROMAGNETIC_SOURCE, path);
+      return AH5_FALSE;
+    }
+    strncpy(path2, path, strlen(path) + 1);
+    strncat(path2, AH5_G_INNER_IMPEDANCE, strlen(AH5_G_INNER_IMPEDANCE));
     if (!AH5_read_floatingtype(file_id, path2, &(generator->inner_impedance)))
       rdata = AH5_FALSE;
 
-    strcpy(path2, path);
-    strcat(path2, AH5_G_MAGNITUDE);
+
+    path2 = realloc(path2, (strlen(path) + strlen(AH5_G_MAGNITUDE) + 1) * sizeof(*path2));
+    if (!path2)
+    {
+      AH5_print_err_path(AH5_C_ELECTROMAGNETIC_SOURCE, path);
+      return AH5_FALSE;
+    }
+    strncpy(path2, path, strlen(path) + 1);
+    strncat(path2, AH5_G_MAGNITUDE, strlen(AH5_G_MAGNITUDE));
     if (!AH5_read_floatingtype(file_id, path2, &(generator->magnitude)))
       rdata = AH5_FALSE;
 
@@ -224,17 +234,25 @@ char AH5_read_els_dipole (hid_t file_id, const char *path, AH5_dipole_t *dipole)
       rdata = AH5_FALSE;
     }
 
-    path2 = malloc((strlen(path)
-                    + AH5_MAX(strlen(AH5_G_INNER_IMPEDANCE), strlen(AH5_G_MAGNITUDE)) + 1)
-                   * sizeof(*path2));
-    
-    strcpy(path2, path);
-    strcat(path2, AH5_G_INNER_IMPEDANCE);
+    path2 = malloc((strlen(path) + strlen(AH5_G_INNER_IMPEDANCE) + 1) * sizeof(*path2));
+    if (!path2)
+    {
+      AH5_print_err_path(AH5_C_ELECTROMAGNETIC_SOURCE, path);
+      return AH5_FALSE;
+    }
+    strncpy(path2, path, strlen(path) + 1);
+    strncat(path2, AH5_G_INNER_IMPEDANCE, strlen(AH5_G_INNER_IMPEDANCE));
     if (!AH5_read_floatingtype(file_id, path2, &(dipole->inner_impedance)))
       rdata = AH5_FALSE;
 
-    strcpy(path2, path);
-    strcat(path2, AH5_G_MAGNITUDE);
+    path2 = realloc(path2, (strlen(path) + strlen(AH5_G_MAGNITUDE) + 1) * sizeof(*path2));
+    if (!path2)
+    {
+      AH5_print_err_path(AH5_C_ELECTROMAGNETIC_SOURCE, path);
+      return AH5_FALSE;
+    }
+    strncpy(path2, path, strlen(path) + 1);
+    strncat(path2, AH5_G_MAGNITUDE, strlen(AH5_G_MAGNITUDE));
     if (!AH5_read_floatingtype(file_id, path2, &(dipole->magnitude)))
       rdata = AH5_FALSE;
 
@@ -256,10 +274,11 @@ char AH5_read_els_antenna (hid_t file_id, const char *path, AH5_antenna_t *anten
   char model_man[][AH5_ATTR_LENGTH] = {AH5_A_TYPE};
   char *path2, *type, rdata = AH5_TRUE;
 
-  path2 = malloc((AH5_MAX(
-      AH5_MAX3(strlen(AH5_G_INPUT_IMPEDANCE), strlen(AH5_G_LOAD_IMPEDANCE), strlen(AH5_G_FEEDER_IMPEDANCE)),
-      AH5_MAX(strlen(AH5_G_MAGNITUDE), strlen(AH5_G_MODEL))) + 1)
-                 * sizeof(*path2));
+  path2 = malloc((strlen(path) + strlen(AH5_G_INPUT_IMPEDANCE) + 1) * sizeof(*path2));
+  if (!path2)
+  {
+    return AH5_FALSE;
+  }
 
   antenna->path = strdup(path);
   antenna->model.type = ANT_INVALID;
@@ -276,28 +295,48 @@ char AH5_read_els_antenna (hid_t file_id, const char *path, AH5_antenna_t *anten
   {
     AH5_read_opt_attrs(file_id, path, &(antenna->opt_attrs), NULL, 0);
 
-    strcpy(path2, path);
-    strcat(path2, AH5_G_INPUT_IMPEDANCE);
+    strncpy(path2, path, strlen(path) + 1);
+    strncat(path2, AH5_G_INPUT_IMPEDANCE, strlen(AH5_G_INPUT_IMPEDANCE));
     if (!AH5_read_floatingtype(file_id, path2, &(antenna->input_impedance)))
       rdata = AH5_FALSE;
 
-    strcpy(path2, path);
-    strcat(path2, AH5_G_LOAD_IMPEDANCE);
+    path2 = realloc(path2, (strlen(path) + strlen(AH5_G_LOAD_IMPEDANCE) + 1) * sizeof(*path2));
+    if (!path2)
+    {
+      return AH5_FALSE;
+    }
+    strncpy(path2, path, strlen(path) + 1);
+    strncat(path2, AH5_G_LOAD_IMPEDANCE, strlen(AH5_G_LOAD_IMPEDANCE));
     if (!AH5_read_floatingtype(file_id, path2, &(antenna->load_impedance)))
       rdata = AH5_FALSE;
 
-    strcpy(path2, path);
-    strcat(path2, AH5_G_FEEDER_IMPEDANCE);
+    path2 = realloc(path2, (strlen(path) + strlen(AH5_G_FEEDER_IMPEDANCE) + 1) * sizeof(*path2));
+    if (!path2)
+    {
+      return AH5_FALSE;
+    }
+    strncpy(path2, path, strlen(path) + 1);
+    strncat(path2, AH5_G_FEEDER_IMPEDANCE, strlen(AH5_G_FEEDER_IMPEDANCE));
     if (!AH5_read_floatingtype(file_id, path2, &(antenna->feeder_impedance)))
       rdata = AH5_FALSE;
 
-    strcpy(path2, path);
-    strcat(path2, AH5_G_MAGNITUDE);
+    path2 = realloc(path2, (strlen(path) + strlen(AH5_G_MAGNITUDE) + 1) * sizeof(*path2));
+    if (!path2)
+    {
+      return AH5_FALSE;
+    }
+    strncpy(path2, path, strlen(path) + 1);
+    strncat(path2, AH5_G_MAGNITUDE, strlen(AH5_G_MAGNITUDE));
     if (!AH5_read_floatingtype(file_id, path2, &(antenna->magnitude)))
       rdata = AH5_FALSE;
 
-    strcpy(path2, path);
-    strcat(path2, AH5_G_MODEL);
+    path2 = realloc(path2, (strlen(path) + strlen(AH5_G_MODEL) + 1) * sizeof(*path2));
+    if (!path2)
+    {
+      return AH5_FALSE;
+    }
+    strncpy(path2, path, strlen(path) + 1);
+    strncat(path2, AH5_G_MODEL, strlen(AH5_G_MODEL));
     AH5_read_opt_attrs(file_id, path2, &(antenna->model.opt_attrs), model_man,
                        sizeof(model_man)/AH5_ATTR_LENGTH);
     if (AH5_read_str_attr(file_id, path2, AH5_A_TYPE, &type))
@@ -360,7 +399,7 @@ char AH5_read_els_antenna (hid_t file_id, const char *path, AH5_antenna_t *anten
   }
 
   free(path2);
-  
+
   return rdata;
 }
 
@@ -917,4 +956,3 @@ void AH5_free_electromagnetic_source (AH5_em_source_t *em_source)
     em_source->sm_sources = NULL;
   }
 }
-

@@ -30,17 +30,26 @@ char AH5_read_sim_instance (hid_t file_id, const char *path, AH5_sim_instance_t 
     if (!AH5_read_str_attr(file_id, path, AH5_A_VERSION, &(sim_instance->version)))
       AH5_print_err_attr(AH5_C_SIMULATION, path, AH5_A_VERSION);
 
-    path1 = malloc((strlen(path) + AH5_MAX3(
-        strlen(AH5_G_INPUTS), strlen(AH5_G_OUTPUTS), strlen(AH5_G_PARAMETER)) + 1)
-                   * sizeof(*path1));
-    strcpy(path1, path);
-    strcat(path1, AH5_G_PARAMETER);
+    path1 = malloc((strlen(path) + strlen(AH5_G_PARAMETER) + 1) * sizeof(*path1));
+    if (!path1)
+    {
+      AH5_print_err_dset(AH5_C_SIMULATION, path);
+      return AH5_FALSE;
+    }
+    strncpy(path1, path, strlen(path) + 1);
+    strncat(path1, AH5_G_PARAMETER, strlen(AH5_G_PARAMETER));
     AH5_read_opt_attrs(file_id, path1, &(sim_instance->parameter), NULL, 0);
 
     // inputs
     sim_instance->nb_inputs = 1;  // in case of single value
-    strcpy(path1, path);
-    strcat(path1, AH5_G_INPUTS);
+    path1 = realloc(path1, (strlen(path) + strlen(AH5_G_INPUTS) + 1) * sizeof(*path1));
+    if (!path1)
+    {
+      AH5_print_err_dset(AH5_C_SIMULATION, path);
+      return AH5_FALSE;
+    }
+    strncpy(path1, path, strlen(path) + 1);
+    strncat(path1, AH5_G_INPUTS, strlen(AH5_G_INPUTS));
     if (AH5_path_valid(file_id, path1))
       if (H5LTget_dataset_ndims(file_id, path1, &nb_dims) >= 0)
         if (nb_dims <= 1)
@@ -54,11 +63,18 @@ char AH5_read_sim_instance (hid_t file_id, const char *path, AH5_sim_instance_t 
       sim_instance->nb_inputs = 0;
       rdata = AH5_FALSE;
     }
-    
+
     // outputs
     sim_instance->nb_outputs = 1;  // in case of single value
-    strcpy(path1, path);
-    strcat(path1, AH5_G_OUTPUTS);
+
+    path1 = realloc(path1, (strlen(path) + strlen(AH5_G_OUTPUTS) + 1) * sizeof(*path1));
+    if (!path1)
+    {
+      AH5_print_err_dset(AH5_C_SIMULATION, path);
+      return AH5_FALSE;
+    }
+    strncpy(path1, path, strlen(path) + 1);
+    strncat(path1, AH5_G_OUTPUTS, strlen(AH5_G_OUTPUTS));
     if (AH5_path_valid(file_id, path1))
       if (H5LTget_dataset_ndims(file_id, path1, &nb_dims) >= 0)
         if (nb_dims <= 1)
@@ -74,7 +90,11 @@ char AH5_read_sim_instance (hid_t file_id, const char *path, AH5_sim_instance_t 
 
     free(path1);
   }
-  
+  else
+  {
+    rdata = AH5_FALSE;
+  }
+
   return rdata;
 }
 

@@ -2,7 +2,7 @@
  * @file   ah5_category.h
  * @author Nathanaël MUOT <nathanael.muot@axessim.fr>
  * @date   Mon Jan 25 14:54:16 2016
- * 
+ *
  * @brief
  *
  * Amelet-HDF back compatibility Only the last version is compatible with
@@ -30,32 +30,13 @@
 #include <hdf5.h>
 #include <ah5_config.h>
 
-/** @def AH5_MAX
- * maximum between 2 values
- */
-#define AH5_MAX(a,b)            \
-  ({ __typeof__ (a) _a = (a);   \
-    __typeof__ (b) _b = (b);    \
-    _a > _b ? _a : _b; })
-
-/**
- * @def AH5_MAX
- * maximum between 3 values
- */
-#define AH5_MAX3(a, b, c)        \
-  ({ __typeof__ (a) _a = (a);    \
-  __typeof__ (b) _b = (b);       \
-  __typeof__ (c) _c = (c);       \
-  AH5_MAX(AH5_MAX(_a, _b), _c); })
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-  
+
   /*
-   
+
    */
 #define AH5_VERSION_1_5_4                1
 #define AH5_VERSION_1_6_0                1
@@ -104,9 +85,15 @@ extern "C" {
 # define AH5_ELEMENT_NAME_LENGTH         31
 #else
 # ifndef AH5_SILENT_PREPROCESSOR
-#  warning "The macros associated to name length restriction are disable, \
+#  ifdef _WIN32
+#   pragma message ("The macros associated to name length restriction are disable, \
+defined AH5_USED_DEPRECIATED_NAME_LENGTH to keep compatibility \
+or AH5_SILENT_PREPROCESSOR for hide this message.")
+#  else
+#   warning "The macros associated to name length restriction are disable, \
 defined AH5_USED_DEPRECIATED_NAME_LENGTH to keep compatibility \
 or AH5_SILENT_PREPROCESSOR for hide this message."
+#  endif
 # endif // AH5_SILENT_PREPROCESSOR
 #endif // AH5_DEPRECIATED_NAME_LENGTH
 
