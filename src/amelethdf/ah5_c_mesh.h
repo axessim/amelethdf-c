@@ -113,6 +113,7 @@ typedef enum _AH5_uelement_type_t
   AH5_UELE_TRI6               = 12,
   AH5_UELE_QUAD4              = 13,
   AH5_UELE_QUAD8              = 14,
+  AH5_UELE_QUAD9              = 18,
   AH5_UELE_TETRA4             = 101,
   AH5_UELE_PYRA5              = 102,
   AH5_UELE_PENTA6             = 103,

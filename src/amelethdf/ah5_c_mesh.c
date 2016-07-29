@@ -314,7 +314,7 @@ AH5_PUBLIC AH5_ugroup_t *AH5_init_umsh_group(
 
     if (path)
       AH5_setpath(&group->path, path);
-    
+
     if (nb_eles)
     {
       group->groupelts = (int *)malloc(nb_eles*sizeof(int));
@@ -2471,6 +2471,10 @@ int AH5_element_size(char element_type)
   case AH5_UELE_QUAD8:
   case AH5_UELE_HEXA8:
     size = 8;
+    break;
+
+  case AH5_UELE_QUAD9:
+    size = 9;
     break;
 
   case AH5_UELE_TETRA10:

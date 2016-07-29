@@ -68,7 +68,7 @@ char *test_copy_umesh()
   build_umesh_1(&msh1);
 
   mu_assert("copy umesh", AH5_copy_umesh(&msh2, &msh1) != NULL);
-  
+
   return MU_FINISHED_WITHOUT_ERRORS;
 }
 
@@ -736,6 +736,8 @@ const char *test_element_size()
     "Check element_size", AH5_element_size(AH5_UELE_QUAD4), 4);
   mu_assert_eq(
     "Check element_size", AH5_element_size(AH5_UELE_QUAD8), 8);
+  mu_assert_eq(
+    "Check element_size", AH5_element_size(AH5_UELE_QUAD9), 9);
   mu_assert_eq(
     "Check element_size", AH5_element_size(AH5_UELE_TETRA4), 4);
   mu_assert_eq(
