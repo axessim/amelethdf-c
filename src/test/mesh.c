@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include <ah5.h>
+#include <hdf5.h>
 #include "utest.h"
 
 //! Test suite counter.
@@ -416,8 +417,7 @@ char *test_write_groupgroup()
   gg.path = "gg_name";
   gg.nb_groupgroupnames = 2;
   gg.groupgroupnames = groupgroupnames;
-  mu_assert_true("Write valide data.",
-                 AH5_write_groupgroup(file_id, &gg, 1));
+  mu_assert_true("Write valide data.", AH5_write_groupgroup(file_id, &gg, 1));
 
   // Test the written data using hdf5 API.
   dset = H5Dopen(file_id, "/groupGroup/gg_name", H5P_DEFAULT);
@@ -468,10 +468,8 @@ char *test_write_unstructured_mesh_group()
   ugrp.groupelts = NULL;
   ugrp.nb_groupelts = 0;
 
-  mu_assert_false("Negative numbre of groups.",
-                  AH5_write_umsh_group(file_id, &ugrp, 0));
-  mu_assert_false("Empty group.",
-                  AH5_write_umsh_group(file_id, &ugrp, 1));
+  mu_assert_false("Negative numbre of groups.", AH5_write_umsh_group(file_id, &ugrp, 0));
+  mu_assert_false("Empty group.", AH5_write_umsh_group(file_id, &ugrp, 1));
 
   // Write a simple group by relative path name.
   ugrp.path = "grp_name";
@@ -481,23 +479,19 @@ char *test_write_unstructured_mesh_group()
   for (i = 0; i < ugrp.nb_groupelts; i++)
     ugrp.groupelts[i] = i;
 
-  mu_assert_true("Write a simple group by relative path [1].",
-                 AH5_write_umsh_group(file_id, &ugrp, 1));
-  mu_assert("Check 'group' category nodes in file [1].",
-            AH5_path_valid(file_id, "/group"));
-  mu_assert("Check 'group' nodes in file [1].",
-            AH5_path_valid(file_id, "/group/grp_name"));
+  mu_assert_true(
+      "Write a simple group by relative path [1].", AH5_write_umsh_group(file_id, &ugrp, 1));
+  mu_assert("Check 'group' category nodes in file [1].", AH5_path_valid(file_id, "/group"));
+  mu_assert("Check 'group' nodes in file [1].", AH5_path_valid(file_id, "/group/grp_name"));
 
 
   // Write a simple group by abs path name.
   ugrp.path = "/mesh/$mesh_group/$mesh_name/group/grp_name_2";
 
-  mu_assert_true("Write a simple group by relative path [2].",
-                 AH5_write_umsh_group(file_id, &ugrp, 1));
-  mu_assert("Check 'group' category nodes in file [2].",
-            AH5_path_valid(file_id, "/group"));
-  mu_assert("Check 'group' nodes in file [2].",
-            AH5_path_valid(file_id, "/group/grp_name_2"));
+  mu_assert_true(
+      "Write a simple group by relative path [2].", AH5_write_umsh_group(file_id, &ugrp, 1));
+  mu_assert("Check 'group' category nodes in file [2].", AH5_path_valid(file_id, "/group"));
+  mu_assert("Check 'group' nodes in file [2].", AH5_path_valid(file_id, "/group/grp_name_2"));
 
   // Close and release.
   free(ugrp.groupelts);
@@ -524,37 +518,30 @@ char *test_write_umesh()
 
   // Write the mesh into '/mesh' node.
   loc_id = H5Gcreate(file_id, "/mesh", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  mu_assert("Write an simple umesh.",
-            AH5_write_umesh(loc_id, &umesh));
-
+  mu_assert_eq("check HDF object closed", H5Fget_obj_count(file_id, H5F_OBJ_ALL), 2);
+  mu_assert("Write an simple umesh.", AH5_write_umesh(loc_id, &umesh));
+  mu_assert_eq("check HDF object closed", H5Fget_obj_count(file_id, H5F_OBJ_ALL), 2);
+  H5Gclose(loc_id);
+  
   // Check if all the mesh parts are written.
-  mu_assert("Check 'nodes' nodes in file.",
-            AH5_path_valid(file_id, "/mesh/nodes"));
-  mu_assert("Check 'elementNodes' nodes in file.",
-            AH5_path_valid(file_id, "/mesh/elementNodes"));
-  mu_assert("Check 'elementTypes' nodes in file.",
-            AH5_path_valid(file_id, "/mesh/elementTypes"));
-  mu_assert("Check 'groupGroup' nodes in file.",
-            AH5_path_valid(file_id, "/mesh/groupGroup"));
-  mu_assert("Check 'group' nodes in file.",
-            AH5_path_valid(file_id, "/mesh/group"));
-  mu_assert("Check 'group/name' nodes in file.",
-            AH5_path_valid(file_id, "/mesh/group/name"));
+  mu_assert("Check 'nodes' nodes in file.", AH5_path_valid(file_id, "/mesh/nodes"));
+  mu_assert("Check 'elementNodes' nodes in file.", AH5_path_valid(file_id, "/mesh/elementNodes"));
+  mu_assert("Check 'elementTypes' nodes in file.", AH5_path_valid(file_id, "/mesh/elementTypes"));
+  mu_assert("Check 'groupGroup' nodes in file.", AH5_path_valid(file_id, "/mesh/groupGroup"));
+  mu_assert("Check 'group' nodes in file.", AH5_path_valid(file_id, "/mesh/group"));
+  mu_assert("Check 'group/name' nodes in file.", AH5_path_valid(file_id, "/mesh/group/name"));
 
   //TODO: Used hdf5 API to check the behaviours not the read function.
   // Now read the mesh
-  mu_assert("The written mesh is readable.",
-            AH5_read_msh_instance(file_id, "/mesh", &mesh));
+  mu_assert_eq("check HDF object closed", H5Fget_obj_count(file_id, H5F_OBJ_ALL), 1);
+  mu_assert("The written mesh is readable.", AH5_read_msh_instance(file_id, "/mesh", &mesh));
+  mu_assert_eq("check HDF object closed", H5Fget_obj_count(file_id, H5F_OBJ_ALL), 1);
 
   // Check some value
-  mu_assert_equal("Check mesh type",
-                  mesh.type, MSH_UNSTRUCTURED);
-  mu_assert_equal("Check nodes size",
-                  mesh.data.unstructured.nb_nodes[0], 5);
-  mu_assert_equal("Check nodes size",
-                  mesh.data.unstructured.nb_nodes[1], 3);
-  mu_assert_str_equal("Check the mesh path.",
-                      mesh.path, "/mesh");
+  mu_assert_equal("Check mesh type", mesh.type, MSH_UNSTRUCTURED);
+  mu_assert_equal("Check nodes size", mesh.data.unstructured.nb_nodes[0], 5);
+  mu_assert_equal("Check nodes size", mesh.data.unstructured.nb_nodes[1], 3);
+  mu_assert_str_equal("Check the mesh path.", mesh.path, "/mesh");
 
   // Close and release
   AH5_free_umesh(&umesh);
@@ -606,23 +593,18 @@ char *test_write_unstructured_nodes_mesh()
 
   // Write the mesh into '/mesh' node.
   loc_id = H5Gcreate(file_id, "/mesh", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  mu_assert("Write an simple umesh.",
-            AH5_write_umesh(loc_id, &umesh));
+  mu_assert_eq("check HDF object closed", H5Fget_obj_count(file_id, H5F_OBJ_ALL), 2);
+  mu_assert("Write an simple umesh.", AH5_write_umesh(loc_id, &umesh));
+  mu_assert_eq("check HDF object closed", H5Fget_obj_count(file_id, H5F_OBJ_ALL), 2);
+  H5Gclose(loc_id);
 
   // Check if all the mesh parts are written.
-  mu_assert("Check 'nodes' nodes in file.",
-            AH5_path_valid(file_id, "/mesh/nodes"));
-  mu_assert("Check 'elementNodes' nodes in file.",
-            AH5_path_valid(file_id, "/mesh/elementNodes"));
-  mu_assert("Check 'elementTypes' nodes in file.",
-            AH5_path_valid(file_id, "/mesh/elementTypes"));
-  mu_assert("Check 'groupGroup' nodes in file.",
-            AH5_path_valid(file_id, "/mesh/groupGroup"));
-  mu_assert("Check 'group' nodes in file.",
-            AH5_path_valid(file_id, "/mesh/group"));
-  mu_assert("Check 'group/name' nodes in file.",
-            AH5_path_valid(file_id, "/mesh/group/name"));
-
+  mu_assert("Check 'nodes' nodes in file.", AH5_path_valid(file_id, "/mesh/nodes"));
+  mu_assert("Check 'elementNodes' nodes in file.", AH5_path_valid(file_id, "/mesh/elementNodes"));
+  mu_assert("Check 'elementTypes' nodes in file.", AH5_path_valid(file_id, "/mesh/elementTypes"));
+  mu_assert("Check 'groupGroup' nodes in file.", AH5_path_valid(file_id, "/mesh/groupGroup"));
+  mu_assert("Check 'group' nodes in file.", AH5_path_valid(file_id, "/mesh/group"));
+  mu_assert("Check 'group/name' nodes in file.", AH5_path_valid(file_id, "/mesh/group/name"));
 
   // Close and release
   AH5_free_umesh(&umesh);
@@ -653,21 +635,23 @@ char *test_write_mesh()
 
   // Write mesh category.
   file_id = AH5_auto_test_file();
-  mu_assert("Write mesh [1].",
-            AH5_write_mesh(file_id, &mesh));
-
+  mu_assert_eq("check HDF object closed", H5Fget_obj_count(file_id, H5F_OBJ_ALL), 1);
+  mu_assert("Write mesh [1].", AH5_write_mesh(file_id, &mesh));
+  mu_assert_eq("check HDF object closed", H5Fget_obj_count(file_id, H5F_OBJ_ALL), 1);
+  
   // Release resource.
   free(mesh.groups[0].path);
   free(mesh.groups[0].msh_instances[0].path);
   free(mesh.groups);
 
   // Read data (build data with full path) and rename a node to build a copy.
-  mu_assert("Read mesh [1].",
-            AH5_read_mesh(file_id, &mesh));
+  mu_assert_eq("check HDF object closed", H5Fget_obj_count(file_id, H5F_OBJ_ALL), 1);
+  mu_assert("Read mesh [1].", AH5_read_mesh(file_id, &mesh));
+  mu_assert_eq("check HDF object closed", H5Fget_obj_count(file_id, H5F_OBJ_ALL), 1);
+  
   free(mesh.groups[0].path);
   mesh.groups[0].path = new_string("mesh_group_name_copy");
-  mu_assert("Write mesh [2].",
-            AH5_write_mesh(file_id, &mesh));
+  mu_assert("Write mesh [2].", AH5_write_mesh(file_id, &mesh));
 
   // Clean and release resource.
   AH5_free_mesh(&mesh);
@@ -689,27 +673,24 @@ char *test_read_umesh()
   build_umesh_1(&umesh);
   loc_id = H5Gcreate(file_id, "/mesh", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   AH5_write_umesh(loc_id, &umesh);
+  H5Gclose(loc_id);
   AH5_free_umesh(&umesh);
 
   // Now read the mesh
-  mu_assert("The written mesh is readable.",
-            AH5_read_msh_instance(file_id, "/mesh", &mesh));
+  mu_assert_eq("check HDF object closed", H5Fget_obj_count(file_id, H5F_OBJ_ALL), 1);
+  mu_assert("The written mesh is readable.", AH5_read_msh_instance(file_id, "/mesh", &mesh));
+  mu_assert_eq("check HDF object closed", H5Fget_obj_count(file_id, H5F_OBJ_ALL), 1);
 
   // Check some value
-  mu_assert("Check mesh type",
-            mesh.type == MSH_UNSTRUCTURED);
-  mu_assert("Check nodes size",
-            mesh.data.unstructured.nb_nodes[0] == 5);
-  mu_assert("Check nodes size",
-            mesh.data.unstructured.nb_nodes[1] == 3);
+  mu_assert("Check mesh type", mesh.type == MSH_UNSTRUCTURED);
+  mu_assert("Check nodes size", mesh.data.unstructured.nb_nodes[0] == 5);
+  mu_assert("Check nodes size", mesh.data.unstructured.nb_nodes[1] == 3);
 
   // Check node path values.
-  mu_assert_str_equal("Check the mesh path.",
-                      mesh.path, "/mesh");
+  mu_assert_str_equal("Check the mesh path.", mesh.path, "/mesh");
 
-  mu_assert_str_equal("Check group name.",
-                      mesh.data.unstructured.groups[0].path,
-                      "/mesh/group/name");
+  mu_assert_str_equal(
+      "Check group name.", mesh.data.unstructured.groups[0].path, "/mesh/group/name");
 
   // Close and clean
   AH5_close_test_file(file_id);
@@ -722,32 +703,19 @@ char *test_read_umesh()
 //! Test
 const char *test_element_size()
 {
-  mu_assert_eq(
-    "Check element_size", AH5_element_size(AH5_UELE_INVALID), 0);
-  mu_assert_eq(
-    "Check element_size", AH5_element_size(AH5_UELE_BAR2), 2);
-  mu_assert_eq(
-    "Check element_size", AH5_element_size(AH5_UELE_BAR3), 3);
-  mu_assert_eq(
-    "Check element_size", AH5_element_size(AH5_UELE_TRI3), 3);
-  mu_assert_eq(
-    "Check element_size", AH5_element_size(AH5_UELE_TRI6), 6);
-  mu_assert_eq(
-    "Check element_size", AH5_element_size(AH5_UELE_QUAD4), 4);
-  mu_assert_eq(
-    "Check element_size", AH5_element_size(AH5_UELE_QUAD8), 8);
-  mu_assert_eq(
-    "Check element_size", AH5_element_size(AH5_UELE_TETRA4), 4);
-  mu_assert_eq(
-    "Check element_size", AH5_element_size(AH5_UELE_PYRA5), 5);
-  mu_assert_eq(
-    "Check element_size", AH5_element_size(AH5_UELE_PENTA6), 6);
-  mu_assert_eq(
-    "Check element_size", AH5_element_size(AH5_UELE_HEXA8), 8);
-  mu_assert_eq(
-    "Check element_size", AH5_element_size(AH5_UELE_TETRA10), 10);
-  mu_assert_eq(
-    "Check element_size", AH5_element_size(AH5_UELE_HEXA20), 20);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_INVALID), 0);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_BAR2), 2);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_BAR3), 3);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_TRI3), 3);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_TRI6), 6);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_QUAD4), 4);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_QUAD8), 8);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_TETRA4), 4);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_PYRA5), 5);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_PENTA6), 6);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_HEXA8), 8);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_TETRA10), 10);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_HEXA20), 20);
 
   return MU_FINISHED_WITHOUT_ERRORS;
 }

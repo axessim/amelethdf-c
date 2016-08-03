@@ -1658,7 +1658,8 @@ char AH5_write_groupgroup(hid_t loc_id, const AH5_groupgroup_t *groupgroup, hsiz
   hsize_t i;
   char *ggrp_name;
 
-  // NMT: I prefer build an empty group, because I am not sure that everyone check that the group exist before to open it.
+  // NMT: I prefer build an empty group, because I am not sure that everyone
+  // check that the group exist before to open it.
   if (AH5_path_valid(loc_id, AH5_CATEGORY_NAME(AH5_G_GROUPGROUP)))
     grp = H5Gopen(loc_id, AH5_CATEGORY_NAME(AH5_G_GROUPGROUP), H5P_DEFAULT);
   else
@@ -1674,8 +1675,9 @@ char AH5_write_groupgroup(hid_t loc_id, const AH5_groupgroup_t *groupgroup, hsiz
         if (groupgroup[i].path != NULL)
         {
           ggrp_name = AH5_get_name_from_path(groupgroup[i].path);
-          success &= AH5_write_str_dataset(grp, ggrp_name, groupgroup[i].nb_groupgroupnames,
-                                           strlen(groupgroup[i].groupgroupnames[0]) + 1, groupgroup[i].groupgroupnames);
+          success &= AH5_write_str_dataset(
+              grp, ggrp_name, groupgroup[i].nb_groupgroupnames,
+              strlen(groupgroup[i].groupgroupnames[0]) + 1, groupgroup[i].groupgroupnames);
         }
         else
         {
@@ -1684,6 +1686,9 @@ char AH5_write_groupgroup(hid_t loc_id, const AH5_groupgroup_t *groupgroup, hsiz
       }
     }
   }
+
+  success &= !HDF5_FAILED(H5Gclose(grp));
+  
   return success;
 }
 
@@ -1696,7 +1701,8 @@ char AH5_write_umsh_group(hid_t loc_id, const AH5_ugroup_t *ugroup, hsize_t nb_u
   char *basename;
   char *ctype, *centitytype;
 
-  // NMT: I prefer build an empty group, because I am not sure that everyone check that the group exist before to open it.
+  // NMT: I prefer build an empty group, because I am not sure that everyone
+  // check that the group exist before to open it.
   if (AH5_path_valid(loc_id, AH5_CATEGORY_NAME(AH5_G_GROUP)))
     grp = H5Gopen(loc_id, AH5_CATEGORY_NAME(AH5_G_GROUP), H5P_DEFAULT);
   else
@@ -1716,9 +1722,12 @@ char AH5_write_umsh_group(hid_t loc_id, const AH5_ugroup_t *ugroup, hsize_t nb_u
           success = AH5_write_str_attr(grp, basename, AH5_A_ENTITY_TYPE, centitytype);
       }
       if (!success)
-        return success;
+        break;
     }
   }
+
+  success &= !HDF5_FAILED(H5Gclose(grp));
+  
   return success;
 }
 
@@ -1764,21 +1773,21 @@ char AH5_write_umesh(hid_t msh_id, const AH5_umesh_t *umesh)
 
   if (!AH5_write_str_attr(msh_id, ".", AH5_A_TYPE, AH5_V_UNSTRUCTURED))
     return success;
-
+  
   // Write m x 1 dataset "elementNodes" (32-bit signed integer)
   if (!AH5_write_int_dataset(msh_id, AH5_CATEGORY_NAME(AH5_G_ELEMENT_NODES), umesh->nb_elementnodes,
                              umesh->elementnodes))
     return success;
-
+  
   // Write m x 1 dataset "elementTypes" (8-bit signed char)
   if (!AH5_write_char_dataset(msh_id, AH5_CATEGORY_NAME(AH5_G_ELEMENT_TYPES), umesh->nb_elementtypes,
                               umesh->elementtypes))
     return success;
-
+  
   // Write m x n dataset "nodes" (32-bit signed float)
   if (!AH5_write_flt_array(msh_id, AH5_CATEGORY_NAME(AH5_G_NODES), 2, umesh->nb_nodes, umesh->nodes))
     return success;
-
+  
   // Write groups
   if (!AH5_write_umsh_group(msh_id, umesh->groups, umesh->nb_groups))
     // handled error
@@ -1822,6 +1831,8 @@ char AH5_write_msh_instance(hid_t loc_id, const AH5_msh_instance_t *msh_instance
     success = AH5_FALSE;
   }
 
+  success &= !HDF5_FAILED(H5Gclose(msh_id));
+
   return success;
 }
 
@@ -1855,6 +1866,8 @@ char AH5_write_msh_group(hid_t loc_id, const AH5_msh_group_t *msh_group)
   for (i = 0; i < msh_group->nb_mlk_instances; i++)
     success &= AH5_write_mlk_instance(msh_group_id, msh_group->mlk_instances + i);
 
+  success &= !HDF5_FAILED(H5Gclose(msh_group_id));
+
   return success;
 }
 
@@ -1873,6 +1886,8 @@ char AH5_write_mesh(hid_t file_id, const AH5_mesh_t *mesh)
 
   for (i = 0; i < mesh->nb_groups; i++)
     success &= AH5_write_msh_group(msh_category_id, mesh->groups + i);
+
+  success &= !HDF5_FAILED(H5Gclose(msh_category_id));
 
   return success;
 }
