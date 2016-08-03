@@ -51,6 +51,13 @@ extern "C" {
 #endif
 
 
+#define HDF5_FAILED(status) ((status)<0)
+#define AH5_FAILED(status) ((status)!=AH5_TRUE)
+#define RETURN_IF_FAILED(test, ret) if(test){return ret;}
+#define AH5_RETURN_IF_FAILED(status, ret) RETURN_IF_FAILED(AH5_FAILED(status), ret)
+#define HDF5_RETURN_IF_FAILED(status, ret) RETURN_IF_FAILED(HDF5_FAILED(status), ret)
+
+
 // A specific flag for the complexes.
 #if __STDC_VERSION__ >= 199901L
 # define AH5_SDT_CCOMPLEX
