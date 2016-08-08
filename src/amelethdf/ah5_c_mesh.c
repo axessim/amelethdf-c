@@ -1658,7 +1658,8 @@ char AH5_write_groupgroup(hid_t loc_id, const AH5_groupgroup_t *groupgroup, hsiz
   hsize_t i, j;
   char *ggrp_name;
 
-  // NMT: I prefer build an empty group, because I am not sure that everyone check that the group exist before to open it.
+  // NMT: I prefer build an empty group, because I am not sure that everyone
+  // check that the group exist before to open it.
   if (AH5_path_valid(loc_id, AH5_CATEGORY_NAME(AH5_G_GROUPGROUP)))
     grp = H5Gopen(loc_id, AH5_CATEGORY_NAME(AH5_G_GROUPGROUP), H5P_DEFAULT);
   else
@@ -1680,8 +1681,9 @@ char AH5_write_groupgroup(hid_t loc_id, const AH5_groupgroup_t *groupgroup, hsiz
             hsize_t len = strlen(groupgroup[i].groupgroupnames[j]) + 1;
             if (len > slen) slen = len;
           }
-          success &= AH5_write_str_dataset(grp, ggrp_name, groupgroup[i].nb_groupgroupnames,
-                                           slen, groupgroup[i].groupgroupnames);
+          success &= AH5_write_str_dataset(
+              grp, ggrp_name, groupgroup[i].nb_groupgroupnames,
+              slen, groupgroup[i].groupgroupnames);
         }
         else
         {
@@ -1690,6 +1692,9 @@ char AH5_write_groupgroup(hid_t loc_id, const AH5_groupgroup_t *groupgroup, hsiz
       }
     }
   }
+
+  success &= !HDF5_FAILED(H5Gclose(grp));
+  
   return success;
 }
 
@@ -1702,7 +1707,8 @@ char AH5_write_umsh_group(hid_t loc_id, const AH5_ugroup_t *ugroup, hsize_t nb_u
   char *basename;
   char *ctype, *centitytype;
 
-  // NMT: I prefer build an empty group, because I am not sure that everyone check that the group exist before to open it.
+  // NMT: I prefer build an empty group, because I am not sure that everyone
+  // check that the group exist before to open it.
   if (AH5_path_valid(loc_id, AH5_CATEGORY_NAME(AH5_G_GROUP)))
     grp = H5Gopen(loc_id, AH5_CATEGORY_NAME(AH5_G_GROUP), H5P_DEFAULT);
   else
@@ -1722,9 +1728,12 @@ char AH5_write_umsh_group(hid_t loc_id, const AH5_ugroup_t *ugroup, hsize_t nb_u
           success = AH5_write_str_attr(grp, basename, AH5_A_ENTITY_TYPE, centitytype);
       }
       if (!success)
-        return success;
+        break;
     }
   }
+
+  success &= !HDF5_FAILED(H5Gclose(grp));
+  
   return success;
 }
 
@@ -1828,6 +1837,8 @@ char AH5_write_msh_instance(hid_t loc_id, const AH5_msh_instance_t *msh_instance
     success = AH5_FALSE;
   }
 
+  success &= !HDF5_FAILED(H5Gclose(msh_id));
+
   return success;
 }
 
@@ -1861,6 +1872,8 @@ char AH5_write_msh_group(hid_t loc_id, const AH5_msh_group_t *msh_group)
   for (i = 0; i < msh_group->nb_mlk_instances; i++)
     success &= AH5_write_mlk_instance(msh_group_id, msh_group->mlk_instances + i);
 
+  success &= !HDF5_FAILED(H5Gclose(msh_group_id));
+
   return success;
 }
 
@@ -1879,6 +1892,8 @@ char AH5_write_mesh(hid_t file_id, const AH5_mesh_t *mesh)
 
   for (i = 0; i < mesh->nb_groups; i++)
     success &= AH5_write_msh_group(msh_category_id, mesh->groups + i);
+
+  success &= !HDF5_FAILED(H5Gclose(msh_category_id));
 
   return success;
 }
