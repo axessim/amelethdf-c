@@ -312,9 +312,6 @@ AH5_PUBLIC AH5_ugroup_t *AH5_init_umsh_group(
     group->nb_groupelts = nb_eles;
     group->groupelts = NULL;
 
-    if (path)
-      AH5_setpath(&group->path, path);
-
     if (nb_eles)
     {
       group->groupelts = (int *)malloc(nb_eles*sizeof(int));
