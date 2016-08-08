@@ -11,7 +11,7 @@ AH5_opt_attrs_t *AH5_init_opt_attrs(AH5_opt_attrs_t *attrs, hsize_t nb_attrs)
     attrs->instances = NULL;
 
     if (nb_attrs)
-      attrs->instances = (AH5_opt_attrs_t*)malloc(nb_attrs*sizeof(AH5_opt_attrs_t));
+      attrs->instances = (AH5_attr_instance_t*)malloc(nb_attrs*sizeof(AH5_attr_instance_t));
   }
 
   return attrs;
