@@ -28,9 +28,10 @@ char AH5_write_str_root_attr(hid_t loc_id, char *attr_name, const char *wdata)
   attr = H5Acreate1(loc_id, attr_name, atype, aid, H5P_DEFAULT);
 
   if (H5Awrite(attr, atype, wdata) >= 0)
-    if (H5Sclose(aid) >= 0)
-      if (H5Aclose(attr) >= 0)
-        success = AH5_TRUE;
+	  success = AH5_TRUE;
+  success &= (H5Aclose(attr) >= 0);
+  success &= (H5Tclose(atype) >= 0);
+  success &= (H5Sclose(aid) >= 0);
 
   return success;
 }
