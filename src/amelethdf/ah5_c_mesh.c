@@ -1655,7 +1655,7 @@ char AH5_write_groupgroup(hid_t loc_id, const AH5_groupgroup_t *groupgroup, hsiz
 {
   char success = AH5_FALSE;
   hid_t grp;
-  hsize_t i;
+  hsize_t i, j;
   char *ggrp_name;
 
   // NMT: I prefer build an empty group, because I am not sure that everyone check that the group exist before to open it.
@@ -1674,8 +1674,14 @@ char AH5_write_groupgroup(hid_t loc_id, const AH5_groupgroup_t *groupgroup, hsiz
         if (groupgroup[i].path != NULL)
         {
           ggrp_name = AH5_get_name_from_path(groupgroup[i].path);
+          // Get longest string
+          hsize_t slen = 0;
+          for (j = 0; j < groupgroup[i].nb_groupgroupnames; ++j) {
+            hsize_t len = strlen(groupgroup[i].groupgroupnames[j]) + 1;
+            if (len > slen) slen = len;
+          }
           success &= AH5_write_str_dataset(grp, ggrp_name, groupgroup[i].nb_groupgroupnames,
-                                           strlen(groupgroup[i].groupgroupnames[0]) + 1, groupgroup[i].groupgroupnames);
+                                           slen, groupgroup[i].groupgroupnames);
         }
         else
         {
