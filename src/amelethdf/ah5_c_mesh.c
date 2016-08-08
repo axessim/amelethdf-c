@@ -1652,8 +1652,9 @@ char AH5_write_groupgroup(hid_t loc_id, const AH5_groupgroup_t *groupgroup, hsiz
 {
   char success = AH5_FALSE;
   hid_t grp;
-  hsize_t i;
+  hsize_t i, j;
   char *ggrp_name;
+  hsize_t slen, len;
 
   // NMT: I prefer build an empty group, because I am not sure that everyone
   // check that the group exist before to open it.
@@ -1672,9 +1673,17 @@ char AH5_write_groupgroup(hid_t loc_id, const AH5_groupgroup_t *groupgroup, hsiz
         if (groupgroup[i].path != NULL)
         {
           ggrp_name = AH5_get_name_from_path(groupgroup[i].path);
+
+          // Get longest string
+          slen = 0;
+          for (j = 0; j < groupgroup[i].nb_groupgroupnames; ++j) {
+            len = strlen(groupgroup[i].groupgroupnames[j]) + 1;
+            if (len > slen) slen = len;
+          }
+
           success &= AH5_write_str_dataset(
               grp, ggrp_name, groupgroup[i].nb_groupgroupnames,
-              strlen(groupgroup[i].groupgroupnames[0]) + 1, groupgroup[i].groupgroupnames);
+              slen, groupgroup[i].groupgroupnames);
         }
         else
         {
@@ -1685,7 +1694,7 @@ char AH5_write_groupgroup(hid_t loc_id, const AH5_groupgroup_t *groupgroup, hsiz
   }
 
   success &= !HDF5_FAILED(H5Gclose(grp));
-  
+
   return success;
 }
 
@@ -1724,7 +1733,7 @@ char AH5_write_umsh_group(hid_t loc_id, const AH5_ugroup_t *ugroup, hsize_t nb_u
   }
 
   success &= !HDF5_FAILED(H5Gclose(grp));
-  
+
   return success;
 }
 
@@ -1770,21 +1779,21 @@ char AH5_write_umesh(hid_t msh_id, const AH5_umesh_t *umesh)
 
   if (!AH5_write_str_attr(msh_id, ".", AH5_A_TYPE, AH5_V_UNSTRUCTURED))
     return success;
-  
+
   // Write m x 1 dataset "elementNodes" (32-bit signed integer)
   if (!AH5_write_int_dataset(msh_id, AH5_CATEGORY_NAME(AH5_G_ELEMENT_NODES), umesh->nb_elementnodes,
                              umesh->elementnodes))
     return success;
-  
+
   // Write m x 1 dataset "elementTypes" (8-bit signed char)
   if (!AH5_write_char_dataset(msh_id, AH5_CATEGORY_NAME(AH5_G_ELEMENT_TYPES), umesh->nb_elementtypes,
                               umesh->elementtypes))
     return success;
-  
+
   // Write m x n dataset "nodes" (32-bit signed float)
   if (!AH5_write_flt_array(msh_id, AH5_CATEGORY_NAME(AH5_G_NODES), 2, umesh->nb_nodes, umesh->nodes))
     return success;
-  
+
   // Write groups
   if (!AH5_write_umsh_group(msh_id, umesh->groups, umesh->nb_groups))
     // handled error
