@@ -1657,6 +1657,7 @@ char AH5_write_groupgroup(hid_t loc_id, const AH5_groupgroup_t *groupgroup, hsiz
   hid_t grp;
   hsize_t i, j;
   char *ggrp_name;
+  hsize_t slen, len;
 
   // NMT: I prefer build an empty group, because I am not sure that everyone
   // check that the group exist before to open it.
@@ -1675,12 +1676,14 @@ char AH5_write_groupgroup(hid_t loc_id, const AH5_groupgroup_t *groupgroup, hsiz
         if (groupgroup[i].path != NULL)
         {
           ggrp_name = AH5_get_name_from_path(groupgroup[i].path);
+
           // Get longest string
-          hsize_t slen = 0;
+          slen = 0;
           for (j = 0; j < groupgroup[i].nb_groupgroupnames; ++j) {
-            hsize_t len = strlen(groupgroup[i].groupgroupnames[j]) + 1;
+            len = strlen(groupgroup[i].groupgroupnames[j]) + 1;
             if (len > slen) slen = len;
           }
+
           success &= AH5_write_str_dataset(
               grp, ggrp_name, groupgroup[i].nb_groupgroupnames,
               slen, groupgroup[i].groupgroupnames);
@@ -1694,7 +1697,7 @@ char AH5_write_groupgroup(hid_t loc_id, const AH5_groupgroup_t *groupgroup, hsiz
   }
 
   success &= !HDF5_FAILED(H5Gclose(grp));
-  
+
   return success;
 }
 
@@ -1733,7 +1736,7 @@ char AH5_write_umsh_group(hid_t loc_id, const AH5_ugroup_t *ugroup, hsize_t nb_u
   }
 
   success &= !HDF5_FAILED(H5Gclose(grp));
-  
+
   return success;
 }
 
