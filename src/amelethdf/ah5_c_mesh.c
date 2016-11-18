@@ -559,6 +559,9 @@ AH5_mlk_instance_t *AH5_init_mlk_instance(
 AH5_msh_group_t *AH5_init_msh_group(
   AH5_msh_group_t *msh_group, const char *path, hsize_t nb_meshs, hsize_t nb_mesh_links)
 {
+  AH5_mlk_instance_t *mlk = NULL;
+  AH5_msh_instance_t *msh = NULL;
+
   if (msh_group)
   {
     msh_group->path = NULL;
@@ -573,8 +576,14 @@ AH5_msh_group_t *AH5_init_msh_group(
     if (nb_meshs)
     {
       msh_group->msh_instances = (AH5_msh_instance_t *)malloc(nb_meshs*sizeof(AH5_msh_instance_t));
+
       if (msh_group->msh_instances == NULL)
         return NULL;
+
+      for (msh = msh_group->msh_instances;
+           msh != msh_group->msh_instances + nb_meshs;
+           ++msh)
+        AH5_init_msh_instance(msh, /*path=*/NULL, MSH_INVALID);
     }
 
     if (nb_mesh_links)
@@ -585,6 +594,12 @@ AH5_msh_group_t *AH5_init_msh_group(
         free(msh_group->msh_instances);
         return NULL;
       }
+
+      for (mlk = msh_group->mlk_instances;
+           mlk != msh_group->mlk_instances + nb_mesh_links;
+           ++mlk)
+        AH5_init_mlk_instance(mlk, NULL, MSHLNK_INVALID);
+
     }
   }
 
