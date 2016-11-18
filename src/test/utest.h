@@ -153,6 +153,7 @@ char *__message__;
 /**
  * Define the HDF5 diff executable
  */
+// TODO(XXX): avoid the use of h5diff, test fails when bin not installed
 #if defined(_MSC_VER)
 # define H5DIFF "h5diffdll"
 #else
