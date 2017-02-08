@@ -48,9 +48,19 @@ hid_t AH5_open(const char *name, unsigned flags)
 }
 
 
-void AH5_close(hid_t file_id)
+int AH5_close(hid_t file_id)
 {
-  H5Fclose(file_id);
+  const ssize_t count = H5Fget_obj_count(file_id, H5F_OBJ_ALL) - 1;
+  if (count) {
+    AH5_log_error("Number of open object identifiers for file %d not 0. *****\n\n", file_id);
+    return count;
+  }
+
+  const herr_t err = H5Fclose(file_id);
+
+  if (err < 0)
+    return err;
+  return 0;
 }
 
 
