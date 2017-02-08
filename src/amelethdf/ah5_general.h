@@ -96,6 +96,17 @@ typedef struct _AH5_set_t
 } AH5_set_t;
 
 /**
+ * Write string attribute in given node.
+ *
+ * @param loc_id valid HDF5 node instance
+ * @param attr_name the attribute name
+ * @param wdata the attribute value
+ *
+ * @return return success status
+ */
+AH5_PUBLIC char AH5_write_str_root_attr(hid_t loc_id, const char *attr_name, const char *wdata);
+
+/**
  * Create a Amelet-HDF file and set entry point if not null.
  *
  * @param name name of the file to access.

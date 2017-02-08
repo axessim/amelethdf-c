@@ -6,16 +6,7 @@
 #include <ctype.h>
 
 
-/**
- * Write string attribute in given node.
- *
- * @param loc_id valid HDF5 node instance
- * @param attr_name the attribute name
- * @param wdata the attribute value
- *
- * @return return success status
- */
-char AH5_write_str_root_attr(hid_t loc_id, char *attr_name, const char *wdata)
+char AH5_write_str_root_attr(hid_t loc_id, const char *attr_name, const char *wdata)
 {
   char success = AH5_FALSE;
 
