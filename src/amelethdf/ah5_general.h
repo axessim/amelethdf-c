@@ -135,7 +135,7 @@ AH5_PUBLIC hid_t AH5_open(const char *name, unsigned flags);
    *
    * @param file_id
    *
-   * @return Returns the number of open object identifiers for an open file
+   * @return Returns the number of open object identifiers for file to close
    * if not 0; otherwise if successful returns 0; otherwise returns a negative value.
    */
 AH5_PUBLIC int AH5_close(hid_t file_id);
