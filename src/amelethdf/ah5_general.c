@@ -10,17 +10,24 @@ char AH5_write_str_root_attr(hid_t loc_id, const char *attr_name, const char *wd
 {
   char success = AH5_FALSE;
 
-  hid_t aid, atype, attr;
+  hid_t aid = H5Screate(H5S_SCALAR);
+  hid_t atype = H5Tcopy(H5T_C_S1);
+  htri_t attr_exists = H5Aexists(loc_id, attr_name);
+  hid_t attr = -1;
 
-
-  aid  = H5Screate(H5S_SCALAR);
-  atype = H5Tcopy(H5T_C_S1);
   H5Tset_size(atype, strlen(wdata));
-  attr = H5Acreate1(loc_id, attr_name, atype, aid, H5P_DEFAULT);
 
-  if (H5Awrite(attr, atype, wdata) >= 0)
-	  success = AH5_TRUE;
-  success &= (H5Aclose(attr) >= 0);
+  if (atype >= 0) {
+    if (attr_exists == 0) {
+      attr = H5Acreate(loc_id, attr_name, atype, aid, H5P_DEFAULT, H5P_DEFAULT);
+    } else if (attr_exists > 0) {
+      attr = H5Aopen(loc_id, attr_name, H5P_DEFAULT);
+    }
+
+    if (attr && H5Awrite(attr, atype, wdata) >= 0 && H5Aclose(attr) >= 0)
+      success = AH5_TRUE;
+  }
+
   success &= (H5Tclose(atype) >= 0);
   success &= (H5Sclose(aid) >= 0);
 
