@@ -6,30 +6,28 @@
 #include <ctype.h>
 
 
-/**
- * Write string attribute in given node.
- *
- * @param loc_id valid HDF5 node instance
- * @param attr_name the attribute name
- * @param wdata the attribute value
- *
- * @return return success status
- */
-char AH5_write_str_root_attr(hid_t loc_id, char *attr_name, const char *wdata)
+char AH5_write_str_root_attr(hid_t loc_id, const char *attr_name, const char *wdata)
 {
   char success = AH5_FALSE;
 
-  hid_t aid, atype, attr;
+  hid_t aid = H5Screate(H5S_SCALAR);
+  hid_t atype = H5Tcopy(H5T_C_S1);
+  htri_t attr_exists = H5Aexists(loc_id, attr_name);
+  hid_t attr = -1;
 
-
-  aid  = H5Screate(H5S_SCALAR);
-  atype = H5Tcopy(H5T_C_S1);
   H5Tset_size(atype, strlen(wdata));
-  attr = H5Acreate1(loc_id, attr_name, atype, aid, H5P_DEFAULT);
 
-  if (H5Awrite(attr, atype, wdata) >= 0)
-	  success = AH5_TRUE;
-  success &= (H5Aclose(attr) >= 0);
+  if (atype >= 0) {
+    if (attr_exists == 0) {
+      attr = H5Acreate(loc_id, attr_name, atype, aid, H5P_DEFAULT, H5P_DEFAULT);
+    } else if (attr_exists > 0) {
+      attr = H5Aopen(loc_id, attr_name, H5P_DEFAULT);
+    }
+
+    if (attr && H5Awrite(attr, atype, wdata) >= 0 && H5Aclose(attr) >= 0)
+      success = AH5_TRUE;
+  }
+
   success &= (H5Tclose(atype) >= 0);
   success &= (H5Sclose(aid) >= 0);
 
@@ -57,9 +55,22 @@ hid_t AH5_open(const char *name, unsigned flags)
 }
 
 
-void AH5_close(hid_t file_id)
+int AH5_close(hid_t file_id)
 {
-  H5Fclose(file_id);
+  const ssize_t count = H5Fget_obj_count(file_id, H5F_OBJ_ALL) - 1;
+  const herr_t err = H5Fclose(file_id);
+
+  if (count) {
+    AH5_log_error(
+        "Number of open object identifiers for file %d not 0 but %d. *****\n\n",
+        (int) file_id, (int) count);
+    return count;
+  }
+
+  if (err < 0)
+    return err;
+
+  return 0;
 }
 
 

@@ -284,7 +284,7 @@ char AH5_write_cpx_array(hid_t loc_id, const char *dset_name, const int rank, co
 
 // Write 1D string dataset
 char AH5_write_str_array(hid_t loc_id, const char *dset_name, const int rank, const hsize_t dims[],
-                         char *wdata)
+                         const char *wdata)
 {
   hsize_t nbstr;
   size_t maxlength = 1;

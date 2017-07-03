@@ -46,7 +46,7 @@ AH5_PUBLIC char AH5_write_flt_array(hid_t loc_id, const char *dset_name, const i
 AH5_PUBLIC char AH5_write_cpx_array(hid_t loc_id, const char *dset_name, const int rank,
                                     const hsize_t dims[], const AH5_complex_t *wdata);
 AH5_PUBLIC char AH5_write_str_array(hid_t loc_id, const char *dset_name, const int rank,
-                                    const hsize_t dims[], char *wdata);
+                                    const hsize_t dims[], const char *wdata);
 
 #ifdef __cplusplus
 }
