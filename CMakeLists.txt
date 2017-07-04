@@ -14,6 +14,7 @@ SITE_NAME(HOST_NAME)
 OPTION(AMELETHDF_ENABLE_MPI "Enable MPI support" OFF)
 OPTION(AMELETHDF_BUILD_DOCS "Build Amelet-HDF docs" ON)
 OPTION(AMELETHDF_ENABLE_COVERAGE "Enable coverage" OFF)
+OPTION(AMELETHDF_BUILD_FORTRAN "Build FORTRAN support" OFF)
 
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/resources/cmake") # For custom cmake modules
 IF (AMELETHDF_BUILD_DOCS)
@@ -209,6 +210,9 @@ ENDIF (AMELETHDF_BUILD_DOCS)
 #-------------------------------------------------------------
 ADD_SUBDIRECTORY(src)
 ADD_SUBDIRECTORY(hl)
+IF (AMELETHDF_BUILD_FORTRAN)
+  ADD_SUBDIRECTORY(fortran)
+ENDIF ()
 
 #-------------------------------------------------------------
 # Coverage

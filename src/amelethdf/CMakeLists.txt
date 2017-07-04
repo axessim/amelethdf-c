@@ -8,19 +8,19 @@ ADD_LIBRARY(amelethdfc SHARED ${amelethdf_src})
 
 
 IF (WIN32)
-  SET_TARGET_PROPERTIES(amelethdfc PROPERTIES 
+  SET_TARGET_PROPERTIES(amelethdfc PROPERTIES
     OUTPUT_NAME "amelethdfc")
 ELSE ()
   ADD_LIBRARY(amelethdfc_static STATIC ${amelethdf_src})
-  SET_TARGET_PROPERTIES(amelethdfc amelethdfc_static PROPERTIES 
+  SET_TARGET_PROPERTIES(amelethdfc amelethdfc_static PROPERTIES
     OUTPUT_NAME "amelethdfc")
 ENDIF ()
 
 
-  
+
 TARGET_LINK_LIBRARIES(amelethdfc ${AMELETHDF_DEP_LINK_LIBS})
 
-INSTALL(TARGETS amelethdfc 
+INSTALL(TARGETS amelethdfc
   EXPORT  AmeletHDFLibraryDepends
   RUNTIME       DESTINATION "${INSTALL_BIN_DIR}"
   LIBRARY       DESTINATION "${INSTALL_LIB_DIR}"

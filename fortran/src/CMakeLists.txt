@@ -1,0 +1,31 @@
+# amelethdf/fortran/src/CMakeList.txt file
+
+FILE(GLOB amelethdff_src *.f90)
+
+IF (AH5F_BUILD_STATIC_LIBRARY)
+  ADD_LIBRARY(amelethdff STATIC ${amelethdff_src})
+  SET_TARGET_PROPERTIES(amelethdff  PROPERTIES OUTPUT_NAME "amelethdff")
+  INSTALL(TARGETS amelethdff
+    EXPORT        AmeletHDFFLibraryDepends
+    RUNTIME       DESTINATION "${INSTALL_BIN_DIR}" COMPONENT bin
+    LIBRARY       DESTINATION "${INSTALL_LIB_DIR}" COMPONENT lib
+    ARCHIVE       DESTINATION "${INSTALL_ARCHIVE_DIR}" COMPONENT lib
+    COMPONENT dev
+    )
+
+ELSE (AH5F_BUILD_STATIC_LIBRARY)
+  ADD_LIBRARY(amelethdff SHARED ${amelethdff_src})
+  SET_TARGET_PROPERTIES(amelethdff  PROPERTIES OUTPUT_NAME "amelethdff")
+  TARGET_LINK_LIBRARIES(amelethdff ${amelethdff_lib_dep})
+  INSTALL(TARGETS amelethdff
+    EXPORT        AmeletHDFFLibraryDepends
+    RUNTIME       DESTINATION "${INSTALL_BIN_DIR}" COMPONENT bin
+    LIBRARY       DESTINATION "${INSTALL_LIB_DIR}" COMPONENT lib
+    ARCHIVE       DESTINATION "${INSTALL_LIB_DIR}" COMPONENT lib
+    PUBLIC_HEADER DESTINATION "${INSTALL_INCLUDE_DIR}"
+    COMPONENT dev
+    )
+ENDIF (AH5F_BUILD_STATIC_LIBRARY)
+
+FILE(GLOB amelethdff_module ${CMAKE_CURRENT_BINARY_DIR}/*.mod)
+INSTALL(FILES ${amelethdff_module} DESTINATION "${INSTALL_INCLUDE_DIR}")
