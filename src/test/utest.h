@@ -69,6 +69,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 /** Return value for success */
 #define MU_FINISHED_WITHOUT_ERRORS NULL
@@ -222,6 +225,13 @@ void filecopy(const char *input, const char *output)
 
   fclose(fpi);
   fclose(fpo);
+}
+
+
+int file_exists(const char *filename) {
+    struct stat st;
+    int result = stat(filename, &st);
+    return result == 0;
 }
 
 
