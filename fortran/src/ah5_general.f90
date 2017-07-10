@@ -19,6 +19,8 @@ module ah5_general_m
   public ah5_close
   public ah5_read_entrypoint
 
+  public ah5_path_basename
+
   !================================ type ======================================!
 
 
@@ -28,10 +30,10 @@ module ah5_general_m
      function ah5_create_c(name, flags, entry_point) &
           bind(c, name="AH5_create") &
           result(file_id)
-       import c_int, c_char
+       import c_int, c_char, c_ptr
        character(c_char), dimension(*), intent(in) :: name
        integer(c_int), value, intent(in) :: flags
-       character(c_char), dimension(*), intent(in) :: entry_point
+       type(c_ptr), value, intent(in) :: entry_point
        integer(c_int) :: file_id
      end function ah5_create_c
 
@@ -50,7 +52,7 @@ module ah5_general_m
           bind(c, name="AH5_close") &
           result(status)
        import c_int
-       integer(c_int), intent(in) :: file_id
+       integer(c_int), value, intent(in) :: file_id
        integer(c_int) :: status
      end function ah5_close_c
 
@@ -61,8 +63,8 @@ module ah5_general_m
           bind(c, name="AH5_read_entrypoint") &
           result(status)
        import c_int, c_char, c_ptr
-       integer(c_int), intent(in) :: file_id
-       type(c_ptr), intent(in) :: entrypoint
+       integer(c_int), value, intent(in) :: file_id
+       type(c_ptr), value, intent(in) :: entrypoint
        type(c_ptr) :: status
      end function ah5_read_entrypoint_c
 
@@ -71,7 +73,7 @@ module ah5_general_m
           bind(c, name="AH5_read_entrypoint_strlen") &
           result(strlen)
        import c_int
-       integer(c_int), intent(in) :: file_id
+       integer(c_int), value, intent(in) :: file_id
        integer(c_int) :: strlen
      end function ah5_read_entrypoint_strlen_c
   end interface
@@ -92,14 +94,22 @@ contains
                                                          ! if nil it
                                                          ! is ignored.
     integer, intent(out), optional :: hdferr ! Error code 0 on success
-                                             ! and -1 on failure
+    ! and -1 on failure
+
+    character(c_char), dimension(:), pointer :: entrypoint_
+
+    ! set error to 0
+    ah5err = 0
 
     if (present(entrypoint)) then
+       allocate(entrypoint_(len(entrypoint)+1))
+       entrypoint_ = trim(entrypoint)//c_null_char
+
        file_id = ah5_create_c(trim(name)//c_null_char, &
-            flags, trim(entrypoint)//c_null_char)
+            flags, c_loc(entrypoint_))
     else
        file_id = ah5_create_c(trim(name)//c_null_char, &
-            flags, c_null_char)
+            flags, c_null_ptr)
     end if
 
     call ah5_error_if(file_id.le.0, hdferr, file_id)
@@ -115,6 +125,9 @@ contains
     integer(hid_t), intent(out) :: file_id ! File identifier
     integer, intent(out), optional :: hdferr ! Error code 0 on success
                                              ! and -1 on failure
+
+    ! set error to 0
+    ah5err = 0
 
     file_id = ah5_open_c(trim(name)//c_null_char, flags)
 
@@ -132,7 +145,6 @@ contains
     call ah5_error_if(errco.gt.0, hdferr, errco)
   end subroutine ah5_close
 
-
   ! Read the AmeletHDF entry point
   subroutine ah5_read_entrypoint(file_id, entrypoint, hdferr)
     integer(hid_t), intent(in) :: file_id    ! File identifier
@@ -144,18 +156,35 @@ contains
                                              ! and -1 on failure
 
     integer :: strlen
-    character(1000), target :: buf
+    character(c_char), dimension(:), pointer :: buf
     type(c_ptr) :: status
 
 
-    strlen = AH5_read_entrypoint_strlen_c(file_id)
-    allocate(character(len=strlen) :: entrypoint)
-    ! allocate(character(len=strlen+1) :: buf)
-
+    ! strlen = AH5_read_entrypoint_strlen_c(file_id)
+    ! allocate(character(len=strlen) :: entrypoint)
+    ! allocate(buf(strlen+1))
+    !
     ! status = AH5_read_entrypoint_c(file_id, c_loc(buf))
     ! call ah5_error_if(c_associated(status), hdferr)
-
-    ! entrypoint = buf(:strlen)
+    !
+    ! print*, buf
   end subroutine ah5_read_entrypoint
+
+  ! get the basename ot the given path
+  subroutine ah5_path_basename(path, name)
+    character(len=*), intent(in) :: path
+    character(len=:), intent(inout), allocatable :: name
+
+    integer :: sep_idx
+
+    sep_idx = index(path, '/', back=.true.)
+
+    if (allocated(name)) then
+       deallocate(name)
+    end if
+
+    allocate(character(len(path) - sep_idx - 1) :: name)
+    name = path(sep_idx+1:)
+  end subroutine ah5_path_basename
 
 end module ah5_general_m

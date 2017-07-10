@@ -39,7 +39,7 @@ char *test_creat_open_close()
 
   // read entry point
   mu_assert_eq(
-      "Check entrypoint strlen",
+      "Check entry point strlen",
       AH5_read_entrypoint_strlen(file_id),
       strlen(entrypoint));
 
@@ -51,7 +51,6 @@ char *test_creat_open_close()
 
   mu_assert("close file", HDF5_SUCCESS(AH5_close(file_id)));
   remove(filename);
-
 
   return MU_FINISHED_WITHOUT_ERRORS;
 }

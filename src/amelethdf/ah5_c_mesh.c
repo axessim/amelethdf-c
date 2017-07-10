@@ -1075,8 +1075,7 @@ char AH5_read_umsh_group(hid_t file_id, const char *path, AH5_ugroup_t *ugroup)
             if (type_class == H5T_INTEGER && length == 4)
               if (AH5_read_int_dataset(file_id, path, ugroup->nb_groupelts, &(ugroup->groupelts)))
                 rdata = AH5_TRUE;
-      //XXX Why not point to the constant value (AH5_V_ELEMENT, ...)?
-      //      Does not forgot to update free function.
+
       if(!AH5_read_str_attr(file_id, path, AH5_A_ENTITY_TYPE, &entitytype))
       {
         if (strcmp(type, AH5_V_NODE) != 0)
@@ -2481,48 +2480,54 @@ int AH5_element_size(char element_type)
 
   switch (element_type)
   {
-  case AH5_UELE_BAR2:
-    size = 2;
-    break;
+    case AH5_UELE_BAR2:
+    case AH5_UELE_SPHERE:
+      size = 2;
+      break;
 
-  case AH5_UELE_BAR3:
-  case AH5_UELE_TRI3:
-    size = 3;
-    break;
+    case AH5_UELE_BAR3:
+    case AH5_UELE_TRI3:
+    case AH5_UELE_PLAN:
+    case AH5_UELE_CIRCLE:
+    case AH5_UELE_ELLIPSE:
+    case AH5_UELE_CYLINDRE:
+      size = 3;
+      break;
 
-  case AH5_UELE_QUAD4:
-  case AH5_UELE_TETRA4:
-    size = 4;
-    break;
+    case AH5_UELE_QUAD4:
+    case AH5_UELE_TETRA4:
+    case AH5_UELE_CONE:
+      size = 4;
+      break;
 
-  case AH5_UELE_PYRA5:
-    size = 5;
-    break;
+    case AH5_UELE_PYRA5:
+      size = 5;
+      break;
 
-  case AH5_UELE_TRI6:
-  case AH5_UELE_PENTA6:
-    size = 6;
-    break;
+    case AH5_UELE_TRI6:
+    case AH5_UELE_PENTA6:
+      size = 6;
+      break;
 
-  case AH5_UELE_QUAD8:
-  case AH5_UELE_HEXA8:
-    size = 8;
-    break;
+    case AH5_UELE_QUAD8:
+    case AH5_UELE_HEXA8:
+      size = 8;
+      break;
 
-  case AH5_UELE_QUAD9:
-    size = 9;
-    break;
+    case AH5_UELE_QUAD9:
+      size = 9;
+      break;
 
-  case AH5_UELE_TETRA10:
-    size = 10;
-    break;
+    case AH5_UELE_TETRA10:
+      size = 10;
+      break;
 
-  case AH5_UELE_HEXA20:
-    size = 20;
-    break;
+    case AH5_UELE_HEXA20:
+      size = 20;
+      break;
 
-  default:
-    size = 0;
+    default:
+      size = 0;
   }
 
   return size;

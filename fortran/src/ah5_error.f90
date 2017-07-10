@@ -1,4 +1,5 @@
 module ah5_error_m
+  use, intrinsic :: ISO_C_BINDING
 
   implicit none
   !=============================== header =====================================!
@@ -15,6 +16,13 @@ module ah5_error_m
   integer :: ah5err
 
   !================================ interfaces ================================!
+
+  interface ah5_error_if
+     module procedure &
+          ah5_error_if_bool, &
+          ah5_error_if_errco
+  end interface ah5_error_if
+
 
 contains
   ! Check if an error occure
@@ -34,8 +42,9 @@ contains
     endif
   end subroutine ah5_check
 
+
   ! Add an error (internal)
-  subroutine ah5_error_if(test, hdferr, errcode)
+  subroutine ah5_error_if_bool(test, hdferr, errcode)
     logical, intent(in) :: test
     integer, intent(out), optional :: hdferr
     integer, intent(in), optional :: errcode
@@ -51,7 +60,28 @@ contains
           hdferr = ah5err
        end if
     end if
-  end subroutine ah5_error_if
+  end subroutine ah5_error_if_bool
+
+
+  ! Handle error for AH5 return code convension
+  subroutine ah5_error_if_errco(test, hdferr, errcode)
+    character(c_char), intent(in) :: test
+    integer, intent(out), optional :: hdferr
+    integer, intent(in), optional :: errcode
+
+    if (test.eq.achar(0)) then
+       if (present(errcode)) then
+          ah5err = errcode
+       else
+          ah5err = -1
+       end if
+
+       if (present(hdferr)) then
+          hdferr = ah5err
+       end if
+    end if
+  end subroutine ah5_error_if_errco
+
 
   ! Add an error (internal)
   subroutine ah5_error(message, must_stop, errcode)

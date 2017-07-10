@@ -119,7 +119,15 @@ typedef enum _AH5_uelement_type_t
   AH5_UELE_PENTA6             = 103,
   AH5_UELE_HEXA8              = 104,
   AH5_UELE_TETRA10            = 108,
-  AH5_UELE_HEXA20             = 109
+  AH5_UELE_HEXA20             = 109,
+
+  // Canonical elements
+  AH5_UELE_PLAN               = 15,
+  AH5_UELE_CIRCLE             = 16,
+  AH5_UELE_ELLIPSE            = 17,
+  AH5_UELE_CYLINDRE           = 105,
+  AH5_UELE_CONE               = 106,
+  AH5_UELE_SPHERE             = 107
 } AH5_uelement_type_t;
 
 /**

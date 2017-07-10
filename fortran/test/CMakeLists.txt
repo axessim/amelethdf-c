@@ -21,6 +21,9 @@ FOREACH (test_file ${tests_src})
   STRING (REPLACE ".f90"  "" test_exec ${rel_test_file})
   SET(test_exec "fortran_${test_exec}")
 
+  ADD_DEFINITIONS("-DAH5_DATA_DIR=\"${AMELETHDF_EXEMPLES_DIR}\"")
+  ADD_DEFINITIONS("-DAH5_TEST_DATA_DIR=\"${AMELETHDF_TEST_DATA_DIR}\"")
+
   ADD_EXECUTABLE (${test_exec} ${test_file})
   TARGET_LINK_LIBRARIES (${test_exec}
     utestf_lib

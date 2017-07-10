@@ -4,6 +4,7 @@
 module utest_m
   use ISO_C_BINDING
   use h5lt
+  use ah5_error_m
 
   implicit none
 
@@ -24,6 +25,7 @@ module utest_m
   public testu_assert_almost_equal
 
   public testu_assert_h5_attribute
+  public testu_assert_ah5err
 
   public file_exists
   public remove_file
@@ -48,7 +50,8 @@ module utest_m
           testu_assert_equal_d, &
           testu_assert_equal_i, &
           testu_assert_equal_s, &
-          testu_assert_equal_b
+          testu_assert_equal_b, &
+          testu_assert_equal_ci
   end interface
 
   interface testu_assert_equal_all
@@ -112,6 +115,13 @@ contains
        ce = test
     end if
   end subroutine testu_update_env
+
+
+  subroutine testu_assert_ah5err(msg)
+    character(len=*), intent(in), optional  :: msg
+
+    call testu_assert(ah5err.eq.0, msg)
+  end subroutine testu_assert_ah5err
 
 
   subroutine testu_assert_h5_attribute(file_id, path, attr, val, msg)
@@ -252,6 +262,17 @@ contains
     call testu_update_env(v1.eq.v2, msg, errormsg=errormsg, ce=ce)
   end subroutine testu_assert_equal_i
 
+  subroutine testu_assert_equal_ci(v1, v2, msg, ce)
+    integer(c_size_t), intent(in) :: v1, v2
+    character(len=*), intent(in), optional  :: msg
+    logical, intent(out), optional :: ce
+
+    character(len=100) :: errormsg
+    write(errormsg, *) v1, '!=', v2
+
+    call testu_update_env(v1.eq.v2, msg, errormsg=errormsg, ce=ce)
+  end subroutine testu_assert_equal_ci
+
 
   subroutine testu_assert_equal_s(v1, v2, msg, ce)
     character(len=*), intent(in) :: v1, v2
@@ -279,7 +300,7 @@ contains
     character(len=*), intent(in), optional  :: msg
     logical, intent(out), optional :: ce
 
-    character(len=100) :: errormsg
+    character(len=1000) :: errormsg
     write(errormsg, *) v1, '!=', v2
 
     call testu_update_env(all(v1.eq.v2), msg, ce=ce, errormsg=errormsg)
