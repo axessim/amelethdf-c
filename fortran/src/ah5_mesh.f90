@@ -4,9 +4,6 @@ module ah5_mesh_m
   use ah5_error_m
   use ah5_util_m
 
-  use h5lt
-
-
   implicit none
   !=============================== header =====================================!
   private ! all private
@@ -30,8 +27,8 @@ module ah5_mesh_m
   public ah5_groupgroup_getitem
 
   !================================ type ======================================!
-  integer, parameter :: c_hsize_t = c_size_t
 
+  ! The valide Amllet-HDF unstructured elements type
   character, public, parameter :: AH5_UELE_BAR2     = achar(1)
   character, public, parameter :: AH5_UELE_BAR3     = achar(2)
   character, public, parameter :: AH5_UELE_TRI3     = achar(11)
@@ -45,7 +42,7 @@ module ah5_mesh_m
   character, public, parameter :: AH5_UELE_HEXA8    = achar(104)
   character, public, parameter :: AH5_UELE_TETRA10  = achar(108)
   character, public, parameter :: AH5_UELE_HEXA20   = achar(109)
-
+  ! Geometrical primitive
   character, public, parameter :: AH5_UELE_PLAN     = achar(15)
   character, public, parameter :: AH5_UELE_CIRCLE   = achar(16)
   character, public, parameter :: AH5_UELE_ELLIPSE  = achar(17)
@@ -53,43 +50,47 @@ module ah5_mesh_m
   character, public, parameter :: AH5_UELE_CONE     = achar(106)
   character, public, parameter :: AH5_UELE_SPHERE   = achar(107)
 
+  ! The valide Amelet-HDF group type
   integer, public, parameter :: AH5_GROUP_NODE = 1
   integer, public, parameter :: AH5_GROUP_EDGE = 2
   integer, public, parameter :: AH5_GROUP_FACE = 3
   integer, public, parameter :: AH5_GROUP_VOLUME = 4
 
 
-
+  ! The Amelet-HDF mesh group of group (set of groups).
   type, bind(C) :: ah5_groupgroup_t
      type(c_ptr)                     :: path
-     integer(c_hsize_t)              :: nb_groupgroupnames
+     integer(hsize_t)                :: nb_groupgroupnames
      type(c_ptr)                     :: groupgroupnames
   end type ah5_groupgroup_t
 
+  ! The Amelet-HDF unstructured mesh group (set of elements).
   type, bind(C) :: ah5_ugroup_t
      type(c_ptr)                     :: path
      integer(c_int)                  :: entitytype
-     integer(c_hsize_t)              :: nb_groupelts
+     integer(hsize_t)                :: nb_groupelts
      type(c_ptr)                     :: groupelts
   end type ah5_ugroup_t
 
+  ! The Amelet-HDF unstructured mesh.
   type, bind(C) :: ah5_umesh_t
-     integer(c_hsize_t)              :: nb_elementnodes
+     integer(hsize_t)                :: nb_elementnodes
      type(c_ptr)                     :: elementnodes
-     integer(c_hsize_t)              :: nb_elementtypes
+     integer(hsize_t)                :: nb_elementtypes
      type(c_ptr)                     :: elementtypes
-     integer(c_hsize_t), dimension(2):: nb_nodes
+     integer(hsize_t), dimension(2):: nb_nodes
      type(c_ptr)                     :: nodes
-     integer(c_hsize_t)              :: nb_groups
+     integer(hsize_t)                :: nb_groups
      type(c_ptr)                     :: groups
-     integer(c_hsize_t)              :: nb_groupgroups
+     integer(hsize_t)                :: nb_groupgroups
      type(c_ptr)                     :: groupgroups
-     integer(c_hsize_t)              :: nb_som_tables
+     integer(hsize_t)                :: nb_som_tables
      type(c_ptr)                     :: som_tables
   end type ah5_umesh_t
 
   !================================ interfaces ================================!
 
+  ! Binding with Amelet-HDF C library
   interface
      function ah5_read_umesh_c(file_id, path, umesh) &
           bind(C, name="AH5_read_umesh") &
@@ -271,5 +272,4 @@ contains
 
     call ah5_c_string_ptr_to_f_string(groupgroupnames(idx), name)
   end subroutine ah5_groupgroup_getitem
-
 end module ah5_mesh_m

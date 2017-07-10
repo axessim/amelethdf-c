@@ -1,13 +1,21 @@
 module ah5_util_m
   use, intrinsic :: ISO_C_BINDING
 
+  use h5lt
+
   implicit none
   !=============================== header =====================================!
   private ! all private
 
+  ! The HDF5 file id
+  public hid_t
+  ! The HDF5 size type
+  public hsize_t
+
   public ah5_c_string_ptr_to_f_string
 
   !================================ type ======================================!
+
 
   !================================ interfaces ================================!
   interface
