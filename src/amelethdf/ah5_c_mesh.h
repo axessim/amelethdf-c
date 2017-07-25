@@ -251,7 +251,7 @@ AH5_PUBLIC char AH5_read_mesh(hid_t file_id, AH5_mesh_t *mesh);
 // The data can be relatively named (data.path = the node name not the full path).
 // In this case the 'file_id' must be the direct parent node.
 //
-// The 'file_id' can be the root node but in this case the furst data node's path must by the full node path.
+// The 'file_id' can be the root node but in this case the first data node's path must be the full node path.
 //
 AH5_PUBLIC char AH5_write_groupgroup(hid_t file_id, const AH5_groupgroup_t *groupgroup, hsize_t nb);
 AH5_PUBLIC char AH5_write_smesh_axis(hid_t file_id, const AH5_axis_t *axis);

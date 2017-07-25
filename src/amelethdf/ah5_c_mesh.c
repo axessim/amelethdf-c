@@ -244,7 +244,6 @@ AH5_sgroup_t *AH5_init_smsh_group(
         group->dims[1] = 3;
       else
         group->dims[1] = 6;
-      group->dims[0] = nb_eles;
 
       group->elements = (int *)malloc(group->dims[0]*group->dims[1]*sizeof(int));
       success &= (group->elements != NULL);
@@ -254,16 +253,9 @@ AH5_sgroup_t *AH5_init_smsh_group(
         group->normals = (char **)malloc(nb_eles*sizeof(char *));
         if (group->normals != NULL)
         {
-          *group->normals = (char *)malloc(2*nb_eles*sizeof(char));
-          if (*group->normals != NULL)
-          {
-            for (i = 1; i < nb_eles; ++i)
-              group->normals[i] = *group->normals + 2*i;
-          }
-          else
-          {
-            free(group->normals);
-            group->normals = NULL;
+          for (i = 0; i < nb_eles; ++i) {
+            group->normals[i] = (char *)malloc(3*sizeof(char));
+            success &= (group->normals[i] != NULL);
           }
         }
         success &= (group->normals != NULL);
@@ -272,6 +264,12 @@ AH5_sgroup_t *AH5_init_smsh_group(
       /*release memory in error.*/
       if (!success)
       {
+        if (group->normals != NULL) {
+          for (i = 0; i < nb_eles; ++i)
+            if (group->normals[i] != NULL)
+              free(group->normals[i]);
+          free(group->normals);
+        }
         free(group->elements);
         return NULL;
       }
@@ -1651,15 +1649,146 @@ char AH5_read_mesh(hid_t file_id, AH5_mesh_t *mesh)
   return rdata;
 }
 
+// Write group of structured mesh
+char AH5_write_smsh_group(hid_t id, const AH5_sgroup_t* sgroup) {
+  hid_t loc_id;
+  char* basename;
+  char* ctype;
+  char* centitytype;
+  char success;
+
+  // Invalid group
+  if (sgroup == NULL)
+    return AH5_FALSE;
+
+  // Empty group
+  if (sgroup->dims[0] == 0)
+    return AH5_TRUE;
+
+  basename = AH5_get_name_from_path(sgroup->path);
+
+  // Open / create "groups" node
+  if (AH5_path_valid(id, AH5_CATEGORY_NAME(AH5_G_GROUP))) {
+    loc_id = H5Gopen(
+        id, AH5_CATEGORY_NAME(AH5_G_GROUP), H5P_DEFAULT);
+  } else {
+    loc_id = H5Gcreate(
+        id, AH5_CATEGORY_NAME(AH5_G_GROUP),
+        H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  }
+
+  if (loc_id < 0)
+    return AH5_FALSE;
+
+  // Write m x 6 dataset "elements" (32-bit signed int)
+  if (AH5_write_int_array(loc_id, basename, 2, sgroup->dims, sgroup->elements)) {
+    success = AH5_TRUE;
+
+    // Get type and entityType
+    AH5_write_group_entitytype(sgroup->entitytype, &ctype, &centitytype);
+
+    // Set type
+    success &= AH5_write_str_attr(loc_id, basename, AH5_A_TYPE, ctype);
+
+    // Set entityType
+    if (centitytype != NULL)
+      success &= AH5_write_str_attr(loc_id, basename, AH5_A_ENTITY_TYPE, centitytype);
+  }
+
+  // Close "groups" node
+  if (HDF5_FAILED(H5Gclose(loc_id)) || !success)
+    return AH5_FALSE;
+
+
+  // Surface normals
+  if (sgroup->entitytype == AH5_GROUP_FACE) {
+    // Open / create "normal" node
+    if (AH5_path_valid(id, AH5_CATEGORY_NAME(AH5_G_NORMAL))) {
+      loc_id = H5Gopen(
+          id, AH5_CATEGORY_NAME(AH5_G_NORMAL), H5P_DEFAULT);
+    } else {
+      loc_id = H5Gcreate(
+          id, AH5_CATEGORY_NAME(AH5_G_NORMAL),
+          H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    }
+
+    if (loc_id < 0)
+      return AH5_FALSE;
+
+    // Write m x 1 dataset "normal" (str)
+    success = AH5_write_str_dataset(loc_id, basename, sgroup->dims[0], 2, sgroup->normals);
+
+    // Close "normal" node
+    if (HDF5_FAILED(H5Gclose(loc_id)) || !success)
+      return AH5_FALSE;
+  }
+
+  return AH5_TRUE;
+}
 
 // Write structured mesh
-char AH5_write_smesh(hid_t file_id, const AH5_smesh_t *smesh)
+char AH5_write_smesh(hid_t msh_id, const AH5_smesh_t *smesh)
 {
-  char success = AH5_FALSE;
+  hsize_t i;
+  hid_t loc_id;
 
-  AH5_PRINT_ERR_FUNC_NOT_IMPLEMENTED(AH5_C_MESH, "UNKNOWN PATH");
+  // Check smesh sanity first
+  if (smesh == NULL ||
+      smesh->x.nodes == NULL ||
+      smesh->y.nodes == NULL ||
+      smesh->z.nodes == NULL)
+    return AH5_FALSE;
 
-  return success;
+
+  // Mesh type
+  if (!AH5_write_str_attr(msh_id, ".", AH5_A_TYPE, AH5_V_STRUCTURED))
+    return AH5_FALSE;
+
+
+  // Open / create cartesianGrid
+  if (AH5_path_valid(msh_id, AH5_CATEGORY_NAME(AH5_G_CARTESIAN_GRID)))
+    loc_id = H5Gopen(msh_id, AH5_CATEGORY_NAME(AH5_G_CARTESIAN_GRID), H5P_DEFAULT);
+  else
+    loc_id = H5Gcreate(
+        msh_id, AH5_CATEGORY_NAME(AH5_G_CARTESIAN_GRID),
+        H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  if (loc_id < 0)
+    return AH5_FALSE;
+
+  // Write m x 1 dataset "x" (32-bit signed float)
+  if (!AH5_write_flt_dataset(
+          loc_id, AH5_CATEGORY_NAME(AH5_G_X), smesh->x.nb_nodes, smesh->x.nodes))
+    return AH5_FALSE;
+
+  // Write m x 1 dataset "y" (32-bit signed float)
+  if (!AH5_write_flt_dataset(
+          loc_id, AH5_CATEGORY_NAME(AH5_G_Y), smesh->y.nb_nodes, smesh->y.nodes))
+    return AH5_FALSE;
+
+  // Write m x 1 dataset "z" (32-bit signed float)
+  if (!AH5_write_flt_dataset(
+          loc_id, AH5_CATEGORY_NAME(AH5_G_Z), smesh->z.nb_nodes, smesh->z.nodes))
+    return AH5_FALSE;
+
+  // Close cartesianGrid
+  if (HDF5_FAILED(H5Gclose(loc_id)))
+    return AH5_FALSE;
+
+  // Write groups
+  if (smesh->nb_groups)
+    for (i = 0; i < smesh->nb_groups; ++i)
+      if (!AH5_write_smsh_group(msh_id, smesh->groups + i))
+        return AH5_FALSE;
+
+  // Write groupGroups
+  if (smesh->nb_groupgroups)
+    if (!AH5_write_groupgroup(msh_id, smesh->groupgroups, smesh->nb_groupgroups))
+      return AH5_FALSE;
+
+  // Write selectorOnMesh
+  // FIXME(any) not implemented yet...
+
+  return AH5_TRUE;
 }
 
 // Write groupGroup
