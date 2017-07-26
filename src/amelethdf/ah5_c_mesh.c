@@ -116,12 +116,12 @@ int AH5_read_group_entitytype(
  * @param groupgroup the initialized group
  * @param path the mesh groupgroup name
  * @param nb the number of entry
- * @param length the entry size (0 represent the default group name length)
+ * @param length the entry size
  *
  * @return On success, a pointer to the mesh group. If the function failed to
  * allocate memory, a null pointer is returned.
  *
- * groupgroupnames[0] -> {0, ..., lenght, length+1, ... 2*length, 2*length+1, ... 3*length}
+ * groupgroupnames[0] -> {0, ..., length, length+1, ... 2*length, 2*length+1, ... 3*length}
  * groupgroupnames[1] --------------------^
  * groupgroupnames[2] --------------------------------------------^
  *
@@ -139,33 +139,34 @@ AH5_groupgroup_t *AH5_init_groupgroup(
     groupgroup->groupgroupnames = NULL;
 
     if (path)
+    {
       AH5_setpath(&groupgroup->path, path);
-
-    // assert(length > 0);
-    ++length; // make a space for the null terminator
+    }
 
     if (nb)
     {
-      success = AH5_FALSE;
+      groupgroup->groupgroupnames = (char**) malloc(sizeof(char*) * nb);
+      success &= groupgroup->groupgroupnames != NULL;
 
-      groupgroup->groupgroupnames = (char **)malloc(nb*sizeof(char *));
-      if (groupgroup->groupgroupnames != NULL)
+      if (success)
       {
-        *groupgroup->groupgroupnames = (char *)malloc(nb*length*sizeof(char));
-        if (*groupgroup->groupgroupnames != NULL)
-        {
-          for (i = 1; i < nb; i++)
-            groupgroup->groupgroupnames[i] = groupgroup->groupgroupnames[0] + i * length;
-          success = AH5_TRUE;
-        }
+        ++length;  // null terminator
+        *groupgroup->groupgroupnames = (char*) malloc(sizeof(char) * nb * length);
+        success &= *groupgroup->groupgroupnames != NULL;
       }
 
-      if (!success)
+      if (success)
       {
-        free(groupgroup->groupgroupnames);
-        return NULL;
+        for (i = 1; i < nb; ++i)
+          groupgroup->groupgroupnames[i] = *groupgroup->groupgroupnames + i * length;
       }
     }
+  }
+
+  if (!success)
+  {
+    AH5_free_groupgroup(groupgroup);
+    return NULL;
   }
 
   return groupgroup;
@@ -210,17 +211,25 @@ AH5_axis_t *AH5_init_axis(AH5_axis_t *axis, hsize_t nb_nodes)
  * @param entitytype the group element type (GROUP_EDGE, GROUP_FACE,
  *   GROUP_VOLUME or GROUP_ENTITYTYPE_UNDEF)
  *
+ * @deprecated AH5_init_sgroup
+ *
  * @return On success, a pointer to the mesh group. If the function failed to
  * allocate memory, a null pointer is returned.
  */
 AH5_sgroup_t *AH5_init_smsh_group(
-  AH5_sgroup_t *group, const char *path, hsize_t nb_eles,
-  AH5_group_entitytype_t entitytype)
+  AH5_sgroup_t *group, const char *path, hsize_t nb_eles, AH5_group_entitytype_t entitytype)
+{
+  return AH5_init_sgroup(group, path, nb_eles, entitytype);
+}
+
+AH5_sgroup_t *AH5_init_sgroup(
+  AH5_sgroup_t *group, const char *path, hsize_t nb_eles, AH5_group_entitytype_t entitytype)
 {
   char success = AH5_TRUE;
   hsize_t i;
 
-  if (entitytype == AH5_GROUP_ENTITYTYPE_UNDEF || entitytype == AH5_GROUP_ENTITYTYPE_INVALID)
+  if (entitytype == AH5_GROUP_ENTITYTYPE_INVALID ||
+      entitytype == AH5_GROUP_ENTITYTYPE_UNDEF)
   {
     return NULL;
   }
@@ -228,52 +237,58 @@ AH5_sgroup_t *AH5_init_smsh_group(
   if (group)
   {
     group->path = NULL;
-    group->entitytype = AH5_GROUP_ENTITYTYPE_UNDEF;
-    group->dims[1] = 0;
+    group->entitytype = entitytype;
     group->dims[0] = nb_eles;
+    group->dims[1] = 0;
     group->elements = NULL;
     group->normals = NULL;
 
     if (path)
+    {
       AH5_setpath(&group->path, path);
+    }
 
     if (nb_eles)
     {
-      group->entitytype = entitytype;
       if (entitytype == AH5_GROUP_NODE)
-        group->dims[1] = 3;
-      else
-        group->dims[1] = 6;
-
-      group->elements = (int *)malloc(group->dims[0]*group->dims[1]*sizeof(int));
-      success &= (group->elements != NULL);
-
-      if (success && entitytype == AH5_GROUP_FACE)
       {
-        group->normals = (char **)malloc(nb_eles*sizeof(char *));
-        if (group->normals != NULL)
-        {
-          for (i = 0; i < nb_eles; ++i) {
-            group->normals[i] = (char *)malloc(3*sizeof(char));
-            success &= (group->normals[i] != NULL);
-          }
-        }
-        success &= (group->normals != NULL);
+        group->dims[1] = 3;
+      }
+      else
+      {
+        group->dims[1] = 6;
       }
 
-      /*release memory in error.*/
-      if (!success)
+      group->elements = (int*) malloc(sizeof(int) * group->dims[0] * group->dims[1]);
+      success &= group->elements != NULL;
+
+      if (entitytype == AH5_GROUP_FACE)
       {
-        if (group->normals != NULL) {
-          for (i = 0; i < nb_eles; ++i)
-            if (group->normals[i] != NULL)
-              free(group->normals[i]);
-          free(group->normals);
+        if (success)
+        {
+          group->normals = (char**) malloc(sizeof(char*) * group->dims[0]);
+          success &= group->normals != NULL;
         }
-        free(group->elements);
-        return NULL;
+
+        if (success)
+        {
+          *group->normals = (char*) malloc(sizeof(char) * group->dims[0] * 2);
+          success &= *group->normals != NULL;
+        }
+
+        if (success)
+        {
+          for (i = 0; i < group->dims[0]; ++i)
+            group->normals[i] = *group->normals + i * 2;
+        }
       }
     }
+  }
+
+  if (!success)
+  {
+    AH5_free_sgroup(group);
+    return NULL;
   }
 
   return group;
@@ -360,13 +375,12 @@ AH5_smesh_t *AH5_init_smesh(
     {
       smesh->groups = (AH5_sgroup_t *)malloc(nb_groups*sizeof(AH5_sgroup_t));
       success &= (smesh->groups != NULL);
+    }
 
-      /*no group of groups if no groups.*/
-      if (nb_groupgroups)
-      {
-        smesh->groupgroups = (AH5_groupgroup_t *)malloc(nb_groups*sizeof(AH5_groupgroup_t));
-        success &= (smesh->groupgroups != NULL);
-      }
+    if (nb_groupgroups)
+    {
+      smesh->groupgroups = (AH5_groupgroup_t *)malloc(nb_groupgroups*sizeof(AH5_groupgroup_t));
+      success &= (smesh->groupgroups != NULL);
     }
 
     if (nb_som_tables)
@@ -2270,21 +2284,65 @@ void AH5_print_mesh(const AH5_mesh_t *mesh)
 
 
 
-// Free memory used by grouGgroup
+// Free memory used by groupGgroup
 void AH5_free_groupgroup(AH5_groupgroup_t *groupgroup)
 {
-  if (groupgroup->path != NULL)
+  if (groupgroup)
   {
-    free(groupgroup->path);  // free groupGroup name
-    groupgroup->path = NULL;
-  }
+    if (groupgroup->path)
+    {
+      free(groupgroup->path);
+      groupgroup->path = NULL;
+    }
 
-  if (groupgroup->groupgroupnames != NULL)  // if groupGroup is not empty...
-  {
-    free(*(groupgroup->groupgroupnames));  // free groupGroup member names (strings)
-    free(groupgroup->groupgroupnames);  // free groupGroup member names
-    groupgroup->groupgroupnames = NULL;
+    if (groupgroup->groupgroupnames)
+    {
+      if (*groupgroup->groupgroupnames)
+      {
+        free(*groupgroup->groupgroupnames);
+        *groupgroup->groupgroupnames = NULL;
+      }
+
+      free(groupgroup->groupgroupnames);
+      groupgroup->groupgroupnames = NULL;
+    }
+
     groupgroup->nb_groupgroupnames = 0;
+  }
+}
+
+
+// Free memory used by sgroup
+void AH5_free_sgroup(AH5_sgroup_t *sgroup) {
+  if (sgroup)
+  {
+    if (sgroup->path)
+    {
+      free(sgroup->path);
+      sgroup->path = NULL;
+    }
+
+    if (sgroup->elements)
+    {
+      free(sgroup->elements);
+      sgroup->elements = NULL;
+    }
+
+    if (sgroup->normals)
+    {
+      if (*sgroup->normals)
+      {
+        free(*sgroup->normals);
+        *sgroup->normals = NULL;
+      }
+
+      free(sgroup->normals);
+      sgroup->normals = NULL;
+    }
+
+    sgroup->entitytype = AH5_GROUP_ENTITYTYPE_UNDEF;
+    sgroup->dims[0] = 0;
+    sgroup->dims[1] = 0;
   }
 }
 
@@ -2313,25 +2371,12 @@ void AH5_free_smesh(AH5_smesh_t *smesh)
     smesh->z.nb_nodes = 0;
   }
 
-  if (smesh->groups != NULL)  // if any groups...
+  if (smesh->groups != NULL)
   {
-    for (i = 0; i < smesh->nb_groups; i++)    // for each group...
-    {
-      if (smesh->groups[i].elements != NULL)  // if group is not empty...
-        free(smesh->groups[i].elements);
+    for (i = 0; i < smesh->nb_groups; ++i)
+      AH5_free_sgroup(smesh->groups + i);
 
-      if (smesh->groups[i].normals != NULL)
-      {
-        free(*(smesh->groups[i].normals));
-        free(smesh->groups[i].normals);
-      }
-
-      if (smesh->groups[i].path != NULL)
-        free(smesh->groups[i].path);  // free group name
-
-      smesh->groups[i].entitytype = AH5_GROUP_ENTITYTYPE_UNDEF;
-    }
-    free(smesh->groups);  // free space for pointers to groups
+    free(smesh->groups);
     smesh->groups = NULL;
     smesh->nb_groups = 0;
   }

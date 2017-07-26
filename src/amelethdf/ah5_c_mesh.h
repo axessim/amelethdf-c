@@ -207,8 +207,10 @@ typedef struct _AH5_mesh_t
 AH5_PUBLIC AH5_groupgroup_t *AH5_init_groupgroup(AH5_groupgroup_t *groupgroup, const char *path,
     hsize_t nb, size_t length);
 AH5_PUBLIC AH5_axis_t *AH5_init_axis(AH5_axis_t *axis, hsize_t nb_nodes);
-AH5_PUBLIC AH5_sgroup_t *AH5_init_smsh_group(AH5_sgroup_t *group, const char *path, hsize_t nb_eles,
-    AH5_group_entitytype_t entitytype);
+AH5_PUBLIC AH5_sgroup_t *AH5_init_smsh_group(  // deprecated in favor of AH5_init_sgroup
+    AH5_sgroup_t *group, const char *path, hsize_t nb_eles, AH5_group_entitytype_t entitytype);
+AH5_PUBLIC AH5_sgroup_t *AH5_init_sgroup(
+    AH5_sgroup_t *group, const char *path, hsize_t nb_eles, AH5_group_entitytype_t entitytype);
 AH5_PUBLIC AH5_ugroup_t *AH5_init_umsh_group(AH5_ugroup_t *group, const char *path, hsize_t nb_eles,
     AH5_group_entitytype_t entitytype);
 
@@ -278,6 +280,7 @@ AH5_PUBLIC void AH5_print_msh_group(const AH5_msh_group_t *msh_group, int space)
 AH5_PUBLIC void AH5_print_mesh(const AH5_mesh_t *mesh);
 
 AH5_PUBLIC void AH5_free_groupgroup(AH5_groupgroup_t *groupgroup);
+AH5_PUBLIC void AH5_free_sgroup(AH5_sgroup_t *sgroup);
 AH5_PUBLIC void AH5_free_smesh(AH5_smesh_t *smesh);
 AH5_PUBLIC void AH5_free_umesh(AH5_umesh_t *umesh);
 AH5_PUBLIC void AH5_free_msh_instance(AH5_msh_instance_t *msh_instance);

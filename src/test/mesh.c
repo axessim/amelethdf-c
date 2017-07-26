@@ -291,10 +291,10 @@ char *test_init_functions()
 
   /*Check smesh group*/
   mu_assert_eq_ptr(
-    "null mesh", AH5_init_smsh_group(NULL, NULL, 1, AH5_GROUP_EDGE), NULL);
+    "null mesh", AH5_init_sgroup(NULL, NULL, 1, AH5_GROUP_EDGE), NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_smsh_group(smesh.groups, "group 0", 1, AH5_GROUP_NODE),
+    "empty mesh", AH5_init_sgroup(smesh.groups, "group 0", 1, AH5_GROUP_NODE),
     smesh.groups);
   mu_assert_str_equal("check field", smesh.groups->path, "group 0");
   mu_assert_eq("check field", smesh.groups->entitytype, AH5_GROUP_NODE);
@@ -303,7 +303,7 @@ char *test_init_functions()
   mu_assert_eq("check field", smesh.groups->normals, NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_smsh_group(smesh.groups+1, "group 1", 1, AH5_GROUP_EDGE),
+    "empty mesh", AH5_init_sgroup(smesh.groups+1, "group 1", 1, AH5_GROUP_EDGE),
     smesh.groups + 1);
   mu_assert_str_equal("check field", smesh.groups[1].path, "group 1");
   mu_assert_eq("check field", smesh.groups[1].entitytype, AH5_GROUP_EDGE);
@@ -312,7 +312,7 @@ char *test_init_functions()
   mu_assert_eq("check field", smesh.groups[1].normals, NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_smsh_group(smesh.groups+2, "group 2", 10, AH5_GROUP_FACE),
+    "empty mesh", AH5_init_sgroup(smesh.groups+2, "group 2", 10, AH5_GROUP_FACE),
     smesh.groups + 2);
   mu_assert_str_equal("check field", smesh.groups[2].path, "group 2");
   mu_assert_eq("check field", smesh.groups[2].entitytype, AH5_GROUP_FACE);
@@ -321,7 +321,7 @@ char *test_init_functions()
   mu_assert_ne("check field", smesh.groups[2].normals, NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_smsh_group(smesh.groups+3, "group 3", 1, AH5_GROUP_VOLUME),
+    "empty mesh", AH5_init_sgroup(smesh.groups+3, "group 3", 1, AH5_GROUP_VOLUME),
     smesh.groups + 3);
   mu_assert_str_equal("check field", smesh.groups[3].path, "group 3");
   mu_assert_eq("check field", smesh.groups[3].entitytype, AH5_GROUP_VOLUME);
@@ -330,11 +330,11 @@ char *test_init_functions()
   mu_assert_eq("check field", smesh.groups[3].normals, NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_smsh_group(smesh.groups+3, NULL, 1, AH5_GROUP_ENTITYTYPE_UNDEF),
+    "empty mesh", AH5_init_sgroup(smesh.groups+3, NULL, 1, AH5_GROUP_ENTITYTYPE_UNDEF),
     NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_smsh_group(smesh.groups+3, NULL, 1, AH5_GROUP_ENTITYTYPE_INVALID),
+    "empty mesh", AH5_init_sgroup(smesh.groups+3, NULL, 1, AH5_GROUP_ENTITYTYPE_INVALID),
     NULL);
 
   mu_assert_eq_ptr(
@@ -750,7 +750,7 @@ char* test_write_smesh() {
   smesh->z.nodes[0] = 4;
   smesh->z.nodes[1] = 5;
   sgroup = smesh->groups + 0;
-  AH5_init_smsh_group(sgroup, "surface", 6, AH5_GROUP_FACE);
+  AH5_init_sgroup(sgroup, "surface", 6, AH5_GROUP_FACE);
 
   i = 0;
   sgroup->elements[i++] = 0;  // x-
@@ -804,7 +804,7 @@ char* test_write_smesh() {
   strcpy(sgroup->normals[i++], "z+");
 
   sgroup = smesh->groups + 1;
-  AH5_init_smsh_group(sgroup, "volume", 1, AH5_GROUP_VOLUME);
+  AH5_init_sgroup(sgroup, "volume", 1, AH5_GROUP_VOLUME);
 
   i = 0;
   sgroup->elements[i++] = 0;
