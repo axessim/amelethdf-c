@@ -160,14 +160,19 @@ contains
     type(c_ptr) :: status
 
 
-    ! strlen = AH5_read_entrypoint_strlen_c(file_id)
-    ! allocate(character(len=strlen) :: entrypoint)
-    ! allocate(buf(strlen+1))
-    !
-    ! status = AH5_read_entrypoint_c(file_id, c_loc(buf))
-    ! call ah5_error_if(c_associated(status), hdferr)
-    !
-    ! print*, buf
+    strlen = AH5_read_entrypoint_strlen_c(file_id)
+    if (strlen .gt. 0) then
+       allocate(character(len=strlen) :: entrypoint)
+       allocate(buf(strlen+1))
+
+       status = AH5_read_entrypoint_c(file_id, c_loc(buf))
+       call ah5_error_if(.not. c_associated(status), hdferr)
+
+       entrypoint = transfer(buf(1: strlen), entrypoint)
+    else
+       hdferr = -1
+    endif
+
   end subroutine ah5_read_entrypoint
 
   ! get the basename ot the given path
