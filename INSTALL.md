@@ -10,7 +10,7 @@ Obtaining Amelet-HDF
 --------------------
 
 The last release of Amelet-HDF is avaiable from
-https://code.google.com/p/amelet-hdf/. 
+https://code.google.com/p/amelet-hdf/.
 
 For get the source code checkout the code from the subversion repository.
 
@@ -24,12 +24,12 @@ This project requires:
 
   * Reasonably conformant C compiler:
     - GCC 4.6 recomanded 4.8
-    - Microsoft Visual C++ 2010 [Express] 32 or 64 
+    - Microsoft Visual C++ 2010 [Express] 32 or 64
     - Clang 3.4
 
   * HDF5 Libraries [HEADERS and LIBRARIES] in version 1.8.12.
     (see http://www.hdfgroup.org/HDF5/release/obtain5.html)
-    The main HDF5 dependance are Zlib, SZip and MPI. 
+    The main HDF5 dependance are Zlib, SZip and MPI.
 
 Basic installation
 ------------------
@@ -54,7 +54,15 @@ library, the configure line might read as follows:
             -DHDF5_DIR:PATH=PATH_TO_HDF5
 
 In this case, PATH_TO_HDF5 would be replaced with the path to the installed
-location of the HDF5 library.
+location of the HDF5 library. This folder may contain the hdf5*.cmake files.
+
+The configuration of the build can be perform by invoking the configure.py
+script with the suitable options. The options can be displayed by invoking
+the script with the '--help' option.
+
+    python configure.py --prefix=/usr/local/amelet-hdf
+                        --flavor=Release
+                        --hdf5-dir=PATH_TO_HDF5
 
 Full installation
 -----------------
@@ -70,7 +78,7 @@ By default, 'cmake' will install the package's files in current directory
 other than '/usr/local' by giving 'cmake' the option
 '-DCMAKE_INSTALL_PREFIX:PATH=$PATH'.
 
-    cmake . -DCMAKE_INSTALL_PREFIX:PATH=$PATH 
+    cmake . -DCMAKE_INSTALL_PREFIX:PATH=$PATH
 
 ### Build flavor
 
