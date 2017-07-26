@@ -28,7 +28,7 @@ module ah5_mesh_m
 
   !================================ type ======================================!
 
-  ! The valide Amllet-HDF unstructured elements type
+  ! The valid Amelet-HDF unstructured elements type
   character, public, parameter :: AH5_UELE_BAR2     = achar(1)
   character, public, parameter :: AH5_UELE_BAR3     = achar(2)
   character, public, parameter :: AH5_UELE_TRI3     = achar(11)
@@ -78,7 +78,7 @@ module ah5_mesh_m
      type(c_ptr)                     :: elementnodes
      integer(hsize_t)                :: nb_elementtypes
      type(c_ptr)                     :: elementtypes
-     integer(hsize_t), dimension(2):: nb_nodes
+     integer(hsize_t), dimension(2)  :: nb_nodes
      type(c_ptr)                     :: nodes
      integer(hsize_t)                :: nb_groups
      type(c_ptr)                     :: groups
@@ -169,6 +169,7 @@ contains
 
   ! build element offset. The element nodes index are
   ! 'elementnodes(offset(element_index):offset(element_index+1)-1)'
+  ! The indices in offset starts at 1 unlike native Amelet-HDF indexing.
   subroutine ah5_umesh_elementoffsets(this, offset)
     type(ah5_umesh_t), intent(in) :: this
     integer, intent(inout), dimension(:), allocatable :: offset
