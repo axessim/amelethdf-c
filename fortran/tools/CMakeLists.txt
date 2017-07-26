@@ -20,5 +20,4 @@ FOREACH (tool_file ${tools_src})
     amelethdfc
     ${AMELETHDF_DEP_LINK_LIBS})
 
-  ADD_TEST (${tool_exec} "${EXECUTABLE_OUTPUT_PATH}/${tool_exec}")
 ENDFOREACH (tool_file)
