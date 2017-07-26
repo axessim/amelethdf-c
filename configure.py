@@ -133,6 +133,9 @@ def main():
     group.add_option("--build-docs", dest="docs",
                      help="Build library documentation",
                      action="store_true", default=False)
+    group.add_option("--build-fortran", dest="fortran",
+                     help="Build fortran library",
+                     action="store_true", default=False)
     parser.add_option_group(group)
 
     group = OptionGroup(parser, "CMake", "")
@@ -177,6 +180,10 @@ def main():
     if options.docs is not None:
         cmake_options.setdefault(
             "AMELETHDF_BUILD_DOCS:BOOL", cmake_onoff(options.docs))
+
+    if options.fortran is not None:
+        cmake_options.setdefault(
+            "AMELETHDF_BUILD_FORTRAN:BOOL", cmake_onoff(options.fortran))
 
     if options.flavor is not None:
         cmake_options.setdefault("CMAKE_BUILD_TYPE", options.flavor)
