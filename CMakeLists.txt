@@ -53,8 +53,7 @@ SET(AMELETHDF_HL_DEP_LINK_LIBS_DIRS "")
 # set(CMAKE_MODULE_PATH "/opt/axessim/adk-2.0/share/cmake-3.6/Modules/") # For custom cmake modules
 # HDF5
 FIND_PACKAGE(HDF5 REQUIRED
-  COMPONENTS C HL
-  CONFIG)
+  COMPONENTS C HL)
 IF (NOT HDF5_FOUND)
   MESSAGE(FATAL_ERROR "HDF5 not found.")
 ENDIF ()
