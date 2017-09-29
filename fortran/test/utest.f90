@@ -1,6 +1,15 @@
 !
 ! Provide a minimal unit test framwork for Frotran 90
 !
+#if !defined(AH5_DATA_DIR)
+#error "Test need define AH5_DATA_DIR"
+#endif
+
+#if !defined(AH5_TEST_DATA_DIR)
+#error "Test need define AH5_TEST_DATA_DIR"
+#endif
+
+
 module utest_m
   use ISO_C_BINDING
   use h5lt

@@ -27,7 +27,7 @@ This project requires:
     - Microsoft Visual C++ 2010 [Express] 32 or 64
     - Clang 3.4
 
-  * HDF5 Libraries [HEADERS and LIBRARIES] in version 1.8.12.
+  * HDF5 Libraries [HEADERS and LIBRARIES] in version 1.8.17.
     (see http://www.hdfgroup.org/HDF5/release/obtain5.html)
     The main HDF5 dependance are Zlib, SZip and MPI.
 
