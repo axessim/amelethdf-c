@@ -123,7 +123,7 @@ size_t AH5_read_str_attr_len(hid_t loc_id, const char *path, const char *attr_na
 // Read string attribute <attr_name> given by address <path>
 char AH5_read_str_attr(hid_t loc_id, const char *path, const char *attr_name, char **rdata)
 {
-  hid_t attr_id, filetype, memtype;
+  hid_t attr_id, atype, memtype;
   size_t sdim;
   char success = AH5_FALSE;
 
@@ -131,19 +131,19 @@ char AH5_read_str_attr(hid_t loc_id, const char *path, const char *attr_name, ch
     if (H5Aexists_by_name(loc_id, path, attr_name, H5P_DEFAULT) > 0)
     {
       attr_id = H5Aopen_by_name(loc_id, path, attr_name, H5P_DEFAULT, H5P_DEFAULT);
-      filetype = H5Aget_type(attr_id);
-      sdim = H5Tget_size(filetype);
+      atype = H5Aget_type(attr_id);
+      sdim = H5Tget_size(atype);
       sdim++;  // make a space for null terminator
       // XXX allocate memory into an input argument is dangerous thing.
       *rdata = (char *) malloc(sdim * sizeof(char));
-      memtype = H5Tcopy(H5T_C_S1);
+      memtype = H5Tget_native_type(atype, H5T_DIR_ASCEND);
       H5Tset_size(memtype, sdim);
       if (H5Aread(attr_id, memtype, *rdata) >= 0)
         success = AH5_TRUE;
       else
         free(*rdata);
       H5Tclose(memtype);
-      H5Tclose(filetype);
+      H5Tclose(atype);
       H5Aclose(attr_id);
     }
   if (!success)
@@ -215,6 +215,7 @@ char AH5_read_opt_attrs(hid_t loc_id, const char *path, AH5_opt_attrs_t *opt_att
         case H5T_STRING:
           opt_attrs->instances[k].value.s = NULL;
           memtype = H5Tcopy(H5T_C_S1);
+          memtype = H5Tget_native_type(type_id, H5T_DIR_ASCEND);
           H5Tset_size(memtype, AH5_ATTR_LENGTH);
           opt_attrs->instances[k].value.s = (char *) malloc(AH5_ATTR_LENGTH * sizeof(char));
           if (H5Aread(attr_id, memtype, opt_attrs->instances[k].value.s) >= 0)
