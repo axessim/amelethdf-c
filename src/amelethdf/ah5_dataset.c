@@ -203,7 +203,7 @@ char AH5_write_str_dataset(hid_t loc_id, const char *dset_name, const hsize_t le
   hsize_t dims[1] = {len}, k;
   char *buf = NULL;
 
-  buf = (char *) malloc((size_t) len*(slen)+1 * sizeof(char));
+  buf = (char *) malloc((size_t) len*(slen+1) * sizeof(char));
   buf[0] = '\0';
   for (k = 0; k < len; k++)
   {

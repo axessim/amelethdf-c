@@ -272,12 +272,13 @@ AH5_sgroup_t *AH5_init_sgroup(
 
         if (success)
         {
-          *group->normals = (char*) malloc(sizeof(char) * group->dims[0] * 2);
+          *group->normals = (char*) malloc(sizeof(char) * (group->dims[0] * 2 + 1));
           success &= *group->normals != NULL;
         }
 
         if (success)
         {
+          (*group->normals)[group->dims[0] * 2] = '\0';
           for (i = 0; i < group->dims[0]; ++i)
             group->normals[i] = *group->normals + i * 2;
         }
