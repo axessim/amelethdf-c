@@ -39,7 +39,7 @@ AH5_attr_instance_t *AH5_init_attr_str(AH5_attr_instance_t *attr, const char *na
     attr->value.s = (char*)malloc((strlen(val)+1) * sizeof(char));
     strcpy(attr->value.s, val);
   }
-  
+
   return attr;
 }
 
@@ -214,13 +214,8 @@ char AH5_read_opt_attrs(hid_t loc_id, const char *path, AH5_opt_attrs_t *opt_att
           break;
         case H5T_STRING:
           opt_attrs->instances[k].value.s = NULL;
-          memtype = H5Tcopy(H5T_C_S1);
-          memtype = H5Tget_native_type(type_id, H5T_DIR_ASCEND);
-          H5Tset_size(memtype, AH5_ATTR_LENGTH);
-          opt_attrs->instances[k].value.s = (char *) malloc(AH5_ATTR_LENGTH * sizeof(char));
-          if (H5Aread(attr_id, memtype, opt_attrs->instances[k].value.s) >= 0)
+          if (AH5_read_str_attr(loc_id, path, temp_name, &opt_attrs->instances[k].value.s))
             success = AH5_TRUE;
-          H5Tclose(memtype);
           break;
         default:
           opt_attrs->instances[k].type = H5T_NO_CLASS;
@@ -448,6 +443,3 @@ void AH5_free_opt_attrs(AH5_opt_attrs_t *opt_attrs)
     opt_attrs->nb_instances = 0;
   }
 }
-
-
-
