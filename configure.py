@@ -11,7 +11,7 @@ from optparse import OptionParser, OptionGroup
 from os.path import join
 
 from logging import (
-    info, error,
+    info, error, warn,
     Formatter, StreamHandler, getLogger,
     INFO, WARN, ERROR, DEBUG)
 
@@ -48,6 +48,7 @@ def guessed_platform():
 # Some staf for prety log
 #
 class ColoredFormatter(Formatter):
+
     """A logger formatter coloring the outputs."""
 
     def format(self, record):
@@ -127,6 +128,9 @@ def main():
                      help="path to the HDF5 cmake directory "
                      "'${SOMEWHERE}/share/cmake/hdf5'",
                      metavar="PATH", default=None)
+    group.add_option("--hdf5-root-dir", dest="hdf5_root",
+                     help="path to the HDF5 cmake directory ",
+                     metavar="PATH", default=None)
     parser.add_option_group(group)
 
     group = OptionGroup(parser, "Manage features", "")
@@ -170,8 +174,12 @@ def main():
 
     # Configure cmake with adk
     if options.hdf5 is not None:
+        warn("Depreacted option --hdf5-dir")
         hdf5_path = normpath(options.hdf5)
         cmake_options.setdefault("HDF5_DIR:PATH", hdf5_path)
+    if options.hdf5_root is not None:
+        hdf5_path = normpath(options.hdf5_root)
+        cmake_options.setdefault("HDF5_ROOT:PATH", hdf5_path)
 
     if options.prefix is not None:
         cmake_options.setdefault("CMAKE_INSTALL_PREFIX:PATH",
