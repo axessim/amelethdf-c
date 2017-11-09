@@ -2655,6 +2655,9 @@ int AH5_element_size(char element_type)
 
   switch (element_type)
   {
+    case AH5_UELE_NODE:
+      size = 1;
+      break;
     case AH5_UELE_BAR2:
     case AH5_UELE_SPHERE:
       size = 2;
