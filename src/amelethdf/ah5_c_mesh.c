@@ -2656,48 +2656,51 @@ int AH5_element_size(char element_type)
 
   switch (element_type)
   {
-  case AH5_UELE_BAR2:
-    size = 2;
-    break;
+    case AH5_UELE_NODE:
+      size = 1;
+      break;
+    case AH5_UELE_BAR2:
+      size = 2;
+      break;
 
-  case AH5_UELE_BAR3:
-  case AH5_UELE_TRI3:
-    size = 3;
-    break;
+    case AH5_UELE_BAR3:
+    case AH5_UELE_TRI3:
+      size = 3;
+      break;
 
-  case AH5_UELE_QUAD4:
-  case AH5_UELE_TETRA4:
-    size = 4;
-    break;
+    case AH5_UELE_QUAD4:
+    case AH5_UELE_TETRA4:
+      size = 4;
+      break;
 
-  case AH5_UELE_PYRA5:
-    size = 5;
-    break;
+    case AH5_UELE_PYRA5:
+      size = 5;
+      break;
 
-  case AH5_UELE_TRI6:
-  case AH5_UELE_PENTA6:
-    size = 6;
-    break;
+    case AH5_UELE_TRI6:
+    case AH5_UELE_PENTA6:
+      size = 6;
+      break;
 
-  case AH5_UELE_QUAD8:
-  case AH5_UELE_HEXA8:
-    size = 8;
-    break;
+    case AH5_UELE_QUAD8:
+    case AH5_UELE_HEXA8:
+      size = 8;
+      break;
 
-  case AH5_UELE_QUAD9:
-    size = 9;
-    break;
+    case AH5_UELE_QUAD9:
+      size = 9;
+      break;
 
-  case AH5_UELE_TETRA10:
-    size = 10;
-    break;
+    case AH5_UELE_TETRA10:
+      size = 10;
+      break;
 
-  case AH5_UELE_HEXA20:
-    size = 20;
-    break;
+    case AH5_UELE_HEXA20:
+      size = 20;
+      break;
 
-  default:
-    size = 0;
+    default:
+      size = 0;
   }
 
   return size;

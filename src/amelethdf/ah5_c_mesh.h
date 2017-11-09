@@ -107,6 +107,7 @@ typedef struct _AH5_usom_table_t
 typedef enum _AH5_uelement_type_t
 {
   AH5_UELE_INVALID            = -1,
+  AH5_UELE_NODE               = 0,  // Not native AH5 element.
   AH5_UELE_BAR2               = 1,
   AH5_UELE_BAR3               = 2,
   AH5_UELE_TRI3               = 11,
