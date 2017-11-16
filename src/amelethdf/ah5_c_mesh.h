@@ -46,6 +46,7 @@ typedef struct _AH5_sgroup_t
   hsize_t                dims[2];
   int                    *elements;
   char                   **normals;
+  char*                  *flat_normals;
 } AH5_sgroup_t;
 
 typedef struct _AH5_smesh_t

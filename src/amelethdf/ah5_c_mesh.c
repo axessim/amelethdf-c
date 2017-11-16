@@ -242,6 +242,7 @@ AH5_sgroup_t *AH5_init_sgroup(
     group->dims[1] = 0;
     group->elements = NULL;
     group->normals = NULL;
+    group->flat_normals = NULL;
 
     if (path)
     {
@@ -272,7 +273,8 @@ AH5_sgroup_t *AH5_init_sgroup(
 
         if (success)
         {
-          *group->normals = (char*) malloc(sizeof(char) * (group->dims[0] * 2 + 1));
+          group->flat_normals = (char*) malloc(sizeof(char) * (group->dims[0] * 2 + 1));
+          *group->normals = group->flat_normals;
           success &= *group->normals != NULL;
         }
 
@@ -721,6 +723,7 @@ char AH5_read_smsh_group(hid_t file_id, const char *path, AH5_sgroup_t *sgroup)
   sgroup->path = strdup(path);
   sgroup->entitytype = AH5_GROUP_ENTITYTYPE_UNDEF;
   sgroup->normals = NULL;
+  sgroup->flat_normals = NULL;
   sgroup->elements = NULL;
 
   if (AH5_path_valid(file_id, path))
@@ -758,6 +761,7 @@ char AH5_read_smsh_group(hid_t file_id, const char *path, AH5_sgroup_t *sgroup)
       sgroup->dims[0] = 0;  /* in case of invalid dataset only */
       sgroup->dims[1] = 0;
       sgroup->normals = NULL;
+      sgroup->flat_normals = NULL;
       sgroup->elements = NULL;
       rdata = AH5_FALSE;
     }
@@ -779,6 +783,7 @@ char AH5_read_smsh_group(hid_t file_id, const char *path, AH5_sgroup_t *sgroup)
           strcat(normalpath, temp);
           /* normalpath = <mesh_path>/normal/<group_name> */
 
+          // TODO(XXX) read the normals in flat_normal member.
           if (AH5_path_valid(file_id, normalpath))
             if (H5LTget_dataset_ndims(file_id, normalpath, &nb_dims) >= 0)
               if (nb_dims <= 1)
@@ -1664,6 +1669,7 @@ char AH5_read_mesh(hid_t file_id, AH5_mesh_t *mesh)
   return rdata;
 }
 
+
 // Write group of structured mesh
 char AH5_write_smsh_group(hid_t id, const AH5_sgroup_t* sgroup) {
   hid_t loc_id;
@@ -1731,7 +1737,13 @@ char AH5_write_smsh_group(hid_t id, const AH5_sgroup_t* sgroup) {
       return AH5_FALSE;
 
     // Write m x 1 dataset "normal" (str)
-    success = AH5_write_str_dataset(loc_id, basename, sgroup->dims[0], 2, sgroup->normals);
+    if (sgroup->flat_normals == NULL)
+    {
+      success = AH5_write_str_dataset(loc_id, basename, sgroup->dims[0], 2, sgroup->normals);
+    } else
+    {
+      success = AH5_write_flat_str_dataset(loc_id, basename, sgroup->dims[0], 2, sgroup->flat_normals);
+    }
 
     // Close "normal" node
     if (HDF5_FAILED(H5Gclose(loc_id)) || !success)
@@ -2331,7 +2343,7 @@ void AH5_free_sgroup(AH5_sgroup_t *sgroup) {
 
     if (sgroup->normals)
     {
-      if (*sgroup->normals)
+      if ((*sgroup->normals != NULL) && (sgroup->flat_normals == NULL))
       {
         free(*sgroup->normals);
         *sgroup->normals = NULL;
@@ -2339,6 +2351,10 @@ void AH5_free_sgroup(AH5_sgroup_t *sgroup) {
 
       free(sgroup->normals);
       sgroup->normals = NULL;
+    }
+    if (sgroup->flat_normals) {
+      free(sgroup->flat_normals);
+      sgroup->flat_normals = NULL;
     }
 
     sgroup->entitytype = AH5_GROUP_ENTITYTYPE_UNDEF;

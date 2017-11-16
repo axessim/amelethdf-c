@@ -190,8 +190,9 @@ hid_t AH5_build_test_file_from_name(const char *name, const char *ext)
 {
   char *file_name;
   hid_t file_id;
+  size_t size = (strlen(name) + strlen(ext) + 1)* sizeof(char);
 
-  file_name = (char *)malloc((strlen(name) + strlen(ext) + 1)* sizeof(char));
+  file_name = (char *)malloc(size);
   strcpy(file_name, name);
   strcat(file_name, ext);
 
