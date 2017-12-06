@@ -347,6 +347,74 @@ AH5_PUBLIC AH5_ugroup_t *AH5_init_umsh_group(
 
 
 /**
+ * Initialized and allocates unstructured selector on mesh.
+ *
+ * @param som the initialized selector on mesh
+ * @param path the selector on mesh name
+ * @param type the selector on mesh type
+ * @param size the number of selectors
+ *
+ * @return On success, a pointer to the selector on mesh. If the
+ * function failed to allocate memory, a null pointer is returned.
+ */
+AH5_usom_table_t *AH5_init_umsh_som(
+    AH5_usom_table_t *som, const char *path, hsize_t size, AH5_usom_class_t type) {
+  hsize_t i;
+
+  if (som)
+  {
+    som->path = NULL;
+    som->type = type;
+
+    switch (type)
+    {
+      case SOM_INVALID:
+        return NULL;
+
+      case SOM_POINT_IN_ELEMENT:
+        som->data.pie.nb_dims = 3;
+        som->data.pie.nb_points = size;
+
+        som->data.pie.indices = (int *) malloc((size_t) som->data.pie.nb_points * sizeof(int));
+        /* initialized with default value. */
+        for (i = 0; i < som->data.pie.nb_points; ++i)
+          som->data.pie.indices[i] = -1;
+
+        /* build 2d-array curvilinear index. */
+        som->data.pie.vectors = (float **) malloc(
+            (size_t) som->data.pie.nb_points * sizeof(float *));
+        som->data.pie.vectors[0] = (float *) malloc(
+            (size_t) (som->data.pie.nb_points * som->data.pie.nb_dims) * sizeof(float));
+        for (i = 1; i < som->data.pie.nb_points; ++i)
+          som->data.pie.vectors[i] = som->data.pie.vectors[0] + i * (som->data.pie.nb_dims);
+        /* initialized with default value. */
+        for (i = 0; i < som->data.pie.nb_points * som->data.pie.nb_dims; ++i)
+          som->data.pie.vectors[0][i] = -1;
+
+        break;
+
+      case SOM_EDGE:
+      case SOM_FACE:
+        som->data.ef.dims[0] = 2;
+        som->data.ef.dims[1] = size;
+
+        som->data.ef.items = (int *) malloc(
+            (size_t) som->data.ef.dims[0] * som->data.ef.dims[1] * sizeof(int));
+        for (i = 0; i <  som->data.ef.dims[0] * som->data.ef.dims[1]; ++i)
+          som->data.ef.items[i] = -1;
+
+        break;
+    }
+
+    if (path)
+      AH5_setpath(&som->path, path);
+  }
+
+  return som;
+}
+
+
+/**
  * Initialized and allocates structured mesh.
  *
  * @param smesh the initialized mesh

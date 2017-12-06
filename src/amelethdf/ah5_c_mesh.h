@@ -216,6 +216,8 @@ AH5_PUBLIC AH5_sgroup_t *AH5_init_sgroup(
 AH5_PUBLIC AH5_ugroup_t *AH5_init_umsh_group(AH5_ugroup_t *group, const char *path, hsize_t nb_eles,
     AH5_group_entitytype_t entitytype);
 
+AH5_PUBLIC AH5_usom_table_t *AH5_init_umsh_som(AH5_usom_table_t *som, const char *path, hsize_t size, AH5_usom_class_t type);
+
 AH5_PUBLIC AH5_smesh_t *AH5_init_smesh(AH5_smesh_t *smesh, hsize_t nb_groups,
                                        hsize_t nb_groupgroups, hsize_t nb_som_tables);
 AH5_PUBLIC AH5_umesh_t *AH5_init_umesh(AH5_umesh_t *umesh, hsize_t nb_elementnodes,

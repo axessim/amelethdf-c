@@ -52,9 +52,11 @@ void build_umesh_1(AH5_umesh_t *umesh)
   umesh->groups[0].nb_groupelts = 1;
   umesh->groups[0].groupelts = (int *) malloc(umesh->groups[0].nb_groupelts * sizeof(int));
   umesh->groups[0].groupelts[0] = 2;
+
   // group of group
   umesh->nb_groupgroups = 0;
   umesh->groupgroups = NULL;
+
   // selector on mesh
   umesh->nb_som_tables = 0;
   umesh->som_tables = NULL;
@@ -139,6 +141,8 @@ char *test_init_functions()
   mu_assert_eq_ptr("check mesh field", umesh.elementtypes, NULL);
   mu_assert_eq("check mesh field", umesh.nb_nodes[0], 0);
   mu_assert_eq("check mesh field", umesh.nb_nodes[1], 0);
+  mu_assert_eq("check mesh field", umesh.nb_som_tables, 0);
+  mu_assert_eq_ptr("check mesh field", umesh.som_tables, NULL);
 
   mu_assert_eq_ptr(
     "empty mesh", AH5_init_umesh(&umesh, 1, 2, 3, 0, 0, 0), &umesh);
@@ -150,6 +154,8 @@ char *test_init_functions()
   mu_assert_eq("check mesh field", umesh.nb_nodes[1], 3);
   mu_assert_eq("check mesh field", umesh.nb_groups, 0);
   mu_assert_eq_ptr("check mesh field", umesh.groups, NULL);
+  mu_assert_eq("check mesh field", umesh.nb_som_tables, 0);
+  mu_assert_eq_ptr("check mesh field", umesh.som_tables, NULL);
 
   mu_assert_eq_ptr(
     "empty mesh", AH5_init_umesh(&umesh, 0, 0, 3, 0, 0, 0), &umesh);
@@ -161,6 +167,21 @@ char *test_init_functions()
   mu_assert_eq("check mesh field", umesh.nb_nodes[1], 3);
   mu_assert_eq("check mesh field", umesh.nb_groups, 0);
   mu_assert_eq_ptr("check mesh field", umesh.groups, NULL);
+  mu_assert_eq("check mesh field", umesh.nb_som_tables, 0);
+  mu_assert_eq_ptr("check mesh field", umesh.som_tables, NULL);
+
+  mu_assert_eq_ptr(
+    "empty mesh", AH5_init_umesh(&umesh, 0, 0, 3, 0, 0, 2), &umesh);
+  mu_assert_eq("check mesh field", umesh.nb_elementnodes, 0);
+  mu_assert_eq_ptr("check mesh field", umesh.elementnodes, NULL);
+  mu_assert_eq("check mesh field", umesh.nb_elementtypes, 0);
+  mu_assert_eq_ptr("check mesh field", umesh.elementtypes, NULL);
+  mu_assert_eq("check mesh field", umesh.nb_nodes[0], 3);
+  mu_assert_eq("check mesh field", umesh.nb_nodes[1], 3);
+  mu_assert_eq("check mesh field", umesh.nb_groups, 0);
+  mu_assert_eq_ptr("check mesh field", umesh.groups, NULL);
+  mu_assert_eq("check mesh field", umesh.nb_som_tables, 2);
+  mu_assert_ne("check mesh field", umesh.som_tables, NULL);
 
   AH5_free_umesh(&umesh);
   mu_assert_eq("check mesh field", umesh.nb_elementnodes, 0);
@@ -169,9 +190,10 @@ char *test_init_functions()
   mu_assert_eq_ptr("check mesh field", umesh.elementtypes, NULL);
   mu_assert_eq("check mesh field", umesh.nb_nodes[0], 0);
   mu_assert_eq("check mesh field", umesh.nb_nodes[1], 0);
+  mu_assert_eq("check mesh field", umesh.nb_som_tables, 0);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_umesh(&umesh, 1, 2, 3, 4, 3, 0), &umesh);
+    "empty mesh", AH5_init_umesh(&umesh, 1, 2, 3, 4, 3, 2), &umesh);
   mu_assert_eq("check field", umesh.nb_elementnodes, 1);
   mu_assert_ne("check field", umesh.elementnodes, NULL);
   mu_assert_eq("check field", umesh.nb_elementtypes, 2);
@@ -180,6 +202,8 @@ char *test_init_functions()
   mu_assert_eq("check field", umesh.nb_nodes[1], 3);
   mu_assert_eq("check field", umesh.nb_groups, 4);
   mu_assert_ne("check field", umesh.groups, NULL);
+  mu_assert_eq("check field", umesh.nb_som_tables, 2);
+  mu_assert_ne("check field", umesh.som_tables, NULL);
 
   /*Check umesh group*/
   mu_assert_eq_ptr(
@@ -250,6 +274,26 @@ char *test_init_functions()
   mu_assert_str_equal("check field", umesh.groupgroups[1].path, "gg1");
   mu_assert_eq("check field", umesh.groupgroups[1].nb_groupgroupnames, 50);
   mu_assert_ne("check field", umesh.groupgroups[1].groupgroupnames, NULL);
+
+  /*Check selector on mesh*/
+  mu_assert_eq_ptr(
+      "empty mesh", AH5_init_umsh_som(umesh.som_tables, "som1", 2, SOM_POINT_IN_ELEMENT),
+      umesh.som_tables);
+  mu_assert_str_equal("check field", umesh.som_tables[0].path, "som1");
+  mu_assert_equal("check field", umesh.som_tables[0].type, SOM_POINT_IN_ELEMENT);
+  mu_assert_equal("check field", umesh.som_tables[0].data.pie.nb_dims, 3);
+  mu_assert_equal("check field", umesh.som_tables[0].data.pie.nb_points, 2);
+  mu_assert_ne("check field", umesh.som_tables[0].data.pie.indices, NULL);
+  mu_assert_ne("check field", umesh.som_tables[0].data.pie.vectors, NULL);
+
+  mu_assert_eq_ptr(
+      "empty mesh", AH5_init_umsh_som(umesh.som_tables+1, "som2", 3, SOM_EDGE),
+      umesh.som_tables+1);
+  mu_assert_str_equal("check field", umesh.som_tables[1].path, "som2");
+  mu_assert_equal("check field", umesh.som_tables[1].type, SOM_EDGE);
+  mu_assert_equal("check field", umesh.som_tables[1].data.ef.dims[0], 2);
+  mu_assert_equal("check field", umesh.som_tables[1].data.ef.dims[1], 3);
+  mu_assert_ne("check field", umesh.som_tables[1].data.ef.items, NULL);
 
   /*release mesh*/
   AH5_free_umesh(&umesh);
