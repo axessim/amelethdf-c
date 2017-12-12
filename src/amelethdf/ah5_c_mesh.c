@@ -201,6 +201,27 @@ AH5_axis_t *AH5_init_axis(AH5_axis_t *axis, hsize_t nb_nodes)
 }
 
 
+
+AH5_ssom_pie_table_t *AH5_init_smsh_som(AH5_ssom_pie_table_t *som, const char *path, hsize_t size)
+{
+  hsize_t i;
+
+  som->nb_points = size;
+  som->nb_dims = 3;
+  som->elements = (unsigned int **)malloc(size * sizeof(unsigned int *));
+  som->elements[0] = (unsigned int *)malloc((size * som->nb_dims) * 2 * sizeof(unsigned int));
+  som->vectors = (float **)malloc(size * sizeof(float *));
+  som->vectors[0] = (float *)malloc((size*som->nb_dims) * sizeof(float));
+  for (i = 1; i < size; i++)
+  {
+    som->elements[i] = som->elements[0] + i * 2 * som->nb_dims;
+    som->vectors[i] = som->vectors[0] + i * som->nb_dims;
+  }
+
+  return som;
+}
+
+
 /**
  * Initialized and allocates mesh group.
  *
@@ -1821,6 +1842,18 @@ char AH5_write_smsh_group(hid_t id, const AH5_sgroup_t* sgroup) {
   return AH5_TRUE;
 }
 
+
+// Write structured selector on mesh
+char AH5_write_ssom_pie_table(hid_t file_id, const AH5_ssom_pie_table_t *ssom_pie_table)
+{
+  char success = AH5_FALSE;
+
+  AH5_PRINT_ERR_FUNC_NOT_IMPLEMENTED(AH5_C_MESH, "UNKNOWN PATH");
+
+  return success;
+}
+
+
 // Write structured mesh
 char AH5_write_smesh(hid_t msh_id, const AH5_smesh_t *smesh)
 {
@@ -1881,7 +1914,10 @@ char AH5_write_smesh(hid_t msh_id, const AH5_smesh_t *smesh)
       return AH5_FALSE;
 
   // Write selectorOnMesh
-  // FIXME(any) not implemented yet...
+  if (smesh->nb_som_tables)
+    for (i = 0; i < smesh->nb_som_tables; ++i)
+      if (!AH5_write_ssom_pie_table(msh_id, smesh->som_tables + i))
+        return AH5_FALSE;
 
   return AH5_TRUE;
 }

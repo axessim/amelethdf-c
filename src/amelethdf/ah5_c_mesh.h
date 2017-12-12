@@ -44,8 +44,8 @@ typedef struct _AH5_sgroup_t
   char                   *path;
   AH5_group_entitytype_t entitytype;
   hsize_t                dims[2];
-  int                    *elements;
-  char                   **normals;
+  int                    *elements;    // TODO: implement with 2d-array and first element is flatten list.
+  char                   **normals;    // TODO: The first element is flatten normals list.
   char*                  *flat_normals;
 } AH5_sgroup_t;
 
@@ -209,6 +209,7 @@ typedef struct _AH5_mesh_t
 AH5_PUBLIC AH5_groupgroup_t *AH5_init_groupgroup(AH5_groupgroup_t *groupgroup, const char *path,
     hsize_t nb, size_t length);
 AH5_PUBLIC AH5_axis_t *AH5_init_axis(AH5_axis_t *axis, hsize_t nb_nodes);
+  AH5_PUBLIC AH5_ssom_pie_table_t *AH5_init_smsh_som(AH5_ssom_pie_table_t *som, const char *path, hsize_t size);
 AH5_PUBLIC AH5_sgroup_t *AH5_init_smsh_group(  // deprecated in favor of AH5_init_sgroup
     AH5_sgroup_t *group, const char *path, hsize_t nb_eles, AH5_group_entitytype_t entitytype);
 AH5_PUBLIC AH5_sgroup_t *AH5_init_sgroup(
