@@ -1846,7 +1846,7 @@ char AH5_write_smsh_group(hid_t id, const AH5_sgroup_t* sgroup) {
 // Write structured selector on mesh
 char AH5_write_ssom_pie_table(hid_t file_id, const AH5_ssom_pie_table_t *ssom_pie_table)
 {
-  char success = AH5_FALSE;
+  char success = AH5_TRUE;
 
   AH5_PRINT_ERR_FUNC_NOT_IMPLEMENTED(AH5_C_MESH, "UNKNOWN PATH");
 
@@ -2015,7 +2015,7 @@ char AH5_write_umsh_group(hid_t loc_id, const AH5_ugroup_t *ugroup, hsize_t nb_u
 // Write table of type "pointInElement" from /selectorOnMesh (unstructured) (index: 32-bit signed int, vector: 32-bit signed float)
 char AH5_write_usom_pie_table(hid_t file_id, const AH5_usom_pie_table_t *usom_pie_table)
 {
-  char success = AH5_FALSE;
+  char success = AH5_TRUE;
 
   AH5_PRINT_ERR_FUNC_NOT_IMPLEMENTED(AH5_C_MESH, "UNKNOWN PATH");
 
@@ -2035,7 +2035,7 @@ char AH5_write_usom_ef_table(hid_t file_id, const AH5_usom_ef_table_t *usom_ef_t
 // Read selector on mesh (unstructured mesh)
 char AH5_write_umesh_som_table(hid_t file_id, const AH5_usom_table_t *usom_table, hsize_t nb_som)
 {
-  char success = AH5_FALSE;
+  char success = AH5_TRUE;
 
   AH5_PRINT_ERR_FUNC_NOT_IMPLEMENTED(AH5_C_MESH, "UNKNOWN PATH");
 
