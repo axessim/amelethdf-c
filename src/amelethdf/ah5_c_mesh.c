@@ -206,16 +206,23 @@ AH5_ssom_pie_table_t *AH5_init_smsh_som(AH5_ssom_pie_table_t *som, const char *p
 {
   hsize_t i;
 
-  som->nb_points = size;
-  som->nb_dims = 3;
-  som->elements = (unsigned int **)malloc(size * sizeof(unsigned int *));
-  som->elements[0] = (unsigned int *)malloc((size * som->nb_dims) * 2 * sizeof(unsigned int));
-  som->vectors = (float **)malloc(size * sizeof(float *));
-  som->vectors[0] = (float *)malloc((size*som->nb_dims) * sizeof(float));
-  for (i = 1; i < size; i++)
-  {
-    som->elements[i] = som->elements[0] + i * 2 * som->nb_dims;
-    som->vectors[i] = som->vectors[0] + i * som->nb_dims;
+  if (som) {
+    som->path = NULL;
+
+    if (path)
+      AH5_setpath(&som->path, path);
+
+    som->nb_points = size;
+    som->nb_dims = 3;
+    som->elements = (unsigned int **)malloc(size * sizeof(unsigned int *));
+    som->elements[0] = (unsigned int *)malloc((size * som->nb_dims) * 2 * sizeof(unsigned int));
+    som->vectors = (float **)malloc(size * sizeof(float *));
+    som->vectors[0] = (float *)malloc((size*som->nb_dims) * sizeof(float));
+    for (i = 1; i < size; i++)
+    {
+      som->elements[i] = som->elements[0] + i * 2 * som->nb_dims;
+      som->vectors[i] = som->vectors[0] + i * som->nb_dims;
+    }
   }
 
   return som;
