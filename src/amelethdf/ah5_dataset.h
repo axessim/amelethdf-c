@@ -18,6 +18,8 @@ AH5_PUBLIC char AH5_read_str_dataset(hid_t file_id, const char *path, const hsiz
 
 AH5_PUBLIC char AH5_write_char_dataset(hid_t loc_id, const char *dset_name, const hsize_t len,
                                        const char *wdata);
+AH5_PUBLIC char AH5_write_flat_str_dataset(hid_t loc_id, const char *dset_name, const hsize_t len,
+                                           const size_t slen, const char *buf);
 AH5_PUBLIC char AH5_write_int_dataset(hid_t loc_id, const char *dset_name, const hsize_t len,
                                       const int *wdata);
 AH5_PUBLIC char AH5_write_flt_dataset(hid_t loc_id, const char *dset_name, const hsize_t len,

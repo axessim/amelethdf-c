@@ -196,7 +196,7 @@ char AH5_write_cpx_dataset(hid_t loc_id, const char *dset_name, const hsize_t le
 // wdata[len][slen]; param slen: string length with null char.
 // TODO Check HDF5 return code.
 char AH5_write_flat_str_dataset(hid_t loc_id, const char *dset_name, const hsize_t len,
-                                const size_t slen, char *buf)
+                                const size_t slen, const char *buf)
 {
   char success = AH5_FALSE;
   hid_t filetype, memtype, space, dset;
