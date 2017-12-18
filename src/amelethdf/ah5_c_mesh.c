@@ -1938,32 +1938,29 @@ char AH5_write_groupgroup(hid_t loc_id, const AH5_groupgroup_t *groupgroup, hsiz
   else
     grp = H5Gcreate(loc_id, AH5_CATEGORY_NAME(AH5_G_GROUPGROUP), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
-  if (nb_ggrp >= 0)
+  success = AH5_TRUE;
+  for (i = 0; i < nb_ggrp; i++)
   {
-    success = AH5_TRUE;
-    for (i = 0; i < nb_ggrp; i++)
+    if (groupgroup[i].nb_groupgroupnames > 0)
     {
-      if (groupgroup[i].nb_groupgroupnames > 0)
+      if (groupgroup[i].path != NULL)
       {
-        if (groupgroup[i].path != NULL)
-        {
-          ggrp_name = AH5_get_name_from_path(groupgroup[i].path);
+        ggrp_name = AH5_get_name_from_path(groupgroup[i].path);
 
-          // Get longest string
-          slen = 0;
-          for (j = 0; j < groupgroup[i].nb_groupgroupnames; ++j) {
-            len = strlen(groupgroup[i].groupgroupnames[j]) + 1;
-            if (len > slen) slen = len;
-          }
+        // Get longest string
+        slen = 0;
+        for (j = 0; j < groupgroup[i].nb_groupgroupnames; ++j) {
+          len = strlen(groupgroup[i].groupgroupnames[j]) + 1;
+          if (len > slen) slen = len;
+        }
 
-          success &= AH5_write_str_dataset(
-              grp, ggrp_name, groupgroup[i].nb_groupgroupnames,
-              slen, groupgroup[i].groupgroupnames);
-        }
-        else
-        {
-          success &= AH5_FALSE;
-        }
+        success &= AH5_write_str_dataset(
+            grp, ggrp_name, groupgroup[i].nb_groupgroupnames,
+            slen, groupgroup[i].groupgroupnames);
+      }
+      else
+      {
+        success &= AH5_FALSE;
       }
     }
   }
@@ -1993,7 +1990,7 @@ char AH5_write_umsh_group(hid_t loc_id, const AH5_ugroup_t *ugroup, hsize_t nb_u
   {
     if (ugroup[i].nb_groupelts > 0)
     {
-      basename = AH5_get_name_from_path(ugroup[i].path);
+      basename = AH5_get_name_from_path(ugroup[i].path);  // No allocation.
       if (AH5_write_int_dataset(grp, basename, ugroup[i].nb_groupelts, ugroup[i].groupelts))
       {
         AH5_write_group_entitytype(ugroup[i].entitytype, &ctype, &centitytype);
@@ -2131,7 +2128,7 @@ char AH5_write_mlk_instance(hid_t loc_id, const AH5_mlk_instance_t *mlk_instance
 char AH5_write_msh_group(hid_t loc_id, const AH5_msh_group_t *msh_group)
 {
   char success = AH5_TRUE;
-  int i;
+  hsize_t i;
   hid_t msh_group_id;
   char *basename;
 
@@ -2156,7 +2153,7 @@ char AH5_write_msh_group(hid_t loc_id, const AH5_msh_group_t *msh_group)
 char AH5_write_mesh(hid_t file_id, const AH5_mesh_t *mesh)
 {
   char success = AH5_TRUE;
-  int i;
+  hsize_t i;
   hid_t msh_category_id;
 
   if (AH5_path_valid(file_id, AH5_CATEGORY_NAME(AH5_C_MESH)))
