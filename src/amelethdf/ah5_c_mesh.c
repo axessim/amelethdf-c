@@ -556,7 +556,7 @@ AH5_umesh_t *AH5_init_umesh(
         /*no group of groups if no groups.*/
         if (nb_groupgroups)
         {
-          umesh->groupgroups = (AH5_groupgroup_t *)malloc(nb_groups*sizeof(AH5_groupgroup_t));
+          umesh->groupgroups = (AH5_groupgroup_t *)malloc(nb_groupgroups*sizeof(AH5_groupgroup_t));//////////////////////
           success &= (umesh->groupgroups != NULL);
         }
       }
