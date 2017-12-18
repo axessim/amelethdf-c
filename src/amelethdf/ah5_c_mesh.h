@@ -46,7 +46,7 @@ typedef struct _AH5_sgroup_t
   hsize_t                dims[2];
   int                    *elements;    // TODO: implement with 2d-array and first element is flatten list.
   char                   **normals;    // TODO: The first element is flatten normals list.
-  char*                  *flat_normals;
+  char                   *flat_normals;
 } AH5_sgroup_t;
 
 typedef struct _AH5_smesh_t
