@@ -204,6 +204,11 @@ AH5_axis_t *AH5_init_axis(AH5_axis_t *axis, hsize_t nb_nodes)
 
 AH5_ssom_pie_table_t *AH5_init_smsh_som(AH5_ssom_pie_table_t *som, const char *path, hsize_t size)
 {
+  return AH5_init_ssom_pie_table(som, path, size);
+}
+AH5_ssom_pie_table_t *AH5_init_ssom_pie_table(
+    AH5_ssom_pie_table_t *som, const char *path, hsize_t size)
+{
   hsize_t i;
 
   if (som) {
@@ -336,12 +341,19 @@ AH5_sgroup_t *AH5_init_sgroup(
  * @param entitytype the group element type (GROUP_EDGE, GROUP_FACE,
  *   GROUP_VOLUME or GROUP_ENTITYTYPE_UNDEF)
  *
+ * @deprecated AH5_init_ugroup
+ *
  * @return On success, a pointer to the mesh group. If the function failed to
  * allocate memory, a null pointer is returned.
  */
-AH5_PUBLIC AH5_ugroup_t *AH5_init_umsh_group(
-  AH5_ugroup_t *group, const char *path, hsize_t nb_eles,
-  AH5_group_entitytype_t entitytype)
+AH5_ugroup_t *AH5_init_umsh_group(
+  AH5_ugroup_t *group, const char *path, hsize_t nb_eles, AH5_group_entitytype_t entitytype)
+{
+  return AH5_init_ugroup(group, path, nb_eles, entitytype);
+}
+
+AH5_ugroup_t *AH5_init_ugroup(
+  AH5_ugroup_t *group, const char *path, hsize_t nb_eles, AH5_group_entitytype_t entitytype)
 {
 
   if (entitytype == AH5_GROUP_ENTITYTYPE_UNDEF || entitytype == AH5_GROUP_ENTITYTYPE_INVALID)
@@ -382,10 +394,17 @@ AH5_PUBLIC AH5_ugroup_t *AH5_init_umsh_group(
  * @param type the selector on mesh type
  * @param size the number of selectors
  *
+ * @deprecated AH5_init_usom_table
+ *
  * @return On success, a pointer to the selector on mesh. If the
  * function failed to allocate memory, a null pointer is returned.
  */
 AH5_usom_table_t *AH5_init_umsh_som(
+    AH5_usom_table_t *som, const char *path, hsize_t size, AH5_usom_class_t type) {
+  return AH5_init_usom_table(som, path, size, type);
+}
+
+AH5_usom_table_t *AH5_init_usom_table(
     AH5_usom_table_t *som, const char *path, hsize_t size, AH5_usom_class_t type) {
   hsize_t i;
 
@@ -807,6 +826,10 @@ char AH5_read_smesh_axis(hid_t file_id, const char *path, AH5_axis_t *axis)
 // Read group in structured mesh (+normals)
 char AH5_read_smsh_group(hid_t file_id, const char *path, AH5_sgroup_t *sgroup)
 {
+  return AH5_read_sgroup(file_id, path, sgroup);
+}
+char AH5_read_sgroup(hid_t file_id, const char *path, AH5_sgroup_t *sgroup)
+{
   char *temp, success1 = AH5_FALSE, success2 = AH5_TRUE, success3 = AH5_FALSE, rdata = AH5_TRUE;
   char *normalpath;
   hsize_t dims[2] = {1, 1};
@@ -1080,7 +1103,7 @@ char AH5_read_smesh(hid_t file_id, const char *path, AH5_smesh_t *smesh)
         path3 = realloc(path3, (strlen(path2) + strlen(children.childnames[i]) + 1) * sizeof(*path3));
         strcpy(path3, path2);
         strcat(path3, children.childnames[i]);
-        if (!AH5_read_smsh_group(file_id, path3, smesh->groups + i))
+        if (!AH5_read_sgroup(file_id, path3, smesh->groups + i))
           rdata = AH5_FALSE;
         free(children.childnames[i]);
       }
@@ -1165,6 +1188,10 @@ char AH5_read_smesh(hid_t file_id, const char *path, AH5_smesh_t *smesh)
 
 // Read group in unstructured mesh
 char AH5_read_umsh_group(hid_t file_id, const char *path, AH5_ugroup_t *ugroup)
+{
+  return AH5_read_ugroup(file_id, path, ugroup);
+}
+char AH5_read_ugroup(hid_t file_id, const char *path, AH5_ugroup_t *ugroup)
 {
   H5T_class_t type_class;
   char rdata = AH5_FALSE;
@@ -1310,6 +1337,10 @@ char AH5_read_usom_ef_table(hid_t file_id, const char *path, AH5_usom_ef_table_t
 
 // Read selector on mesh (unstructured mesh)
 char AH5_read_umesh_som_table(hid_t file_id, const char *path, AH5_usom_table_t *usom_table)
+{
+  return AH5_read_usom_table(file_id, path, usom_table);
+}
+char AH5_read_usom_table(hid_t file_id, const char *path, AH5_usom_table_t *usom_table)
 {
   char *type, rdata = AH5_TRUE;
 
@@ -1487,7 +1518,7 @@ char AH5_read_umesh(hid_t file_id, const char *path, AH5_umesh_t *umesh)
         path3 = realloc(path3, (strlen(path2) + strlen(children.childnames[i]) + 1) * sizeof(*path3));
         strcpy(path3, path2);
         strcat(path3, children.childnames[i]);
-        if (!AH5_read_umsh_group(file_id, path3, umesh->groups + i))
+        if (!AH5_read_ugroup(file_id, path3, umesh->groups + i))
           rdata = AH5_FALSE;
         free(children.childnames[i]);
       }
@@ -1511,7 +1542,7 @@ char AH5_read_umesh(hid_t file_id, const char *path, AH5_umesh_t *umesh)
         path3 = realloc(path3, (strlen(path2) + strlen(children.childnames[i]) + 1) * sizeof(*path3));
         strcpy(path3, path2);
         strcat(path3, children.childnames[i]);
-        if (!AH5_read_umesh_som_table(file_id, path3, umesh->som_tables + i))
+        if (!AH5_read_usom_table(file_id, path3, umesh->som_tables + i))
           rdata = AH5_FALSE;
         free(children.childnames[i]);
       }
@@ -1768,6 +1799,9 @@ char AH5_read_mesh(hid_t file_id, AH5_mesh_t *mesh)
 
 // Write group of structured mesh
 char AH5_write_smsh_group(hid_t id, const AH5_sgroup_t* sgroup) {
+  return AH5_write_sgroup(id, sgroup);
+}
+char AH5_write_sgroup(hid_t id, const AH5_sgroup_t* sgroup) {
   hid_t loc_id;
   char* basename;
   char* ctype;
@@ -1912,7 +1946,7 @@ char AH5_write_smesh(hid_t msh_id, const AH5_smesh_t *smesh)
   // Write groups
   if (smesh->nb_groups)
     for (i = 0; i < smesh->nb_groups; ++i)
-      if (!AH5_write_smsh_group(msh_id, smesh->groups + i))
+      if (!AH5_write_sgroup(msh_id, smesh->groups + i))
         return AH5_FALSE;
 
   // Write groupGroups
@@ -1980,6 +2014,10 @@ char AH5_write_groupgroup(hid_t loc_id, const AH5_groupgroup_t *groupgroup, hsiz
 // Write group in unstructured mesh
 char AH5_write_umsh_group(hid_t loc_id, const AH5_ugroup_t *ugroup, hsize_t nb_ugroup)
 {
+  return AH5_write_ugroup(loc_id, ugroup, nb_ugroup);
+}
+char AH5_write_ugroup(hid_t loc_id, const AH5_ugroup_t *ugroup, hsize_t nb_ugroup)
+{
   char success = AH5_FALSE;
   hsize_t i;
   hid_t grp;
@@ -2026,7 +2064,7 @@ char AH5_write_usom_pie_table(hid_t file_id, const AH5_usom_pie_table_t *usom_pi
   return success;
 }
 
-// Read dataset of type "edge" or "face" from /selectorOnMesh (32-bit signed int)
+// Write dataset of type "edge" or "face" from /selectorOnMesh (32-bit signed int)
 char AH5_write_usom_ef_table(hid_t file_id, const AH5_usom_ef_table_t *usom_ef_table)
 {
   char success = AH5_FALSE;
@@ -2036,8 +2074,12 @@ char AH5_write_usom_ef_table(hid_t file_id, const AH5_usom_ef_table_t *usom_ef_t
   return success;
 }
 
-// Read selector on mesh (unstructured mesh)
+// Write selector on mesh (unstructured mesh)
 char AH5_write_umesh_som_table(hid_t file_id, const AH5_usom_table_t *usom_table, hsize_t nb_som)
+{
+  return AH5_write_usom_table(file_id, usom_table, nb_som);
+}
+char AH5_write_usom_table(hid_t file_id, const AH5_usom_table_t *usom_table, hsize_t nb_som)
 {
   char success = AH5_TRUE;
 
@@ -2074,7 +2116,7 @@ char AH5_write_umesh(hid_t msh_id, const AH5_umesh_t *umesh)
     return success;
 
   // Write groups
-  if (!AH5_write_umsh_group(msh_id, umesh->groups, umesh->nb_groups))
+  if (!AH5_write_ugroup(msh_id, umesh->groups, umesh->nb_groups))
     // handled error
     return success;
 
@@ -2085,7 +2127,7 @@ char AH5_write_umesh(hid_t msh_id, const AH5_umesh_t *umesh)
 
   // Write selectorOnMesh
   // FIXME(NMT) not implemented yet...
-  //if (!AH5_write_umesh_som_table(msh, AH5_CATEGORY_NAME(AH5_G_SELECTOR_ON_MESH), umesh->som_tables, umesh->nb_som_tables))
+  //if (!AH5_write_usom_table(msh, AH5_CATEGORY_NAME(AH5_G_SELECTOR_ON_MESH), umesh->som_tables, umesh->nb_som_tables))
   //    return AH5_FAILURE;
 
   success = AH5_TRUE;
@@ -2219,6 +2261,10 @@ void AH5_print_smesh(const AH5_smesh_t *smesh, int space)
 // Print selectorOnMesh table in unstructured mesh
 void AH5_print_umesh_som_table(const AH5_usom_table_t *usom_table, int space)
 {
+  return AH5_print_usom_table(usom_table, space);
+}
+void AH5_print_usom_table(const AH5_usom_table_t *usom_table, int space)
+{
   hsize_t k;
   char dim;
 
@@ -2345,7 +2391,7 @@ void AH5_print_umesh(const AH5_umesh_t *umesh, int space)
   {
     printf("%*s-selector on mesh: %lu\n", space + 2, "", (unsigned long) umesh->nb_som_tables);
     for (i = 0; i < umesh->nb_som_tables; i++)
-      AH5_print_umesh_som_table(&(umesh->som_tables[i]), space);
+      AH5_print_usom_table(&(umesh->som_tables[i]), space);
   }
 }
 
@@ -2737,7 +2783,7 @@ AH5_ugroup_t * AH5_copy_ugroup(AH5_ugroup_t *dest, const AH5_ugroup_t *src)
 
   if (src && dest)
   {
-    if (!AH5_init_umsh_group(
+    if (!AH5_init_ugroup(
             dest, src->path, src->nb_groupelts, src->entitytype))
       return NULL;
 

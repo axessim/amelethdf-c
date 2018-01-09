@@ -207,10 +207,10 @@ char *test_init_functions()
 
   /*Check umesh group*/
   mu_assert_eq_ptr(
-    "null mesh", AH5_init_umsh_group(NULL, NULL, 1, AH5_GROUP_EDGE), NULL);
+    "null mesh", AH5_init_ugroup(NULL, NULL, 1, AH5_GROUP_EDGE), NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_umsh_group(umesh.groups, "group name", 1, AH5_GROUP_NODE),
+    "empty mesh", AH5_init_ugroup(umesh.groups, "group name", 1, AH5_GROUP_NODE),
     umesh.groups);
   mu_assert_str_equal("check field", umesh.groups->path, "group name");
   mu_assert_eq("check field", umesh.groups->entitytype, AH5_GROUP_NODE);
@@ -218,7 +218,7 @@ char *test_init_functions()
   mu_assert_ne("check field", umesh.groups->groupelts, NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_umsh_group(umesh.groups+1, "group 1", 1, AH5_GROUP_EDGE),
+    "empty mesh", AH5_init_ugroup(umesh.groups+1, "group 1", 1, AH5_GROUP_EDGE),
     umesh.groups + 1);
   mu_assert_str_equal("check field", umesh.groups[1].path, "group 1");
   mu_assert_eq("check field", umesh.groups[1].entitytype, AH5_GROUP_EDGE);
@@ -226,7 +226,7 @@ char *test_init_functions()
   mu_assert_ne("check field", umesh.groups[1].groupelts, NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_umsh_group(umesh.groups+2, "group 2", 10, AH5_GROUP_FACE),
+    "empty mesh", AH5_init_ugroup(umesh.groups+2, "group 2", 10, AH5_GROUP_FACE),
     umesh.groups + 2);
   mu_assert_str_equal("check field", umesh.groups[2].path, "group 2");
   mu_assert_eq("check field", umesh.groups[2].entitytype, AH5_GROUP_FACE);
@@ -234,7 +234,7 @@ char *test_init_functions()
   mu_assert_ne("check field", umesh.groups[2].groupelts, NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_umsh_group(umesh.groups+3, "group 3", 1, AH5_GROUP_VOLUME),
+    "empty mesh", AH5_init_ugroup(umesh.groups+3, "group 3", 1, AH5_GROUP_VOLUME),
     umesh.groups + 3);
   mu_assert_str_equal("check field", umesh.groups[3].path, "group 3");
   mu_assert_eq("check field", umesh.groups[3].entitytype, AH5_GROUP_VOLUME);
@@ -242,11 +242,11 @@ char *test_init_functions()
   mu_assert_ne("check field", umesh.groups[3].groupelts, NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_umsh_group(umesh.groups+3, NULL, 1, AH5_GROUP_ENTITYTYPE_UNDEF),
+    "empty mesh", AH5_init_ugroup(umesh.groups+3, NULL, 1, AH5_GROUP_ENTITYTYPE_UNDEF),
     NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_umsh_group(umesh.groups+3, NULL, 1, AH5_GROUP_ENTITYTYPE_INVALID),
+    "empty mesh", AH5_init_ugroup(umesh.groups+3, NULL, 1, AH5_GROUP_ENTITYTYPE_INVALID),
     NULL);
 
   /*Check group of group*/
@@ -277,7 +277,7 @@ char *test_init_functions()
 
   /*Check selector on mesh*/
   mu_assert_eq_ptr(
-      "empty mesh", AH5_init_umsh_som(umesh.som_tables, "som1", 2, SOM_POINT_IN_ELEMENT),
+      "empty mesh", AH5_init_usom_table(umesh.som_tables, "som1", 2, SOM_POINT_IN_ELEMENT),
       umesh.som_tables);
   mu_assert_str_equal("check field", umesh.som_tables[0].path, "som1");
   mu_assert_equal("check field", umesh.som_tables[0].type, SOM_POINT_IN_ELEMENT);
@@ -287,7 +287,7 @@ char *test_init_functions()
   mu_assert_ne("check field", umesh.som_tables[0].data.pie.vectors, NULL);
 
   mu_assert_eq_ptr(
-      "empty mesh", AH5_init_umsh_som(umesh.som_tables+1, "som2", 3, SOM_EDGE),
+      "empty mesh", AH5_init_usom_table(umesh.som_tables+1, "som2", 3, SOM_EDGE),
       umesh.som_tables+1);
   mu_assert_str_equal("check field", umesh.som_tables[1].path, "som2");
   mu_assert_equal("check field", umesh.som_tables[1].type, SOM_EDGE);
@@ -512,8 +512,8 @@ char *test_write_unstructured_mesh_group()
   ugrp.groupelts = NULL;
   ugrp.nb_groupelts = 0;
 
-  mu_assert_false("Negative numbre of groups.", AH5_write_umsh_group(file_id, &ugrp, 0));
-  mu_assert_false("Empty group.", AH5_write_umsh_group(file_id, &ugrp, 1));
+  mu_assert_false("Negative numbre of groups.", AH5_write_ugroup(file_id, &ugrp, 0));
+  mu_assert_false("Empty group.", AH5_write_ugroup(file_id, &ugrp, 1));
 
   // Write a simple group by relative path name.
   ugrp.path = "grp_name";
@@ -524,7 +524,7 @@ char *test_write_unstructured_mesh_group()
     ugrp.groupelts[i] = i;
 
   mu_assert_true(
-      "Write a simple group by relative path [1].", AH5_write_umsh_group(file_id, &ugrp, 1));
+      "Write a simple group by relative path [1].", AH5_write_ugroup(file_id, &ugrp, 1));
   mu_assert("Check 'group' category nodes in file [1].", AH5_path_valid(file_id, "/group"));
   mu_assert("Check 'group' nodes in file [1].", AH5_path_valid(file_id, "/group/grp_name"));
 
@@ -533,7 +533,7 @@ char *test_write_unstructured_mesh_group()
   ugrp.path = "/mesh/$mesh_group/$mesh_name/group/grp_name_2";
 
   mu_assert_true(
-      "Write a simple group by relative path [2].", AH5_write_umsh_group(file_id, &ugrp, 1));
+      "Write a simple group by relative path [2].", AH5_write_ugroup(file_id, &ugrp, 1));
   mu_assert("Check 'group' category nodes in file [2].", AH5_path_valid(file_id, "/group"));
   mu_assert("Check 'group' nodes in file [2].", AH5_path_valid(file_id, "/group/grp_name_2"));
 
