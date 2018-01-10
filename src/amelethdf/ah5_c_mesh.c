@@ -207,26 +207,32 @@ AH5_ssom_pie_table_t *AH5_init_smsh_som(AH5_ssom_pie_table_t *som, const char *p
   return AH5_init_ssom_pie_table(som, path, size);
 }
 AH5_ssom_pie_table_t *AH5_init_ssom_pie_table(
-    AH5_ssom_pie_table_t *som, const char *path, hsize_t size)
-{
-  hsize_t i;
+    AH5_ssom_pie_table_t *som, const char *path, hsize_t nb_points) {
+  hsize_t i, nb_dims = 3;
 
   if (som) {
     som->path = NULL;
+    som->elements = NULL;
+    som->vectors = NULL;
 
     if (path)
       AH5_setpath(&som->path, path);
 
-    som->nb_points = size;
-    som->nb_dims = 3;
-    som->elements = (unsigned int **)malloc(size * sizeof(unsigned int *));
-    som->elements[0] = (unsigned int *)malloc((size * som->nb_dims) * 2 * sizeof(unsigned int));
-    som->vectors = (float **)malloc(size * sizeof(float *));
-    som->vectors[0] = (float *)malloc((size*som->nb_dims) * sizeof(float));
-    for (i = 1; i < size; i++)
-    {
-      som->elements[i] = som->elements[0] + i * 2 * som->nb_dims;
-      som->vectors[i] = som->vectors[0] + i * som->nb_dims;
+    som->nb_dims = nb_dims;
+    som->nb_points = nb_points;
+
+    if (nb_dims * nb_points) {
+      som->elements = (unsigned int **)malloc(nb_points * sizeof(unsigned int *));
+      som->elements[0] = (unsigned int *)malloc(
+          (nb_points * nb_dims) * 2 * sizeof(unsigned int));
+
+      som->vectors = (float **)malloc(nb_points * sizeof(float *));
+      som->vectors[0] = (float *)malloc((nb_points * nb_dims) * sizeof(float));
+
+      for (i = 1; i < nb_points; ++i) {
+        som->elements[i] = som->elements[0] + i * 2 * nb_dims;
+        som->vectors[i] = som->vectors[0] + i * nb_dims;
+      }
     }
   }
 
@@ -929,125 +935,82 @@ char AH5_read_sgroup(hid_t file_id, const char *path, AH5_sgroup_t *sgroup)
 }
 
 
-// Read table of type "pointInElement" from /selectorOnMesh (structured) (element: 32-bit unsigned int, vector: 32-bit signed float)
-char AH5_read_ssom_pie_table(hid_t file_id, const char *path, AH5_ssom_pie_table_t *ssom_pie_table)
-{
-  hsize_t nfields, nrecords, i;
-  char rdata = AH5_FALSE;
+char AH5_read_ssom_pie_table(hid_t file_id, const char *path, AH5_ssom_pie_table_t *som) {
+  char success = AH5_FALSE;
+  hsize_t nb_fields, nb_points, i, j;
   char **field_names;
   size_t *field_sizes;
   size_t *field_offsets;
   size_t type_size;
-  int field_index1[] = {0, 1, 2, 3, 4, 5};
-  int field_index2[3];
+  int points_index[] = {0, 1, 2, 3, 4, 5};
+  int fields_index[] = {6, 7, 8};
 
-  ssom_pie_table->path = strdup(path);
+  if (!som)
+    return AH5_FALSE;
 
-  if (AH5_path_valid(file_id, path))
-    if (H5TBget_table_info(file_id, path, &nfields, &nrecords) >= 0)
-      if ((nfields == 3 || nfields == 6 || nfields == 9) && nrecords > 0)
-      {
-        field_names = (char **) malloc((size_t) nfields * sizeof(char *));
-        field_names[0] = (char *) malloc((size_t) nfields * AH5_TABLE_FIELD_NAME_LENGTH * sizeof(char));
-        for (i = 0; i < nfields; i++)
-          field_names[i] = field_names[0] + i * AH5_TABLE_FIELD_NAME_LENGTH;
-        field_sizes = (size_t *) malloc((size_t) nfields * sizeof(size_t));
-        field_offsets = (size_t *) malloc((size_t) nfields * sizeof(size_t));
+  if (AH5_path_valid(file_id, path) &&
+      H5TBget_table_info(file_id, path, &nb_fields, &nb_points) >= 0 &&
+      nb_fields == 9 && nb_points > 0) {
+    field_names = (char **)malloc(nb_fields * sizeof(char *));
+    field_names[0] = (char *)malloc(nb_fields * AH5_TABLE_FIELD_NAME_LENGTH * sizeof(char));
 
-        if (H5TBget_field_info(file_id, path, field_names, field_sizes, field_offsets, &type_size) >= 0)
-        {
-          if (nfields == 3)
-          {
-            /* imin imax v1 (1D) */
-            if (strcmp(field_names[0], AH5_F_IMIN) == 0
-                && strcmp(field_names[1], AH5_F_IMAX) == 0
-                && strcmp(field_names[2], AH5_F_V1) == 0)
-            {
-              rdata = AH5_TRUE;
-              field_index2[0] = 2;
-            }
-          }
-          else if (nfields == 6)
-          {
-            /* imin jmin imax jmax v1 v2 (2D) */
-            if (strcmp(field_names[0], AH5_F_IMIN) == 0
-                && strcmp(field_names[1], AH5_F_JMIN) == 0
-                && strcmp(field_names[2], AH5_F_IMAX) == 0
-                && strcmp(field_names[3], AH5_F_JMAX) == 0
-                && strcmp(field_names[4], AH5_F_V1) == 0
-                && strcmp(field_names[5], AH5_F_V2) == 0)
-            {
-              rdata = AH5_TRUE;
-              field_index2[0] = 4;
-              field_index2[1] = 5;
-            }
-          }
-          else if (nfields == 9)
-          {
-            /* imin jmin kmin imax jmax kmax v1 v2 v3 (3D) */
-            if (strcmp(field_names[0], AH5_F_IMIN) == 0
-                && strcmp(field_names[1], AH5_F_JMIN) == 0
-                && strcmp(field_names[2], AH5_F_KMIN) == 0
-                && strcmp(field_names[3], AH5_F_IMAX) == 0
-                && strcmp(field_names[4], AH5_F_JMAX) == 0
-                && strcmp(field_names[5], AH5_F_KMAX) == 0
-                && strcmp(field_names[6], AH5_F_V1) == 0
-                && strcmp(field_names[7], AH5_F_V2) == 0
-                && strcmp(field_names[8], AH5_F_V3) == 0)
-            {
-              rdata = AH5_TRUE;
-              field_index2[0] = 6;
-              field_index2[1] = 7;
-              field_index2[2] = 8;
-            }
+    for (i = 1; i < nb_fields; ++i)
+      field_names[i] = field_names[0] + i * AH5_TABLE_FIELD_NAME_LENGTH;
+
+    field_sizes = (size_t *)malloc(nb_fields * sizeof(size_t));
+    field_offsets = (size_t *)malloc(nb_fields * sizeof(size_t));
+
+    if (H5TBget_field_info(
+            file_id, path, field_names, field_sizes, field_offsets, &type_size) >= 0 &&
+        // fields: imin jmin kmin imax jmax kmax v1 v2 v3
+        strcmp(field_names[0], AH5_F_IMIN) == 0 &&
+        strcmp(field_names[1], AH5_F_JMIN) == 0 &&
+        strcmp(field_names[2], AH5_F_KMIN) == 0 &&
+        strcmp(field_names[3], AH5_F_IMAX) == 0 &&
+        strcmp(field_names[4], AH5_F_JMAX) == 0 &&
+        strcmp(field_names[5], AH5_F_KMAX) == 0 &&
+        strcmp(field_names[6], AH5_F_V1) == 0 &&
+        strcmp(field_names[7], AH5_F_V2) == 0 &&
+        strcmp(field_names[8], AH5_F_V3) == 0) {
+      AH5_init_ssom_pie_table(som, path, nb_points);
+
+      if (H5TBread_fields_index(  // elements: 32-bit unsigned int
+              file_id, path, som->nb_dims * 2, points_index, 0, nb_points,
+              som->nb_dims * 2 * sizeof(int), field_offsets, field_sizes,
+              som->elements[0]) < 0
+          ||
+          H5TBread_fields_index(  // vectors: 32-bit signed float
+              file_id, path, som->nb_dims, fields_index, 0, nb_points,
+              som->nb_dims * sizeof(float), field_offsets, field_sizes,
+              som->vectors[0]) < 0) {
+        AH5_free_ssom_pie_table(som);
+        success = AH5_FALSE;
+      } else {
+        success = AH5_TRUE;
+
+        // Check values
+        for (i = 0; i < nb_points; ++i) {
+          for (j = 0; j < som->nb_dims; ++j) {
+            if (som->elements[i][j] > som->elements[i][j + som->nb_dims] ||
+                som->elements[i][j + som->nb_dims] - som->elements[i][j] > 1)
+              AH5_log_warn("Selector on mesh read '%s' id %d: invalid indices", path, i);
+            if ((som->vectors[i][j] < 0 && som->vectors[i][j] != -1) || som->vectors[i][j] > 1)
+              AH5_log_warn("Selector on mesh read '%s' id %d: invalid v%d", path, i, j + 1);
           }
         }
-        if (rdata)
-        {
-          ssom_pie_table->nb_dims = nfields / 3;
-          ssom_pie_table->elements = (unsigned int **) malloc((size_t) nrecords * sizeof(unsigned int *));
-          ssom_pie_table->elements[0] = (unsigned int *) malloc((size_t) (nrecords * ssom_pie_table->nb_dims)
-                                        * 2 * sizeof(unsigned int));
-          ssom_pie_table->vectors = (float **) malloc((size_t) nrecords * sizeof(float *));
-          ssom_pie_table->vectors[0] = (float *) malloc((size_t) (nrecords*ssom_pie_table->nb_dims) * sizeof(
-                                         float));
-          for (i = 1; i < nrecords; i++)
-          {
-            ssom_pie_table->elements[i] = ssom_pie_table->elements[0] + i * 2 * ssom_pie_table->nb_dims;
-            ssom_pie_table->vectors[i] = ssom_pie_table->vectors[0] + i * ssom_pie_table->nb_dims;
-          }
-
-          if (H5TBread_fields_index(file_id, path, ssom_pie_table->nb_dims*2, field_index1, 0, nrecords,
-                                    (size_t) ssom_pie_table->nb_dims*2*sizeof(int), field_offsets, field_sizes,
-                                    ssom_pie_table->elements[0]) < 0
-              ||
-              H5TBread_fields_index(file_id, path, ssom_pie_table->nb_dims, field_index2, 0, nrecords,
-                                    (size_t) ssom_pie_table->nb_dims*sizeof(float), field_offsets, field_sizes,
-                                    ssom_pie_table->vectors[0]) < 0)
-          {
-            free(ssom_pie_table->elements[0]);
-            free(ssom_pie_table->elements);
-            free(ssom_pie_table->vectors[0]);
-            free(ssom_pie_table->vectors);
-            rdata = AH5_FALSE;
-          }
-          else
-            ssom_pie_table->nb_points = nrecords;
-        }
-        free(field_names[0]);
-        free(field_names);
-        free(field_sizes);
-        free(field_offsets);
       }
-  if (!rdata)
-  {
-    AH5_print_err_tble(AH5_C_MESH, path);
-    ssom_pie_table->nb_dims = 0;
-    ssom_pie_table->nb_points = 0;
-    ssom_pie_table->elements = NULL;
-    ssom_pie_table->vectors = NULL;
+    }
+
+    free(field_names[0]);
+    free(field_names);
+    free(field_sizes);
+    free(field_offsets);
   }
-  return rdata;
+
+  if (!success)
+    AH5_print_err_tble(AH5_C_MESH, path);
+
+  return success;
 }
 
 
@@ -1148,25 +1111,19 @@ char AH5_read_smesh(hid_t file_id, const char *path, AH5_smesh_t *smesh)
       path3 = malloc((strlen(path2) + 1) * sizeof(*path3));
       for (i = 0; i < children.nb_children; i++)
       {
+        AH5_init_ssom_pie_table(smesh->som_tables + i, NULL, 0);
+
         success = AH5_FALSE;
         path3 = realloc(path3, (strlen(path2) + strlen(children.childnames[i]) + 1) * sizeof(*path3));
         strcpy(path3, path2);
         strcat(path3, children.childnames[i]);
-        if (AH5_read_str_attr(file_id, path3, AH5_A_TYPE, &type))
-        {
+        if (AH5_read_str_attr(file_id, path3, AH5_A_TYPE, &type)) {
           if (strcmp(type,AH5_V_POINT_IN_ELEMENT) == 0)
-            if (AH5_read_ssom_pie_table(file_id, path3, smesh->som_tables + i))
-              success = AH5_TRUE;
+            success = AH5_read_ssom_pie_table(file_id, path3, smesh->som_tables + i);
           free(type);
         }
-        if (!success)
-        {
+        if (!success) {
           AH5_print_err_attr(AH5_C_MESH, AH5_A_TYPE, path3);
-          smesh->som_tables[i].path = NULL;
-          smesh->som_tables[i].nb_dims = 0;
-          smesh->som_tables[i].nb_points = 0;
-          smesh->som_tables[i].elements = NULL;
-          smesh->som_tables[i].vectors = NULL;
           rdata = AH5_FALSE;
         }
         free(children.childnames[i]);
@@ -1884,12 +1841,123 @@ char AH5_write_sgroup(hid_t id, const AH5_sgroup_t* sgroup) {
 }
 
 
-// Write structured selector on mesh
-char AH5_write_ssom_pie_table(hid_t file_id, const AH5_ssom_pie_table_t *ssom_pie_table)
-{
-  char success = AH5_TRUE;
+typedef struct AH5_ssom_pie_t {
+  unsigned int elements[6];
+  float vectors[3];
+} AH5_ssom_pie_t;
 
-  AH5_PRINT_ERR_FUNC_NOT_IMPLEMENTED(AH5_C_MESH, "UNKNOWN PATH");
+char AH5_write_ssom_pie_table(hid_t id, const AH5_ssom_pie_table_t *som) {
+  char success = AH5_TRUE;
+  hsize_t nb_fields, i, j;
+  hid_t loc_id;
+  char* basename;
+  char **field_names;
+  size_t *field_offsets;
+  hid_t *field_types;
+  AH5_ssom_pie_t* data;
+
+  if (som && som->path && som->nb_dims && som->nb_points) {
+    if (som->elements && som->elements[0] &&
+        som->vectors && som->vectors[0]) {
+      // Check values
+      for (i = 0; i < som->nb_points; ++i) {
+        for (j = 0; j < som->nb_dims; ++j) {
+          if (som->elements[i][j] > som->elements[i][j + som->nb_dims] ||
+              som->elements[i][j + som->nb_dims] - som->elements[i][j] > 1)
+            AH5_log_warn("Selector on mesh write '%s' id %d: invalid indices", som->path, i);
+          if ((som->vectors[i][j] < 0 && som->vectors[i][j] != -1) || som->vectors[i][j] > 1)
+            AH5_log_warn("Selector on mesh write '%s' id %d: invalid v%d", som->path, i, j + 1);
+        }
+      }
+
+      // Non empty selector on mesh table
+      basename = AH5_get_name_from_path(som->path);
+
+      // Open / create selector on mesh node
+      if (AH5_path_valid(id, AH5_CATEGORY_NAME(AH5_G_SELECTOR_ON_MESH))) {
+        loc_id = H5Gopen(
+            id, AH5_CATEGORY_NAME(AH5_G_SELECTOR_ON_MESH), H5P_DEFAULT);
+      } else {
+        loc_id = H5Gcreate(
+            id, AH5_CATEGORY_NAME(AH5_G_SELECTOR_ON_MESH),
+            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      }
+
+      if (loc_id >= 0) {
+        nb_fields = som->nb_dims * 3;
+
+        // Generate write data
+        field_names = (char **)malloc(nb_fields * sizeof(char *));
+        field_names[0] = (char *)malloc(
+            nb_fields * AH5_TABLE_FIELD_NAME_LENGTH * sizeof(char));
+
+        field_offsets = (size_t *)malloc(nb_fields * sizeof(size_t));
+        field_types = (hid_t *)malloc(nb_fields * sizeof(hid_t));
+
+        for (i = 0; i < nb_fields; ++i) {
+          field_names[i] = field_names[0] + i * AH5_TABLE_FIELD_NAME_LENGTH;
+          field_names[i][0] = '\0';
+
+          if (i < som->nb_dims * 2) {
+            field_offsets[i] = (i == 0) ? 0 : field_offsets[i - 1] + sizeof(int);
+            field_types[i] = H5T_NATIVE_UINT;
+          } else {
+            field_offsets[i] = field_offsets[i - 1] + sizeof(float);
+            field_types[i] = H5T_NATIVE_FLOAT;
+          }
+        }
+
+        // fields: imin jmin kmin imax jmax kmax v1 v2 v3
+        strcat(field_names[0], AH5_F_IMIN);
+        strcat(field_names[1], AH5_F_JMIN);
+        strcat(field_names[2], AH5_F_KMIN);
+        strcat(field_names[3], AH5_F_IMAX);
+        strcat(field_names[4], AH5_F_JMAX);
+        strcat(field_names[5], AH5_F_KMAX);
+        strcat(field_names[6], AH5_F_V1);
+        strcat(field_names[7], AH5_F_V2);
+        strcat(field_names[8], AH5_F_V3);
+
+        // Fill write data
+        data = (AH5_ssom_pie_t *)malloc(som->nb_points * sizeof(AH5_ssom_pie_t));
+        for (i = 0; i < som->nb_points; ++i) {
+          for (j = 0; j < som->nb_dims; ++j) {
+            data[i].elements[j] = som->elements[i][j];
+            data[i].elements[j + som->nb_dims] = som->elements[i][j + som->nb_dims];
+            data[i].vectors[j] = som->vectors[i][j];
+          }
+        }
+
+        // Write selector on mesh table
+        if (H5TBmake_table(
+                basename,  // not used
+                loc_id, basename, nb_fields, som->nb_points, sizeof(AH5_ssom_pie_t),
+                field_names, field_offsets, field_types, nb_fields, NULL, 1, data) < 0) {
+          success = AH5_FALSE;
+
+        } else {
+          // Get dataset
+          // Set pie attribute
+          success &= AH5_write_str_attr(
+              loc_id, basename, AH5_A_TYPE, AH5_V_POINT_IN_ELEMENT);
+        }
+
+        free(field_names[0]);
+        free(field_names);
+        free(field_offsets);
+        free(field_types);
+        free(data);
+
+        success &= !HDF5_FAILED(H5Gclose(loc_id));
+
+      } else {
+        success = AH5_FALSE;
+      }
+
+    } else {
+      success = AH5_FALSE;
+    }
+  }
 
   return success;
 }
@@ -2475,6 +2543,34 @@ void AH5_free_groupgroup(AH5_groupgroup_t *groupgroup)
     }
 
     groupgroup->nb_groupgroupnames = 0;
+  }
+}
+
+
+void AH5_free_ssom_pie_table(AH5_ssom_pie_table_t *som) {
+  if (som) {
+    if (som->path) {
+      free(som->path);
+      som->path = NULL;
+    }
+
+    if (som->elements) {
+      if (som->elements[0])
+        free(som->elements[0]);
+
+      free(som->elements);
+      som->elements = NULL;
+    }
+
+    if (som->vectors) {
+      if (som->vectors[0])
+        free(som->vectors[0]);
+
+      free(som->vectors);
+      som->vectors = NULL;
+    }
+
+    AH5_init_ssom_pie_table(som, NULL, 0);
   }
 }
 

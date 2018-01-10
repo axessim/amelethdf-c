@@ -60,6 +60,7 @@ void build_umesh_1(AH5_umesh_t *umesh)
   // selector on mesh
   umesh->nb_som_tables = 0;
   umesh->som_tables = NULL;
+
 }
 
 
@@ -774,6 +775,7 @@ char* test_write_smesh() {
   AH5_smesh_t* smesh = NULL;
   AH5_sgroup_t* sgroup = NULL;
   AH5_groupgroup_t* groupgroup = NULL;
+  AH5_ssom_pie_table_t *som = NULL;
   int i = 0;
   hid_t file_id;
 
@@ -783,7 +785,7 @@ char* test_write_smesh() {
   msh_instance = msh_group->msh_instances;
   AH5_init_msh_instance(msh_instance, "msh_instance", MSH_STRUCTURED);
   smesh = &msh_instance->data.structured;
-  AH5_init_smesh(smesh, 2, 1, 0);
+  AH5_init_smesh(smesh, 2, 1, 2);
   AH5_init_axis(&smesh->x, 2);
   smesh->x.nodes[0] = 0;
   smesh->x.nodes[1] = 1;
@@ -862,6 +864,58 @@ char* test_write_smesh() {
   AH5_init_groupgroup(groupgroup, "all", 2, 7);
   strcpy(groupgroup->groupgroupnames[0], "surface");
   strcpy(groupgroup->groupgroupnames[1], "volume");
+
+  som = smesh->som_tables;
+  AH5_init_ssom_pie_table(som, "som1", 2);
+  som->elements[0][0] = 0;
+  som->elements[0][1] = 1;
+  som->elements[0][2] = 2;
+  som->elements[0][3] = 3;
+  som->elements[0][4] = 4;
+  som->elements[0][5] = 5;
+  som->elements[1][0] = 6;
+  som->elements[1][1] = 7;
+  som->elements[1][2] = 8;
+  som->elements[1][3] = 9;
+  som->elements[1][4] = 10;
+  som->elements[1][5] = 11;
+  som->vectors[0][0] = 12;
+  som->vectors[0][1] = 13;
+  som->vectors[0][2] = 14;
+  som->vectors[1][0] = 15;
+  som->vectors[1][1] = 16;
+  som->vectors[1][2] = 17;
+
+  som = smesh->som_tables + 1;
+  AH5_init_ssom_pie_table(som, "som2", 3);
+  som->elements[0][0] = 100;
+  som->elements[0][1] = 101;
+  som->elements[0][2] = 102;
+  som->elements[0][3] = 103;
+  som->elements[0][4] = 104;
+  som->elements[0][5] = 105;
+  som->elements[1][0] = 106;
+  som->elements[1][1] = 107;
+  som->elements[1][2] = 108;
+  som->elements[1][3] = 109;
+  som->elements[1][4] = 110;
+  som->elements[1][5] = 111;
+  som->elements[2][0] = 112;
+  som->elements[2][1] = 113;
+  som->elements[2][2] = 114;
+  som->elements[2][3] = 115;
+  som->elements[2][4] = 116;
+  som->elements[2][5] = 117;
+  som->vectors[0][0] = 118;
+  som->vectors[0][1] = 119;
+  som->vectors[0][2] = 120;
+  som->vectors[1][0] = 121;
+  som->vectors[1][1] = 122;
+  som->vectors[1][2] = 123;
+  som->vectors[2][0] = 124;
+  som->vectors[2][1] = 125;
+  som->vectors[2][2] = 126;
+
 
   file_id = AH5_auto_test_file();
   mu_assert("Check write smesh", AH5_write_mesh(file_id, &mesh));
@@ -974,8 +1028,59 @@ char* test_write_smesh() {
       "Check smsh groupgroup 0 groups", groupgroup->groupgroupnames[0], "surface");
   mu_assert_str_equal(
       "Check smsh groupgroup 0 groups", groupgroup->groupgroupnames[1], "volume");
-  mu_assert("Check smsh nb som tables", smesh->nb_som_tables == 0);
-  mu_assert("Check smsh som tables", smesh->som_tables == NULL);
+
+  mu_assert("Check smsh nb som tables", smesh->nb_som_tables == 2);
+  som = smesh->som_tables;
+  mu_assert("Check smsh som tables 0", som->nb_dims == 3);
+  mu_assert("Check smsh som tables 0", som->nb_points == 2);
+  mu_assert("Check smsh som tables 0", som->elements[0][0] == 0);
+  mu_assert("Check smsh som tables 0", som->elements[0][1] == 1);
+  mu_assert("Check smsh som tables 0", som->elements[0][2] == 2);
+  mu_assert("Check smsh som tables 0", som->elements[0][3] == 3);
+  mu_assert("Check smsh som tables 0", som->elements[0][4] == 4);
+  mu_assert("Check smsh som tables 0", som->elements[0][5] == 5);
+  mu_assert("Check smsh som tables 0", som->elements[1][0] == 6);
+  mu_assert("Check smsh som tables 0", som->elements[1][1] == 7);
+  mu_assert("Check smsh som tables 0", som->elements[1][2] == 8);
+  mu_assert("Check smsh som tables 0", som->elements[1][3] == 9);
+  mu_assert("Check smsh som tables 0", som->elements[1][4] == 10);
+  mu_assert("Check smsh som tables 0", som->elements[1][5] == 11);
+  mu_assert("Check smsh som tables 0", som->vectors[0][0] == 12);
+  mu_assert("Check smsh som tables 0", som->vectors[0][1] == 13);
+  mu_assert("Check smsh som tables 0", som->vectors[0][2] == 14);
+  mu_assert("Check smsh som tables 0", som->vectors[1][0] == 15);
+  mu_assert("Check smsh som tables 0", som->vectors[1][1] == 16);
+  mu_assert("Check smsh som tables 0", som->vectors[1][2] == 17);
+  som = smesh->som_tables + 1;
+  mu_assert("Check smsh som tables 1", som->nb_dims == 3);
+  mu_assert("Check smsh som tables 1", som->nb_points == 3);
+  mu_assert("Check smsh som tables 1", som->elements[0][0] == 100);
+  mu_assert("Check smsh som tables 1", som->elements[0][1] == 101);
+  mu_assert("Check smsh som tables 1", som->elements[0][2] == 102);
+  mu_assert("Check smsh som tables 1", som->elements[0][3] == 103);
+  mu_assert("Check smsh som tables 1", som->elements[0][4] == 104);
+  mu_assert("Check smsh som tables 1", som->elements[0][5] == 105);
+  mu_assert("Check smsh som tables 1", som->elements[1][0] == 106);
+  mu_assert("Check smsh som tables 1", som->elements[1][1] == 107);
+  mu_assert("Check smsh som tables 1", som->elements[1][2] == 108);
+  mu_assert("Check smsh som tables 1", som->elements[1][3] == 109);
+  mu_assert("Check smsh som tables 1", som->elements[1][4] == 110);
+  mu_assert("Check smsh som tables 1", som->elements[1][5] == 111);
+  mu_assert("Check smsh som tables 1", som->elements[2][0] == 112);
+  mu_assert("Check smsh som tables 1", som->elements[2][1] == 113);
+  mu_assert("Check smsh som tables 1", som->elements[2][2] == 114);
+  mu_assert("Check smsh som tables 1", som->elements[2][3] == 115);
+  mu_assert("Check smsh som tables 1", som->elements[2][4] == 116);
+  mu_assert("Check smsh som tables 1", som->elements[2][5] == 117);
+  mu_assert("Check smsh som tables 1", som->vectors[0][0] == 118);
+  mu_assert("Check smsh som tables 1", som->vectors[0][1] == 119);
+  mu_assert("Check smsh som tables 1", som->vectors[0][2] == 120);
+  mu_assert("Check smsh som tables 1", som->vectors[1][0] == 121);
+  mu_assert("Check smsh som tables 1", som->vectors[1][1] == 122);
+  mu_assert("Check smsh som tables 1", som->vectors[1][2] == 123);
+  mu_assert("Check smsh som tables 1", som->vectors[2][0] == 124);
+  mu_assert("Check smsh som tables 1", som->vectors[2][1] == 125);
+  mu_assert("Check smsh som tables 1", som->vectors[2][2] == 126);
 
   AH5_free_mesh(&mesh);
 

@@ -212,7 +212,7 @@ AH5_PUBLIC AH5_axis_t *AH5_init_axis(AH5_axis_t *axis, hsize_t nb_nodes);
 AH5_PUBLIC AH5_ssom_pie_table_t *AH5_init_smsh_som(  // deprecated in favor of AH5_init_ssom_pie_table
     AH5_ssom_pie_table_t *som, const char *path, hsize_t size);
 AH5_PUBLIC AH5_ssom_pie_table_t *AH5_init_ssom_pie_table(
-    AH5_ssom_pie_table_t *som, const char *path, hsize_t size);
+    AH5_ssom_pie_table_t *som, const char *path, hsize_t nb_points);
 AH5_PUBLIC AH5_sgroup_t *AH5_init_smsh_group(  // deprecated in favor of AH5_init_sgroup
     AH5_sgroup_t *group, const char *path, hsize_t nb_eles, AH5_group_entitytype_t entitytype);
 AH5_PUBLIC AH5_sgroup_t *AH5_init_sgroup(
@@ -246,7 +246,7 @@ AH5_PUBLIC char AH5_read_smsh_group(  // deprecated in favor of AH5_read_sgroup
     hid_t file_id, const char *path, AH5_sgroup_t *sgroup);
 AH5_PUBLIC char AH5_read_sgroup(hid_t file_id, const char *path, AH5_sgroup_t *sgroup);
 AH5_PUBLIC char AH5_read_ssom_pie_table(
-    hid_t file_id, const char *path, AH5_ssom_pie_table_t *ssom_pie_table);
+    hid_t file_id, const char *path, AH5_ssom_pie_table_t *som);
 AH5_PUBLIC char AH5_read_smesh(hid_t file_id, const char *path, AH5_smesh_t *smesh);
 AH5_PUBLIC char AH5_read_umsh_group(  // deprecated in favor of AH5_read_ugroup
     hid_t file_id, const char *path, AH5_ugroup_t *ugroup);
@@ -282,8 +282,7 @@ AH5_PUBLIC char AH5_write_axis(hid_t file_id, const AH5_axis_t *axis);
 AH5_PUBLIC char AH5_write_smsh_group(  // deprecated in favor of AH5_write_sgroup
     hid_t file_id, const AH5_sgroup_t *sgroup);
 AH5_PUBLIC char AH5_write_sgroup(hid_t file_id, const AH5_sgroup_t *sgroup);
-AH5_PUBLIC char AH5_write_ssom_pie_table(
-    hid_t file_id, const AH5_ssom_pie_table_t *ssom_pie_table);
+AH5_PUBLIC char AH5_write_ssom_pie_table(hid_t file_id, const AH5_ssom_pie_table_t *som);
 AH5_PUBLIC char AH5_write_smesh(hid_t file_id, const AH5_smesh_t *smesh);
 AH5_PUBLIC char AH5_write_umsh_group(  // deprecated in favor of AH5_write_ugroup
     hid_t file_id, const AH5_ugroup_t *ugroup, hsize_t nb_grp);
@@ -314,6 +313,7 @@ AH5_PUBLIC void AH5_print_mesh(const AH5_mesh_t *mesh);
 
 
 AH5_PUBLIC void AH5_free_groupgroup(AH5_groupgroup_t *groupgroup);
+AH5_PUBLIC void AH5_free_ssom_pie_table(AH5_ssom_pie_table_t *som);
 AH5_PUBLIC void AH5_free_sgroup(AH5_sgroup_t *sgroup);
 AH5_PUBLIC void AH5_free_smesh(AH5_smesh_t *smesh);
 AH5_PUBLIC void AH5_free_umesh(AH5_umesh_t *umesh);
