@@ -276,6 +276,7 @@ AH5_sgroup_t *AH5_init_sgroup(
   if (entitytype == AH5_GROUP_ENTITYTYPE_INVALID ||
       entitytype == AH5_GROUP_ENTITYTYPE_UNDEF)
   {
+    printf("***** ERROR: Fail to initialize group: no group provided.\n");
     return NULL;
   }
 
@@ -307,6 +308,10 @@ AH5_sgroup_t *AH5_init_sgroup(
 
       group->elements = (int*) malloc(sizeof(int) * group->dims[0] * group->dims[1]);
       success &= group->elements != NULL;
+      if (!success) {
+        printf("***** ERROR: Fail to initialize group: "
+               "fail to allocate elements: %d x %d.\n", group->dims[0], group->dims[1]);
+      }
 
       if (entitytype == AH5_GROUP_FACE)
       {
@@ -330,11 +335,14 @@ AH5_sgroup_t *AH5_init_sgroup(
             group->normals[i] = *group->normals + i * 2;
         }
       }
+    } else {
+      printf("***** WARNING: Fail to initialize group: no elements provided.\n");
     }
   }
 
   if (!success)
   {
+    printf("***** ERROR: Fail to initialize group.\n");
     AH5_free_sgroup(group);
     return NULL;
   }
@@ -1847,7 +1855,7 @@ char AH5_write_sgroup(hid_t id, const AH5_sgroup_t* sgroup) {
   char* basename;
   char* ctype;
   char* centitytype;
-  char success;
+  char success = AH5_TRUE;
 
   // Invalid group
   if (sgroup == NULL)
