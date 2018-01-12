@@ -88,7 +88,7 @@ typedef struct _AH5_usom_pie_table_t
 
 typedef struct _AH5_usom_ef_table_t
 {
-  hsize_t         dims[2];
+  hsize_t         dims[2];  // {size, 2}
   int             *items;
 } AH5_usom_ef_table_t;
 
@@ -221,6 +221,8 @@ AH5_PUBLIC AH5_ugroup_t *AH5_init_umsh_group(  // deprecated in favor of AH5_ini
     AH5_ugroup_t *group, const char *path, hsize_t nb_eles, AH5_group_entitytype_t entitytype);
 AH5_PUBLIC AH5_ugroup_t *AH5_init_ugroup(
     AH5_ugroup_t *group, const char *path, hsize_t nb_eles, AH5_group_entitytype_t entitytype);
+AH5_PUBLIC AH5_usom_pie_table_t *AH5_init_usom_pie_table(AH5_usom_pie_table_t *som, hsize_t size);
+AH5_PUBLIC AH5_usom_ef_table_t *AH5_init_usom_ef_table(AH5_usom_ef_table_t *som, hsize_t size);
 AH5_PUBLIC AH5_usom_table_t *AH5_init_umsh_som(  // deprecated in favor of AH5_init_usom_table
     AH5_usom_table_t *som, const char *path, hsize_t size, AH5_usom_class_t type);
 AH5_PUBLIC AH5_usom_table_t *AH5_init_usom_table(
@@ -245,20 +247,16 @@ AH5_PUBLIC char AH5_read_axis(hid_t file_id, const char *path, AH5_axis_t *axis)
 AH5_PUBLIC char AH5_read_smsh_group(  // deprecated in favor of AH5_read_sgroup
     hid_t file_id, const char *path, AH5_sgroup_t *sgroup);
 AH5_PUBLIC char AH5_read_sgroup(hid_t file_id, const char *path, AH5_sgroup_t *sgroup);
-AH5_PUBLIC char AH5_read_ssom_pie_table(
-    hid_t file_id, const char *path, AH5_ssom_pie_table_t *som);
+AH5_PUBLIC char AH5_read_ssom_pie_table(hid_t file_id, const char *path, AH5_ssom_pie_table_t *som);
 AH5_PUBLIC char AH5_read_smesh(hid_t file_id, const char *path, AH5_smesh_t *smesh);
 AH5_PUBLIC char AH5_read_umsh_group(  // deprecated in favor of AH5_read_ugroup
     hid_t file_id, const char *path, AH5_ugroup_t *ugroup);
 AH5_PUBLIC char AH5_read_ugroup(hid_t file_id, const char *path, AH5_ugroup_t *ugroup);
-AH5_PUBLIC char AH5_read_usom_pie_table(
-    hid_t file_id, const char *path, AH5_usom_pie_table_t *usom_pie_table);
-AH5_PUBLIC char AH5_read_usom_ef_table(
-    hid_t file_id, const char *path, AH5_usom_ef_table_t *usom_ef_table);
+AH5_PUBLIC char AH5_read_usom_pie_table(hid_t file_id, const char *path, AH5_usom_pie_table_t *som);
+AH5_PUBLIC char AH5_read_usom_ef_table(hid_t file_id, const char *path, AH5_usom_ef_table_t *som);
 AH5_PUBLIC char AH5_read_umesh_som_table(  // deprecated in favor of AH5_read_usom_table
-    hid_t file_id, const char *path, AH5_usom_table_t *usom_table);
-AH5_PUBLIC char AH5_read_usom_table(
-    hid_t file_id, const char *path, AH5_usom_table_t *usom_table);
+    hid_t file_id, const char *path, AH5_usom_table_t *som);
+AH5_PUBLIC char AH5_read_usom_table(hid_t file_id, const char *path, AH5_usom_table_t *som);
 AH5_PUBLIC char AH5_read_umesh(hid_t file_id, const char *path, AH5_umesh_t *umesh);
 AH5_PUBLIC char AH5_read_msh_instance(
     hid_t file_id, const char *path, AH5_msh_instance_t *msh_instance);
@@ -288,12 +286,12 @@ AH5_PUBLIC char AH5_write_umsh_group(  // deprecated in favor of AH5_write_ugrou
     hid_t file_id, const AH5_ugroup_t *ugroup, hsize_t nb_grp);
 AH5_PUBLIC char AH5_write_ugroup(hid_t file_id, const AH5_ugroup_t *ugroup, hsize_t nb_grp);
 AH5_PUBLIC char AH5_write_usom_pie_table(
-    hid_t file_id, const AH5_usom_pie_table_t *usom_pie_table);
-AH5_PUBLIC char AH5_write_usom_ef_table(hid_t file_id, const AH5_usom_ef_table_t *usom_ef_table);
+    hid_t file_id, const AH5_usom_pie_table_t *som, const char *path);
+AH5_PUBLIC char AH5_write_usom_ef_table(
+    hid_t file_id, const AH5_usom_ef_table_t *som, const char *path, AH5_usom_class_t type);
 AH5_PUBLIC char AH5_write_umesh_som_table(  // deprecated in favor of AH5_write_usom_table
-    hid_t file_id, const AH5_usom_table_t *usom_table, hsize_t nb_som);
-AH5_PUBLIC char AH5_write_usom_table(
-    hid_t file_id, const AH5_usom_table_t *usom_table, hsize_t nb_som);
+    hid_t file_id, const AH5_usom_table_t *som, hsize_t nb_som);
+AH5_PUBLIC char AH5_write_usom_table(hid_t file_id, const AH5_usom_table_t *som);
 AH5_PUBLIC char AH5_write_umesh(hid_t file_id, const AH5_umesh_t *umesh);
 AH5_PUBLIC char AH5_write_msh_instance(hid_t file_id, const AH5_msh_instance_t *msh_instance);
 AH5_PUBLIC char AH5_write_mlk_instance(hid_t file_id, const AH5_mlk_instance_t *mlk_instance);
@@ -303,8 +301,8 @@ AH5_PUBLIC char AH5_write_mesh(hid_t file_id, const AH5_mesh_t *mesh);
 
 AH5_PUBLIC void AH5_print_smesh(const AH5_smesh_t *smesh, int space);
 AH5_PUBLIC void AH5_print_umesh_som_table(  // deprecated in favor of AH5_print_usom_table
-    const AH5_usom_table_t *usom_table, int space);
-AH5_PUBLIC void AH5_print_usom_table(const AH5_usom_table_t *usom_table, int space);
+    const AH5_usom_table_t *som, int space);
+AH5_PUBLIC void AH5_print_usom_table(const AH5_usom_table_t *som, int space);
 AH5_PUBLIC void AH5_print_umesh(const AH5_umesh_t *umesh, int space);
 AH5_PUBLIC void AH5_print_msh_instance(const AH5_msh_instance_t *msh_instance, int space);
 AH5_PUBLIC void AH5_print_mlk_instance(const AH5_mlk_instance_t *mlk_instance, int space);
@@ -314,6 +312,9 @@ AH5_PUBLIC void AH5_print_mesh(const AH5_mesh_t *mesh);
 
 AH5_PUBLIC void AH5_free_groupgroup(AH5_groupgroup_t *groupgroup);
 AH5_PUBLIC void AH5_free_ssom_pie_table(AH5_ssom_pie_table_t *som);
+AH5_PUBLIC void AH5_free_usom_pie_table(AH5_usom_pie_table_t *som);
+AH5_PUBLIC void AH5_free_usom_ef_table(AH5_usom_ef_table_t *som);
+AH5_PUBLIC void AH5_free_usom_table(AH5_usom_table_t *som);
 AH5_PUBLIC void AH5_free_sgroup(AH5_sgroup_t *sgroup);
 AH5_PUBLIC void AH5_free_smesh(AH5_smesh_t *smesh);
 AH5_PUBLIC void AH5_free_umesh(AH5_umesh_t *umesh);

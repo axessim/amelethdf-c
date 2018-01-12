@@ -221,18 +221,24 @@ AH5_ssom_pie_table_t *AH5_init_ssom_pie_table(
     som->nb_dims = nb_dims;
     som->nb_points = nb_points;
 
-    if (nb_dims * nb_points) {
+    if (nb_points) {
       som->elements = (unsigned int **)malloc(nb_points * sizeof(unsigned int *));
       som->elements[0] = (unsigned int *)malloc(
-          (nb_points * nb_dims) * 2 * sizeof(unsigned int));
+          nb_points * nb_dims * 2 * sizeof(unsigned int));
 
       som->vectors = (float **)malloc(nb_points * sizeof(float *));
-      som->vectors[0] = (float *)malloc((nb_points * nb_dims) * sizeof(float));
+      som->vectors[0] = (float *)malloc(nb_points * nb_dims * sizeof(float));
 
       for (i = 1; i < nb_points; ++i) {
         som->elements[i] = som->elements[0] + i * 2 * nb_dims;
         som->vectors[i] = som->vectors[0] + i * nb_dims;
       }
+
+      // Initialize with default value
+      for (i = 0; i < nb_points * nb_dims * 2; ++i)
+        som->elements[0][i] = 0;
+      for (i = 0; i < nb_points * nb_dims; ++i)
+        som->vectors[0][i] = -1;
     }
   }
 
@@ -412,55 +418,73 @@ AH5_usom_table_t *AH5_init_umsh_som(
 
 AH5_usom_table_t *AH5_init_usom_table(
     AH5_usom_table_t *som, const char *path, hsize_t size, AH5_usom_class_t type) {
-  hsize_t i;
-
-  if (som)
-  {
+  if (som) {
     som->path = NULL;
     som->type = type;
 
-    switch (type)
-    {
+    if (path)
+      AH5_setpath(&som->path, path);
+
+    switch (type) {
       case SOM_INVALID:
         return NULL;
 
       case SOM_POINT_IN_ELEMENT:
-        som->data.pie.nb_dims = 3;
-        som->data.pie.nb_points = size;
-
-        som->data.pie.indices = (int *) malloc((size_t) som->data.pie.nb_points * sizeof(int));
-        /* initialized with default value. */
-        for (i = 0; i < som->data.pie.nb_points; ++i)
-          som->data.pie.indices[i] = -1;
-
-        /* build 2d-array curvilinear index. */
-        som->data.pie.vectors = (float **) malloc(
-            (size_t) som->data.pie.nb_points * sizeof(float *));
-        som->data.pie.vectors[0] = (float *) malloc(
-            (size_t) (som->data.pie.nb_points * som->data.pie.nb_dims) * sizeof(float));
-        for (i = 1; i < som->data.pie.nb_points; ++i)
-          som->data.pie.vectors[i] = som->data.pie.vectors[0] + i * (som->data.pie.nb_dims);
-        /* initialized with default value. */
-        for (i = 0; i < som->data.pie.nb_points * som->data.pie.nb_dims; ++i)
-          som->data.pie.vectors[0][i] = -1;
-
+        AH5_init_usom_pie_table(&som->data.pie, size);
         break;
 
       case SOM_EDGE:
       case SOM_FACE:
-        som->data.ef.dims[0] = 2;
-        som->data.ef.dims[1] = size;
-
-        som->data.ef.items = (int *) malloc(
-            (size_t) som->data.ef.dims[0] * som->data.ef.dims[1] * sizeof(int));
-        for (i = 0; i <  som->data.ef.dims[0] * som->data.ef.dims[1]; ++i)
-          som->data.ef.items[i] = -1;
-
+        AH5_init_usom_ef_table(&som->data.ef, size);
         break;
     }
+  }
 
-    if (path)
-      AH5_setpath(&som->path, path);
+  return som;
+}
+
+
+AH5_usom_pie_table_t *AH5_init_usom_pie_table(AH5_usom_pie_table_t *som, hsize_t size) {
+  hsize_t i, nb_dims = 3;
+
+  if (som) {
+    som->nb_dims = nb_dims;
+    som->nb_points = size;
+
+    if (size) {
+      som->indices = (int *)malloc(size * sizeof(int));
+
+      som->vectors = (float **)malloc(size * sizeof(float *));
+      som->vectors[0] = (float *)malloc(size * nb_dims * sizeof(float));
+      for (i = 1; i < size; ++i)
+        som->vectors[i] = som->vectors[0] + i * nb_dims;
+
+      // Initialize with default value
+      for (i = 0; i < size; ++i)
+        som->indices[i] = -1;
+      for (i = 0; i < size * nb_dims; ++i)
+        som->vectors[0][i] = -1;
+    }
+  }
+
+  return som;
+}
+
+
+AH5_usom_ef_table_t *AH5_init_usom_ef_table(AH5_usom_ef_table_t *som, hsize_t size) {
+  hsize_t i, nb_dims = 2;
+
+  if (som) {
+    som->dims[0] = size;
+    som->dims[1] = nb_dims;
+
+    if (size) {
+      som->items = (int *)malloc(nb_dims * size * sizeof(int));
+
+      // Initialize with default value
+      for (i = 0; i < nb_dims * size; ++i)
+        som->items[i] = -1;
+    }
   }
 
   return som;
@@ -937,20 +961,22 @@ char AH5_read_sgroup(hid_t file_id, const char *path, AH5_sgroup_t *sgroup)
 
 char AH5_read_ssom_pie_table(hid_t file_id, const char *path, AH5_ssom_pie_table_t *som) {
   char success = AH5_FALSE;
-  hsize_t nb_fields, nb_points, i, j;
+  hsize_t nb_fields, nb_dims, nb_points, i, j;
   char **field_names;
   size_t *field_sizes;
   size_t *field_offsets;
   size_t type_size;
   int points_index[] = {0, 1, 2, 3, 4, 5};
   int fields_index[] = {6, 7, 8};
+  unsigned int **elements;
+  float **vectors;
 
   if (!som)
     return AH5_FALSE;
 
   if (AH5_path_valid(file_id, path) &&
       H5TBget_table_info(file_id, path, &nb_fields, &nb_points) >= 0 &&
-      nb_fields == 9 && nb_points > 0) {
+      (nb_fields == 3 || nb_fields == 6 || nb_fields == 9) && nb_points > 0) {
     field_names = (char **)malloc(nb_fields * sizeof(char *));
     field_names[0] = (char *)malloc(nb_fields * AH5_TABLE_FIELD_NAME_LENGTH * sizeof(char));
 
@@ -962,42 +988,88 @@ char AH5_read_ssom_pie_table(hid_t file_id, const char *path, AH5_ssom_pie_table
 
     if (H5TBget_field_info(
             file_id, path, field_names, field_sizes, field_offsets, &type_size) >= 0 &&
-        // fields: imin jmin kmin imax jmax kmax v1 v2 v3
-        strcmp(field_names[0], AH5_F_IMIN) == 0 &&
-        strcmp(field_names[1], AH5_F_JMIN) == 0 &&
-        strcmp(field_names[2], AH5_F_KMIN) == 0 &&
-        strcmp(field_names[3], AH5_F_IMAX) == 0 &&
-        strcmp(field_names[4], AH5_F_JMAX) == 0 &&
-        strcmp(field_names[5], AH5_F_KMAX) == 0 &&
-        strcmp(field_names[6], AH5_F_V1) == 0 &&
-        strcmp(field_names[7], AH5_F_V2) == 0 &&
-        strcmp(field_names[8], AH5_F_V3) == 0) {
+        ((nb_fields == 9 &&
+          strcmp(field_names[0], AH5_F_IMIN) == 0 &&
+          strcmp(field_names[1], AH5_F_JMIN) == 0 &&
+          strcmp(field_names[2], AH5_F_KMIN) == 0 &&
+          strcmp(field_names[3], AH5_F_IMAX) == 0 &&
+          strcmp(field_names[4], AH5_F_JMAX) == 0 &&
+          strcmp(field_names[5], AH5_F_KMAX) == 0 &&
+          strcmp(field_names[6], AH5_F_V1) == 0 &&
+          strcmp(field_names[7], AH5_F_V2) == 0 &&
+          strcmp(field_names[8], AH5_F_V3) == 0) ||
+         (nb_fields == 6 &&
+          strcmp(field_names[0], AH5_F_IMIN) == 0 &&
+          strcmp(field_names[1], AH5_F_JMIN) == 0 &&
+          strcmp(field_names[2], AH5_F_IMAX) == 0 &&
+          strcmp(field_names[3], AH5_F_JMAX) == 0 &&
+          strcmp(field_names[4], AH5_F_V1) == 0 &&
+          strcmp(field_names[5], AH5_F_V2) == 0) ||
+         (nb_fields == 3 &&
+          strcmp(field_names[0], AH5_F_IMIN) == 0 &&
+          strcmp(field_names[1], AH5_F_IMAX) == 0 &&
+          strcmp(field_names[2], AH5_F_V1) == 0))) {
       AH5_init_ssom_pie_table(som, path, nb_points);
 
-      if (H5TBread_fields_index(  // elements: 32-bit unsigned int
-              file_id, path, som->nb_dims * 2, points_index, 0, nb_points,
-              som->nb_dims * 2 * sizeof(int), field_offsets, field_sizes,
-              som->elements[0]) < 0
+      nb_dims = nb_fields / 3;
+
+      if (nb_fields == 9) {
+        elements = som->elements;
+        vectors = som->vectors;
+      } else {
+        elements = (unsigned int **)malloc(nb_points * sizeof(unsigned int *));
+        elements[0] = (unsigned int *)malloc(nb_points * nb_dims * 2 * sizeof(unsigned int));
+        for (i = 1; i < nb_points; ++i)
+          elements[i] = elements[0] + i * nb_dims * 2;
+
+        vectors = (float **)malloc(nb_points * sizeof(float *));
+        vectors[0] = (float *)malloc(nb_points * nb_dims * sizeof(float));
+        for (i = 1; i < nb_points; ++i)
+          vectors[i] = vectors[0] + i * nb_dims;
+      }
+
+      if (H5TBread_fields_index(
+              file_id, path, nb_dims * 2, points_index, 0, nb_points,
+              nb_dims * 2 * sizeof(int), field_offsets, field_sizes,
+              elements[0]) < 0
           ||
-          H5TBread_fields_index(  // vectors: 32-bit signed float
-              file_id, path, som->nb_dims, fields_index, 0, nb_points,
-              som->nb_dims * sizeof(float), field_offsets, field_sizes,
-              som->vectors[0]) < 0) {
+          H5TBread_fields_index(
+              file_id, path, nb_dims, fields_index, 0, nb_points,
+              nb_dims * sizeof(float), field_offsets, field_sizes,
+              vectors[0]) < 0) {
         AH5_free_ssom_pie_table(som);
-        success = AH5_FALSE;
+
       } else {
         success = AH5_TRUE;
 
+        if (nb_fields != 9) {
+          // Transfer values
+          for (i = 0; i < nb_points; ++i) {
+            for (j = 0; j < nb_dims; ++j) {
+              som->elements[i][j] = elements[i][j];
+              som->elements[i][j + 3] = elements[i][j + nb_dims];
+              som->vectors[i][j] = vectors[i][j];
+            }
+          }
+        }
+
         // Check values
         for (i = 0; i < nb_points; ++i) {
-          for (j = 0; j < som->nb_dims; ++j) {
-            if (som->elements[i][j] > som->elements[i][j + som->nb_dims] ||
-                som->elements[i][j + som->nb_dims] - som->elements[i][j] > 1)
+          for (j = 0; j < nb_dims; ++j) {
+            if (som->elements[i][j] > som->elements[i][j + nb_dims] ||
+                som->elements[i][j + nb_dims] - som->elements[i][j] > 1)
               AH5_log_warn("Selector on mesh read '%s' id %d: invalid indices", path, i);
             if ((som->vectors[i][j] < 0 && som->vectors[i][j] != -1) || som->vectors[i][j] > 1)
               AH5_log_warn("Selector on mesh read '%s' id %d: invalid v%d", path, i, j + 1);
           }
         }
+      }
+
+      if (nb_fields != 9) {
+        free(elements[0]);
+        free(elements);
+        free(vectors[0]);
+        free(vectors);
       }
     }
 
@@ -1197,149 +1269,159 @@ char AH5_read_ugroup(hid_t file_id, const char *path, AH5_ugroup_t *ugroup)
 }
 
 
-// Read table of type "pointInElement" from /selectorOnMesh (unstructured) (index: 32-bit signed int, vector: 32-bit signed float)
-char AH5_read_usom_pie_table(hid_t file_id, const char *path, AH5_usom_pie_table_t *usom_pie_table)
-{
-  hsize_t nfields, nrecords, i;
-  char rdata = AH5_FALSE;
+char AH5_read_usom_pie_table(hid_t file_id, const char *path, AH5_usom_pie_table_t *som) {
+  char success = AH5_FALSE;
+  hsize_t nb_fields, size, i, j;
   char **field_names;
   size_t *field_sizes;
   size_t *field_offsets;
   size_t type_size;
-  int field_index1[] = {0};
-  int field_index2[] = {1, 2, 3};
+  int field_index[] = {0, 1, 2, 3};
+  float **vectors;
 
-  if (AH5_path_valid(file_id, path))
-    if (H5TBget_table_info(file_id, path, &nfields, &nrecords) >= 0)
-      if (nfields >= 2 && nfields <=4 && nrecords > 0)
-      {
-        field_names = (char **) malloc((size_t) nfields * sizeof(char *));
-        field_names[0] = (char *) malloc((size_t) nfields * AH5_TABLE_FIELD_NAME_LENGTH * sizeof(char));
-        for (i = 0; i < nfields; i++)
-          field_names[i] = field_names[0] + i * AH5_TABLE_FIELD_NAME_LENGTH;
-        field_sizes = (size_t *) malloc((size_t) nfields * sizeof(size_t));
-        field_offsets = (size_t *) malloc((size_t) nfields * sizeof(size_t));
+  if (!som)
+    return AH5_FALSE;
 
-        if (H5TBget_field_info(file_id, path, field_names, field_sizes, field_offsets, &type_size) >= 0)
-          if (strcmp(field_names[0], "index") == 0)
-          {
-            usom_pie_table->indices = (int *) malloc((size_t) nrecords * sizeof(int));
-            usom_pie_table->vectors = (float **) malloc((size_t) nrecords * sizeof(float *));
-            usom_pie_table->vectors[0] = (float *) malloc((size_t) (nrecords*(nfields-1)) * sizeof(float));
-            for (i = 1; i < nrecords; i++)
-              usom_pie_table->vectors[i] = usom_pie_table->vectors[0] + i * (nfields - 1);
-            if (H5TBread_fields_index(file_id, path, 1, field_index1, 0, nrecords, sizeof(int), field_offsets,
-                                      field_sizes, usom_pie_table->indices) < 0
-                ||
-                H5TBread_fields_index(file_id, path, (nfields - 1), field_index2, 0, nrecords,
-                                      (size_t) (nfields-1)*sizeof(float), field_offsets, field_sizes, usom_pie_table->vectors[0]) < 0)
-            {
-              free(usom_pie_table->vectors[0]);
-              free(usom_pie_table->vectors);
-              free(usom_pie_table->indices);
-            }
-            else
-            {
-              usom_pie_table->nb_points = nrecords;
-              usom_pie_table->nb_dims = (char) nfields - 1;
-              rdata = AH5_TRUE;
-            }
-          }
-        free(field_names[0]);
-        free(field_names);
-        free(field_sizes);
-        free(field_offsets);
+  if (AH5_path_valid(file_id, path) &&
+      H5TBget_table_info(file_id, path, &nb_fields, &size) >= 0 &&
+      nb_fields > 1 && nb_fields < 5 && size > 0) {
+    field_names = (char **)malloc(nb_fields * sizeof(char *));
+    field_names[0] = (char *)malloc(nb_fields * AH5_TABLE_FIELD_NAME_LENGTH * sizeof(char));
+
+    for (i = 1; i < nb_fields; i++)
+      field_names[i] = field_names[0] + i * AH5_TABLE_FIELD_NAME_LENGTH;
+
+    field_sizes = (size_t *)malloc(nb_fields * sizeof(size_t));
+    field_offsets = (size_t *)malloc(nb_fields * sizeof(size_t));
+
+    if (H5TBget_field_info(
+            file_id, path, field_names, field_sizes, field_offsets, &type_size) >= 0 &&
+        strcmp(field_names[0], AH5_F_INDEX) == 0 &&
+        strcmp(field_names[1], AH5_F_V1) == 0 &&
+        (nb_fields < 3 || strcmp(field_names[2], AH5_F_V2) == 0) &&
+        (nb_fields < 4 || strcmp(field_names[3], AH5_F_V3) == 0)) {
+      AH5_init_usom_pie_table(som, size);
+
+      if (nb_fields == 4) {
+        vectors = som->vectors;
+      } else {
+        vectors = (float **)malloc(size * sizeof(float *));
+        vectors[0] = (float *)malloc(size * (nb_fields - 1) * sizeof(float));
+        for (i = 1; i < size; ++i)
+          vectors[i] = vectors[0] + i * (nb_fields - 1);
       }
-  if (!rdata)
-  {
-    AH5_print_err_tble(AH5_C_MESH, path);
-    usom_pie_table->nb_points = 0;
-    usom_pie_table->nb_dims = 0;
-    usom_pie_table->indices = NULL;
-    usom_pie_table->vectors = NULL;
+
+      if (H5TBread_fields_index(
+              file_id, path, 1, field_index, 0, size, sizeof(int),
+              field_offsets, field_sizes, som->indices) < 0
+          ||
+          H5TBread_fields_index(
+              file_id, path, (nb_fields - 1), field_index + 1, 0, size,
+              (nb_fields - 1) * sizeof(float), field_offsets, field_sizes,
+              vectors[0]) < 0) {
+        AH5_free_usom_table(som);
+
+      } else {
+        success = AH5_TRUE;
+
+        if (nb_fields != 4) {
+          // Transfer values
+          for (i = 0; i < size; ++i)
+            for (j = 0; j < nb_fields - 1; ++j)
+              som->vectors[i][j] = vectors[i][j];
+        }
+
+        // Check values
+        for (i = 0; i < size; ++i) {
+          if (som->indices[i] < 0)
+            AH5_log_warn("Selector on mesh read '%s' id %d: invalid index", path, i);
+          for (j = 0; j < nb_fields - 1; ++j)
+            if ((som->vectors[i][j] < 0 && som->vectors[i][j] != -1) ||
+                som->vectors[i][j] > 1)
+              AH5_log_warn("Selector on mesh read '%s' id %d: invalid v%d", path, i, j + 1);
+        }
+      }
+
+      if (nb_fields != 4) {
+        free(vectors[0]);
+        free(vectors);
+      }
+    }
+
+    free(field_names[0]);
+    free(field_names);
+    free(field_sizes);
+    free(field_offsets);
   }
-  return rdata;
+
+  if (!success)
+    AH5_print_err_tble(AH5_C_MESH, path);
+
+  return success;
 }
 
 
-// Read dataset of type "edge" or "face" from /selectorOnMesh (32-bit signed int)
-char AH5_read_usom_ef_table(hid_t file_id, const char *path, AH5_usom_ef_table_t *usom_ef_table)
-{
+char AH5_read_usom_ef_table(hid_t file_id, const char *path, AH5_usom_ef_table_t *som) {
+  char success = AH5_FALSE;
   int nb_dims;
   H5T_class_t type_class;
-  size_t length;
-  char rdata = AH5_FALSE;
+  size_t type_size;
 
-  usom_ef_table->dims[0] = 1;
-  usom_ef_table->dims[1] = 1;
+  if (!som)
+    return AH5_FALSE;
 
-  if (AH5_path_valid(file_id, path))
-    if (H5LTget_dataset_ndims(file_id, path, &nb_dims) >= 0)
-      if (nb_dims == 2)
-        if (H5LTget_dataset_info(file_id, path, usom_ef_table->dims, &type_class, &length) >= 0)
-          if (type_class == H5T_INTEGER && length == 4)
-            if (AH5_read_int_dataset(file_id, path, usom_ef_table->dims[0] * usom_ef_table->dims[1],
-                                     &(usom_ef_table->items)))
-              rdata = AH5_TRUE;
-  if (!rdata)
-  {
+  if (AH5_path_valid(file_id, path) &&
+      H5LTget_dataset_ndims(file_id, path, &nb_dims) >= 0 && nb_dims == 2 &&
+      H5LTget_dataset_info(file_id, path, som->dims, &type_class, &type_size) >= 0 &&
+      type_class == H5T_INTEGER && type_size == 4)
+    success = AH5_read_int_dataset(file_id, path, som->dims[0] * som->dims[1], &(som->items));
+
+  if (!success) {
+    AH5_init_usom_pie_table(som, 0);
     AH5_print_err_dset(AH5_C_MESH, path);
-    usom_ef_table->dims[0] = 0;
-    usom_ef_table->dims[1] = 0;
-    usom_ef_table->items = NULL;
   }
-  return rdata;
+
+  return success;
 }
 
 
-// Read selector on mesh (unstructured mesh)
-char AH5_read_umesh_som_table(hid_t file_id, const char *path, AH5_usom_table_t *usom_table)
+char AH5_read_umesh_som_table(hid_t file_id, const char *path, AH5_usom_table_t *som)
 {
-  return AH5_read_usom_table(file_id, path, usom_table);
+  return AH5_read_usom_table(file_id, path, som);
 }
-char AH5_read_usom_table(hid_t file_id, const char *path, AH5_usom_table_t *usom_table)
-{
-  char *type, rdata = AH5_TRUE;
+char AH5_read_usom_table(hid_t file_id, const char *path, AH5_usom_table_t *som) {
+  char success = AH5_FALSE;
+  char *type;
 
-  usom_table->path = strdup(path);
-  usom_table->type = SOM_INVALID;
+  if (!som)
+    return AH5_FALSE;
 
-  if (AH5_path_valid(file_id, path))
-  {
-    if (AH5_read_str_attr(file_id, path, AH5_A_TYPE, &type))
-    {
-      if (strcmp(type, AH5_V_POINT_IN_ELEMENT) == 0)
-      {
-        usom_table->type = SOM_POINT_IN_ELEMENT;
-        if (!AH5_read_usom_pie_table(file_id, path, &(usom_table->data.pie)))
-          rdata = AH5_FALSE;
+  if (AH5_path_valid(file_id, path)) {
+    if (AH5_read_str_attr(file_id, path, AH5_A_TYPE, &type)) {
+      if (strcmp(type, AH5_V_POINT_IN_ELEMENT) == 0) {
+        AH5_init_usom_table(som, path, 0, SOM_POINT_IN_ELEMENT);
+        success = AH5_read_usom_pie_table(file_id, path, &(som->data.pie));
+
+      } else if (strcmp(type, AH5_V_EDGE) == 0) {
+        AH5_init_usom_table(som, path, 0, SOM_EDGE);
+        success = AH5_read_usom_ef_table(file_id, path, &(som->data.ef));
+
+      } else if (strcmp(type, AH5_V_FACE) == 0) {
+        AH5_init_usom_table(som, path, 0, SOM_FACE);
+        success = AH5_read_usom_ef_table(file_id, path, &(som->data.ef));
       }
-      else if (strcmp(type, AH5_V_EDGE) == 0)
-      {
-        usom_table->type = SOM_EDGE;
-        if (!AH5_read_usom_ef_table(file_id, path, &(usom_table->data.ef)))
-          rdata = AH5_FALSE;
-      }
-      else if (strcmp(type, AH5_V_FACE) == 0)
-      {
-        usom_table->type = SOM_FACE;
-        if (!AH5_read_usom_ef_table(file_id, path, &(usom_table->data.ef)))
-          rdata = AH5_FALSE;
-      }
+
       free(type);
-    }
-    else
-    {
+
+    } else {
       AH5_print_err_attr(AH5_C_MESH, path, AH5_A_TYPE);
-      rdata = AH5_FALSE;
     }
   }
-  else
-  {
+
+  if (!success)
     AH5_print_err_path(AH5_C_MESH, path);
-    rdata = AH5_FALSE;
-  }
-  return rdata;
+
+  return success;
 }
 
 
@@ -1496,6 +1578,8 @@ char AH5_read_umesh(hid_t file_id, const char *path, AH5_umesh_t *umesh)
       path3 = malloc((strlen(path2) + 1) * sizeof(*path3));
       for (i = 0; i < children.nb_children; i++)
       {
+        AH5_init_usom_table(umesh->som_tables + i, NULL, 0, SOM_INVALID);
+
         path3 = realloc(path3, (strlen(path2) + strlen(children.childnames[i]) + 1) * sizeof(*path3));
         strcpy(path3, path2);
         strcat(path3, children.childnames[i]);
@@ -1842,8 +1926,8 @@ char AH5_write_sgroup(hid_t id, const AH5_sgroup_t* sgroup) {
 
 
 typedef struct AH5_ssom_pie_t {
-  unsigned int elements[6];
-  float vectors[3];
+  int element[6];
+  float vector[3];
 } AH5_ssom_pie_t;
 
 char AH5_write_ssom_pie_table(hid_t id, const AH5_ssom_pie_table_t *som) {
@@ -1899,10 +1983,11 @@ char AH5_write_ssom_pie_table(hid_t id, const AH5_ssom_pie_table_t *som) {
           field_names[i][0] = '\0';
 
           if (i < som->nb_dims * 2) {
-            field_offsets[i] = (i == 0) ? 0 : field_offsets[i - 1] + sizeof(int);
+            field_offsets[i] = i * sizeof(int);
             field_types[i] = H5T_NATIVE_UINT;
           } else {
-            field_offsets[i] = field_offsets[i - 1] + sizeof(float);
+            field_offsets[i] = (som->nb_dims * 2) * sizeof(int) +
+                               (i - som->nb_dims * 2) * sizeof(float);
             field_types[i] = H5T_NATIVE_FLOAT;
           }
         }
@@ -1922,9 +2007,9 @@ char AH5_write_ssom_pie_table(hid_t id, const AH5_ssom_pie_table_t *som) {
         data = (AH5_ssom_pie_t *)malloc(som->nb_points * sizeof(AH5_ssom_pie_t));
         for (i = 0; i < som->nb_points; ++i) {
           for (j = 0; j < som->nb_dims; ++j) {
-            data[i].elements[j] = som->elements[i][j];
-            data[i].elements[j + som->nb_dims] = som->elements[i][j + som->nb_dims];
-            data[i].vectors[j] = som->vectors[i][j];
+            data[i].element[j] = som->elements[i][j];
+            data[i].element[j + som->nb_dims] = som->elements[i][j + som->nb_dims];
+            data[i].vector[j] = som->vectors[i][j];
           }
         }
 
@@ -1936,7 +2021,6 @@ char AH5_write_ssom_pie_table(hid_t id, const AH5_ssom_pie_table_t *som) {
           success = AH5_FALSE;
 
         } else {
-          // Get dataset
           // Set pie attribute
           success &= AH5_write_str_attr(
               loc_id, basename, AH5_A_TYPE, AH5_V_POINT_IN_ELEMENT);
@@ -2122,36 +2206,196 @@ char AH5_write_ugroup(hid_t loc_id, const AH5_ugroup_t *ugroup, hsize_t nb_ugrou
   return success;
 }
 
-// Write table of type "pointInElement" from /selectorOnMesh (unstructured) (index: 32-bit signed int, vector: 32-bit signed float)
-char AH5_write_usom_pie_table(hid_t file_id, const AH5_usom_pie_table_t *usom_pie_table)
-{
-  char success = AH5_TRUE;
 
-  AH5_PRINT_ERR_FUNC_NOT_IMPLEMENTED(AH5_C_MESH, "UNKNOWN PATH");
+typedef struct AH5_usom_pie_t {
+  int indice;
+  float vector[3];
+} AH5_usom_pie_t;
+
+char AH5_write_usom_pie_table(hid_t id, const AH5_usom_pie_table_t *som, const char *path) {
+  char success = AH5_TRUE;
+  hsize_t nb_fields, i, j;
+  hid_t loc_id;
+  char* basename;
+  char **field_names;
+  size_t *field_offsets;
+  hid_t *field_types;
+  AH5_usom_pie_t* data;
+
+  if (som && som->nb_dims && som->nb_points) {
+    if (som->indices && som->vectors && som->vectors[0]) {
+      // Check values
+      for (i = 0; i < som->nb_points; ++i) {
+        if (som->indices[i] < 0)
+          AH5_log_warn("Selector on mesh read '%s' id %d: invalid index", path, i);
+        for (j = 0; j < som->nb_dims; ++j)
+          if ((som->vectors[i][j] < 0 && som->vectors[i][j] != -1) ||
+              som->vectors[i][j] > 1)
+            AH5_log_warn("Selector on mesh read '%s' id %d: invalid v%d", path, i, j + 1);
+      }
+
+      // Non empty selector on mesh table
+      basename = AH5_get_name_from_path(path);
+
+      // Open / create selector on mesh node
+      if (AH5_path_valid(id, AH5_CATEGORY_NAME(AH5_G_SELECTOR_ON_MESH))) {
+        loc_id = H5Gopen(
+            id, AH5_CATEGORY_NAME(AH5_G_SELECTOR_ON_MESH), H5P_DEFAULT);
+      } else {
+        loc_id = H5Gcreate(
+            id, AH5_CATEGORY_NAME(AH5_G_SELECTOR_ON_MESH),
+            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      }
+
+      if (loc_id >= 0) {
+        nb_fields = 1 + som->nb_dims;
+
+        // Generate write data
+        field_names = (char **)malloc(nb_fields * sizeof(char *));
+        field_names[0] = (char *)malloc(
+            nb_fields * AH5_TABLE_FIELD_NAME_LENGTH * sizeof(char));
+
+        field_offsets = (size_t *)malloc(nb_fields * sizeof(size_t));
+        field_types = (hid_t *)malloc(nb_fields * sizeof(hid_t));
+
+        for (i = 0; i < nb_fields; ++i) {
+          field_names[i] = field_names[0] + i * AH5_TABLE_FIELD_NAME_LENGTH;
+          field_names[i][0] = '\0';
+
+          if (i == 0) {
+            field_offsets[i] = i * sizeof(int);
+            field_types[i] = H5T_NATIVE_UINT;
+          } else {
+            field_offsets[i] = sizeof(int) + (i - 1) * sizeof(float);
+            field_types[i] = H5T_NATIVE_FLOAT;
+          }
+        }
+
+        // fields: index v1 v2 v3
+        strcat(field_names[0], AH5_F_INDEX);
+        strcat(field_names[1], AH5_F_V1);
+        strcat(field_names[2], AH5_F_V2);
+        strcat(field_names[3], AH5_F_V3);
+
+        // Fill write data
+        data = (AH5_usom_pie_t *)malloc(som->nb_points * sizeof(AH5_usom_pie_t));
+        for (i = 0; i < som->nb_points; ++i) {
+          data[i].indice = som->indices[i];
+          for (j = 0; j < som->nb_dims; ++j)
+            data[i].vector[j] = som->vectors[i][j];
+        }
+
+        // Write selector on mesh table
+        if (H5TBmake_table(
+                basename,  // not used
+                loc_id, basename, nb_fields, som->nb_points, sizeof(AH5_usom_pie_t),
+                field_names, field_offsets, field_types, nb_fields, NULL, 1, data) < 0) {
+          success = AH5_FALSE;
+
+        } else {
+          // Set pie attribute
+          success &= AH5_write_str_attr(
+              loc_id, basename, AH5_A_TYPE, AH5_V_POINT_IN_ELEMENT);
+        }
+
+        free(field_names[0]);
+        free(field_names);
+        free(field_offsets);
+        free(field_types);
+        free(data);
+
+        success &= !HDF5_FAILED(H5Gclose(loc_id));
+
+      } else {
+        success = AH5_FALSE;
+      }
+
+    } else {
+      success = AH5_FALSE;
+    }
+  }
 
   return success;
 }
 
-// Write dataset of type "edge" or "face" from /selectorOnMesh (32-bit signed int)
-char AH5_write_usom_ef_table(hid_t file_id, const AH5_usom_ef_table_t *usom_ef_table)
-{
-  char success = AH5_FALSE;
 
-  AH5_PRINT_ERR_FUNC_NOT_IMPLEMENTED(AH5_C_MESH, "UNKNOWN PATH");
+char AH5_write_usom_ef_table(
+    hid_t id, const AH5_usom_ef_table_t *som, const char *path, AH5_usom_class_t type) {
+  char success = AH5_TRUE;
+  hsize_t nb_fields, i, j;
+  hid_t loc_id;
+  char* basename;
+
+  if (som && som->dims && som->dims[0] && som->dims[1]) {
+    if (som->items) {
+      // Non empty selector on mesh dataset
+      basename = AH5_get_name_from_path(path);
+
+      // Open / create selector on mesh node
+      if (AH5_path_valid(id, AH5_CATEGORY_NAME(AH5_G_SELECTOR_ON_MESH))) {
+        loc_id = H5Gopen(
+            id, AH5_CATEGORY_NAME(AH5_G_SELECTOR_ON_MESH), H5P_DEFAULT);
+      } else {
+        loc_id = H5Gcreate(
+            id, AH5_CATEGORY_NAME(AH5_G_SELECTOR_ON_MESH),
+            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      }
+
+      if (loc_id >= 0) {
+        // Write selector on mesh dataset
+        if (H5LTmake_dataset_int(loc_id, basename, 2, som->dims, som->items) < 0) {
+          success = AH5_FALSE;
+
+        } else {
+          // Set pie attribute
+          if (type == SOM_EDGE) {
+            success &= AH5_write_str_attr(
+                loc_id, basename, AH5_A_TYPE, AH5_V_EDGE);
+          } else if (type == SOM_FACE) {
+            success &= AH5_write_str_attr(
+                loc_id, basename, AH5_A_TYPE, AH5_V_FACE);
+          }
+        }
+
+        success &= !HDF5_FAILED(H5Gclose(loc_id));
+
+      } else {
+        success = AH5_FALSE;
+      }
+
+    } else {
+      success = AH5_FALSE;
+    }
+  }
 
   return success;
 }
 
-// Write selector on mesh (unstructured mesh)
-char AH5_write_umesh_som_table(hid_t file_id, const AH5_usom_table_t *usom_table, hsize_t nb_som)
+
+char AH5_write_umesh_som_table(hid_t file_id, const AH5_usom_table_t *som, hsize_t nb_som)
 {
-  return AH5_write_usom_table(file_id, usom_table, nb_som);
+  int i;
+
+  for (i = 0; i < nb_som; ++i)
+    if (!AH5_write_usom_table(file_id, som))
+      return AH5_FALSE;
+
+  return AH5_TRUE;
 }
-char AH5_write_usom_table(hid_t file_id, const AH5_usom_table_t *usom_table, hsize_t nb_som)
-{
+char AH5_write_usom_table(hid_t id, const AH5_usom_table_t *som) {
   char success = AH5_TRUE;
 
-  AH5_PRINT_ERR_FUNC_NOT_IMPLEMENTED(AH5_C_MESH, "UNKNOWN PATH");
+  switch (som->type) {
+    case SOM_INVALID:
+      break;
+
+    case SOM_POINT_IN_ELEMENT:
+      return AH5_write_usom_pie_table(id, &som->data.pie, som->path);
+
+    case SOM_EDGE:
+    case SOM_FACE:
+      return AH5_write_usom_ef_table(id, &som->data.ef, som->path, som->type);
+  }
 
   return success;
 }
@@ -2159,6 +2403,7 @@ char AH5_write_usom_table(hid_t file_id, const AH5_usom_table_t *usom_table, hsi
 /** Write unstructured mesh */
 char AH5_write_umesh(hid_t msh_id, const AH5_umesh_t *umesh)
 {
+  int i;
   char success = AH5_FALSE;
 
   // Check umesh sanity first
@@ -2194,9 +2439,9 @@ char AH5_write_umesh(hid_t msh_id, const AH5_umesh_t *umesh)
     return success;
 
   // Write selectorOnMesh
-  // FIXME(NMT) not implemented yet...
-  //if (!AH5_write_usom_table(msh, AH5_CATEGORY_NAME(AH5_G_SELECTOR_ON_MESH), umesh->som_tables, umesh->nb_som_tables))
-  //    return AH5_FAILURE;
+  for (i = 0; i < umesh->nb_som_tables; ++i)
+    if (!AH5_write_usom_table(msh_id, umesh->som_tables + i))
+      return success;
 
   success = AH5_TRUE;
   return success;
@@ -2327,62 +2572,62 @@ void AH5_print_smesh(const AH5_smesh_t *smesh, int space)
 
 
 // Print selectorOnMesh table in unstructured mesh
-void AH5_print_umesh_som_table(const AH5_usom_table_t *usom_table, int space)
+void AH5_print_umesh_som_table(const AH5_usom_table_t *som, int space)
 {
-  return AH5_print_usom_table(usom_table, space);
+  return AH5_print_usom_table(som, space);
 }
-void AH5_print_usom_table(const AH5_usom_table_t *usom_table, int space)
+void AH5_print_usom_table(const AH5_usom_table_t *som, int space)
 {
   hsize_t k;
   char dim;
 
-  switch (usom_table->type)
+  switch (som->type)
   {
   case SOM_POINT_IN_ELEMENT:
-    printf("%*sInstance: %s\n", space + 5, "", AH5_get_name_from_path(usom_table->path));
+    printf("%*sInstance: %s\n", space + 5, "", AH5_get_name_from_path(som->path));
     AH5_print_str_attr(AH5_A_TYPE, AH5_V_POINT_IN_ELEMENT, space + 9);
-    for (k = 0; k < usom_table->data.pie.nb_points; k++)
+    for (k = 0; k < som->data.pie.nb_points; k++)
     {
-      dim = usom_table->data.pie.nb_dims;
+      dim = som->data.pie.nb_dims;
       if (dim == 3)
-        if (usom_table->data.pie.vectors[k][2] == -1)
+        if (som->data.pie.vectors[k][2] == -1)
           dim = 2;
       if (dim == 2)
-        if (usom_table->data.pie.vectors[k][1] == -1)
+        if (som->data.pie.vectors[k][1] == -1)
           dim = 1;
 
       switch (dim)
       {
       case 1:
         printf("%*sPoint %lu: index=%i, v1=%f\n", space + 7, "", (long unsigned) k,
-               usom_table->data.pie.indices[k], usom_table->data.pie.vectors[k][0]);
+               som->data.pie.indices[k], som->data.pie.vectors[k][0]);
         break;
       case 2:
         printf("%*sPoint %lu: index=%i, v1=%f, v2=%f\n", space + 7, "", (long unsigned) k,
-               usom_table->data.pie.indices[k], usom_table->data.pie.vectors[k][0],
-               usom_table->data.pie.vectors[k][1]);
+               som->data.pie.indices[k], som->data.pie.vectors[k][0],
+               som->data.pie.vectors[k][1]);
         break;
       case 3:
         printf("%*sPoint %lu: index=%i, v1=%f, v2=%f, v3=%f\n", space + 7, "", (long unsigned) k,
-               usom_table->data.pie.indices[k], usom_table->data.pie.vectors[k][0],
-               usom_table->data.pie.vectors[k][1], usom_table->data.pie.vectors[k][2]);
+               som->data.pie.indices[k], som->data.pie.vectors[k][0],
+               som->data.pie.vectors[k][1], som->data.pie.vectors[k][2]);
         break;
       }
     }
     break;
   case SOM_EDGE:
-    printf("%*sInstance: %s\n", space + 5, "", AH5_get_name_from_path(usom_table->path));
+    printf("%*sInstance: %s\n", space + 5, "", AH5_get_name_from_path(som->path));
     AH5_print_str_attr(AH5_A_TYPE, AH5_V_EDGE, space + 9);
-    for (k = 0; k < usom_table->data.ef.dims[0]; k++)
+    for (k = 0; k < som->data.ef.dims[0]; k++)
       printf("%*sId %lu: element=%i, inner_id=%i\n", space + 7, "", (long unsigned) k,
-             usom_table->data.ef.items[2*k], usom_table->data.ef.items[2*k+1]);
+             som->data.ef.items[2*k], som->data.ef.items[2*k+1]);
     break;
   case SOM_FACE:
-    printf("%*sInstance: %s\n", space + 5, "", AH5_get_name_from_path(usom_table->path));
+    printf("%*sInstance: %s\n", space + 5, "", AH5_get_name_from_path(som->path));
     AH5_print_str_attr(AH5_A_TYPE, AH5_V_FACE, space + 9);
-    for (k = 0; k < usom_table->data.ef.dims[0]; k++)
+    for (k = 0; k < som->data.ef.dims[0]; k++)
       printf("%*sId %lu: element=%i, inner_id=%i\n", space + 7, "", (long unsigned) k,
-             usom_table->data.ef.items[2*k], usom_table->data.ef.items[2*k+1]);
+             som->data.ef.items[2*k], som->data.ef.items[2*k+1]);
     break;
   default:
     break;
@@ -2570,7 +2815,68 @@ void AH5_free_ssom_pie_table(AH5_ssom_pie_table_t *som) {
       som->vectors = NULL;
     }
 
-    AH5_init_ssom_pie_table(som, NULL, 0);
+    som->nb_dims = 0;
+    som->nb_points = 0;
+  }
+}
+
+
+void AH5_free_usom_table(AH5_usom_table_t *som) {
+  if (som) {
+    if (som->path) {
+      free(som->path);
+      som->path = NULL;
+    }
+
+    switch (som->type) {
+      case SOM_INVALID:
+        break;
+
+      case SOM_POINT_IN_ELEMENT:
+        AH5_free_usom_pie_table(&som->data.pie);
+        break;
+
+      case SOM_EDGE:
+      case SOM_FACE:
+        AH5_free_usom_ef_table(&som->data.ef);
+        break;
+    }
+  }
+
+  som->type = SOM_INVALID;
+}
+
+
+void AH5_free_usom_pie_table(AH5_usom_pie_table_t *som) {
+  if (som) {
+    if (som->indices) {
+      free(som->indices);
+      som->indices = NULL;
+    }
+
+    if (som->vectors) {
+      if (som->vectors[0])
+        free(som->vectors[0]);
+
+      free(som->vectors);
+      som->vectors = NULL;
+    }
+
+    som->nb_dims = 0;
+    som->nb_points = 0;
+  }
+}
+
+
+void AH5_free_usom_ef_table(AH5_usom_ef_table_t *som) {
+  if (som) {
+    if (som->items) {
+      free(som->items);
+      som->items = NULL;
+    }
+
+    som->dims[0] = 0;
+    som->dims[1] = 0;
   }
 }
 
