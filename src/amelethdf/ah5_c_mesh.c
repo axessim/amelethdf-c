@@ -2971,23 +2971,9 @@ void AH5_free_smesh(AH5_smesh_t *smesh)
     smesh->nb_groupgroups = 0;
   }
 
-  if (smesh->som_tables != NULL)
-  {
-    for (i = 0; i < smesh->nb_som_tables; i++)
-    {
-      if (smesh->som_tables[i].path != NULL)
-        free(smesh->som_tables[i].path);
-      if (smesh->som_tables[i].elements != NULL)
-      {
-        free(*(smesh->som_tables[i].elements));
-        free(smesh->som_tables[i].elements);
-      }
-      if (smesh->som_tables[i].vectors != NULL)
-      {
-        free(*(smesh->som_tables[i].vectors));
-        free(smesh->som_tables[i].vectors);
-      }
-    }
+  if (smesh->som_tables != NULL) {
+    for (i = 0; i < smesh->nb_som_tables; ++i)
+      AH5_free_ssom_pie_table(smesh->som_tables + i);
     free(smesh->som_tables);
     smesh->som_tables = NULL;
     smesh->nb_som_tables = 0;
@@ -3043,39 +3029,9 @@ void AH5_free_umesh(AH5_umesh_t *umesh)
     umesh->nb_groupgroups = 0;
   }
 
-  if (umesh->som_tables != NULL)
-  {
-    for (i = 0; i < umesh->nb_som_tables; i++)
-    {
-      if (umesh->som_tables[i].path != NULL)
-        free(umesh->som_tables[i].path);
-
-      switch (umesh->som_tables[i].type)
-      {
-      case SOM_POINT_IN_ELEMENT:
-        if (umesh->som_tables[i].data.pie.indices != NULL)
-        {
-          free(umesh->som_tables[i].data.pie.indices);
-        }
-        if (umesh->som_tables[i].data.pie.vectors != NULL)
-        {
-          free(*(umesh->som_tables[i].data.pie.vectors));
-          free(umesh->som_tables[i].data.pie.vectors);
-        }
-        break;
-      case SOM_EDGE:
-        if (umesh->som_tables[i].data.ef.items != NULL)
-          free(umesh->som_tables[i].data.ef.items);
-        break;
-      case SOM_FACE:
-        if (umesh->som_tables[i].data.ef.items != NULL)
-          free(umesh->som_tables[i].data.ef.items);
-        break;
-      default:
-        break;
-      }
-      umesh->som_tables[i].type = SOM_INVALID;
-    }
+  if (umesh->som_tables != NULL) {
+    for (i = 0; i < umesh->nb_som_tables; ++i)
+      AH5_free_usom_table(umesh->som_tables + i);
     free(umesh->som_tables);
     umesh->som_tables = NULL;
     umesh->nb_som_tables = 0;
