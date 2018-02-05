@@ -577,6 +577,7 @@ AH5_umesh_t *AH5_init_umesh(
   AH5_umesh_t *umesh, hsize_t nb_elementnodes, hsize_t nb_elementtypes, hsize_t nb_nodes,
   hsize_t nb_groups, hsize_t nb_groupgroups, hsize_t nb_som_tables)
 {
+  hsize_t i;
   char success = AH5_TRUE;
 
   if (umesh)
@@ -617,11 +618,19 @@ AH5_umesh_t *AH5_init_umesh(
         umesh->groups = (AH5_ugroup_t *)malloc(nb_groups*sizeof(AH5_ugroup_t));
         success &= (umesh->groups != NULL);
 
+        if (success == AH5_TRUE)
+          for (i = 0; i < nb_groups; ++i)
+            AH5_init_ugroup(umesh->groups + i, NULL, 0, AH5_GROUP_ENTITYTYPE_UNDEF);
+
         /*no group of groups if no groups.*/
         if (nb_groupgroups)
         {
           umesh->groupgroups = (AH5_groupgroup_t *)malloc(nb_groupgroups*sizeof(AH5_groupgroup_t));//////////////////////
           success &= (umesh->groupgroups != NULL);
+
+          if (success == AH5_TRUE)
+            for (i = 0; i < nb_groupgroups; ++i)
+              AH5_init_groupgroup(umesh->groupgroups + i, NULL, 0, 0);
         }
       }
 
@@ -630,6 +639,10 @@ AH5_umesh_t *AH5_init_umesh(
       {
         umesh->som_tables = (AH5_usom_table_t *)malloc(nb_som_tables*sizeof(AH5_usom_table_t));
         success &= (umesh->som_tables != NULL);
+
+        if (success == AH5_TRUE)
+          for (i = 0; i < nb_som_tables; ++i)
+            AH5_init_usom_table(umesh->som_tables + i, NULL, 0, SOM_INVALID);
       }
 
       /*release memory in error*/
@@ -786,6 +799,7 @@ AH5_msh_group_t *AH5_init_msh_group(
  */
 AH5_mesh_t *AH5_init_mesh(AH5_mesh_t *mesh, hsize_t nb_groups)
 {
+  hsize_t i;
   if (mesh)
   {
     mesh->nb_groups = nb_groups;
@@ -796,6 +810,9 @@ AH5_mesh_t *AH5_init_mesh(AH5_mesh_t *mesh, hsize_t nb_groups)
       mesh->groups = (AH5_msh_group_t *)malloc(nb_groups*sizeof(AH5_msh_group_t));
       if (mesh->groups == NULL)
         return NULL;
+
+      for (i = 0; i < nb_groups; ++i)
+        AH5_init_msh_group(mesh->groups + i, NULL, 0, 0);
     }
   }
 
@@ -3096,7 +3113,8 @@ void AH5_free_msh_group(AH5_msh_group_t *msh_group)
 {
   hsize_t i;
 
-  free(msh_group->path);
+  if (msh_group->path != NULL)
+    free(msh_group->path);
 
   if (msh_group->msh_instances != NULL)
   {
