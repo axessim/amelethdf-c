@@ -1820,6 +1820,7 @@ char AH5_read_msh_group(hid_t file_id, const char *path, AH5_msh_group_t *msh_gr
     AH5_print_err_path(AH5_C_MESH, path);
     rdata = AH5_FALSE;
   }
+  free(path2);
   return rdata;
 }
 
