@@ -1344,7 +1344,7 @@ char AH5_read_usom_pie_table(hid_t file_id, const char *path, AH5_usom_pie_table
               file_id, path, (nb_fields - 1), field_index + 1, 0, size,
               (nb_fields - 1) * sizeof(float), field_offsets, field_sizes,
               vectors[0]) < 0) {
-        AH5_free_usom_table(som);
+        AH5_free_usom_pie_table(som);
 
       } else {
         success = AH5_TRUE;
@@ -1402,7 +1402,7 @@ char AH5_read_usom_ef_table(hid_t file_id, const char *path, AH5_usom_ef_table_t
     success = AH5_read_int_dataset(file_id, path, som->dims[0] * som->dims[1], &(som->items));
 
   if (!success) {
-    AH5_init_usom_pie_table(som, 0);
+    AH5_init_usom_ef_table(som, 0);
     AH5_print_err_dset(AH5_C_MESH, path);
   }
 
@@ -1961,9 +1961,9 @@ char AH5_write_ssom_pie_table(hid_t id, const AH5_ssom_pie_table_t *som) {
   hsize_t nb_fields, i, j;
   hid_t loc_id;
   char* basename;
-  char **field_names;
-  size_t *field_offsets;
-  hid_t *field_types;
+  char** field_names;
+  size_t* field_offsets;
+  hid_t* field_types;
   AH5_ssom_pie_t* data;
 
   if (som && som->path && som->nb_dims && som->nb_points) {
