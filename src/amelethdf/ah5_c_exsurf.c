@@ -77,7 +77,6 @@ char AH5_read_exs_group (hid_t file_id, const char *path, AH5_exs_group_t *exs_g
         free(children.childnames[i]);
       }
       free(children.childnames);
-      free(path);
     }
   }
   else
