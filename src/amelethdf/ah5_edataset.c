@@ -404,6 +404,7 @@ char AH5_append_Edataset(AH5_Edataset_t *Edataset,
 
     free(ones);
     free(offset);
+    free(block);
   }
   else
   {
@@ -444,6 +445,24 @@ char AH5_free_Edataset(AH5_Edataset_t *Edataset)
   {
     free(Edataset->path);
     Edataset->path = NULL;
+  }
+
+  if(Edataset->nature != NULL)
+  {
+    free(Edataset->nature);
+    Edataset->nature = NULL;
+  }
+
+  if(Edataset->label != NULL)
+  {
+    free(Edataset->label);
+    Edataset->label = NULL;
+  }
+
+  if(Edataset->unit != NULL)
+  {
+    free(Edataset->unit);
+    Edataset->unit = NULL;
   }
 
   Edataset->created = AH5_FALSE;

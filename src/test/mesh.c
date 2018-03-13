@@ -190,6 +190,7 @@ char *test_init_functions()
   mu_assert_eq_ptr("check mesh field", umesh.groups, NULL);
   mu_assert_eq("check mesh field", umesh.nb_som_tables, 0);
   mu_assert_eq_ptr("check mesh field", umesh.som_tables, NULL);
+  AH5_free_umesh(&umesh);
 
   mu_assert_eq_ptr(
     "empty mesh", AH5_init_umesh(&umesh, 0, 0, 3, 0, 0, 0), &umesh);
@@ -203,6 +204,7 @@ char *test_init_functions()
   mu_assert_eq_ptr("check mesh field", umesh.groups, NULL);
   mu_assert_eq("check mesh field", umesh.nb_som_tables, 0);
   mu_assert_eq_ptr("check mesh field", umesh.som_tables, NULL);
+  AH5_free_umesh(&umesh);
 
   mu_assert_eq_ptr(
     "empty mesh", AH5_init_umesh(&umesh, 0, 0, 3, 0, 0, 2), &umesh);

@@ -577,6 +577,7 @@ AH5_umesh_t *AH5_init_umesh(
   AH5_umesh_t *umesh, hsize_t nb_elementnodes, hsize_t nb_elementtypes, hsize_t nb_nodes,
   hsize_t nb_groups, hsize_t nb_groupgroups, hsize_t nb_som_tables)
 {
+  hsize_t i;
   char success = AH5_TRUE;
 
   if (umesh)
@@ -617,11 +618,19 @@ AH5_umesh_t *AH5_init_umesh(
         umesh->groups = (AH5_ugroup_t *)malloc(nb_groups*sizeof(AH5_ugroup_t));
         success &= (umesh->groups != NULL);
 
+        if (success == AH5_TRUE)
+          for (i = 0; i < nb_groups; ++i)
+            AH5_init_ugroup(umesh->groups + i, NULL, 0, AH5_GROUP_ENTITYTYPE_UNDEF);
+
         /*no group of groups if no groups.*/
         if (nb_groupgroups)
         {
           umesh->groupgroups = (AH5_groupgroup_t *)malloc(nb_groupgroups*sizeof(AH5_groupgroup_t));//////////////////////
           success &= (umesh->groupgroups != NULL);
+
+          if (success == AH5_TRUE)
+            for (i = 0; i < nb_groupgroups; ++i)
+              AH5_init_groupgroup(umesh->groupgroups + i, NULL, 0, 0);
         }
       }
 
@@ -630,6 +639,10 @@ AH5_umesh_t *AH5_init_umesh(
       {
         umesh->som_tables = (AH5_usom_table_t *)malloc(nb_som_tables*sizeof(AH5_usom_table_t));
         success &= (umesh->som_tables != NULL);
+
+        if (success == AH5_TRUE)
+          for (i = 0; i < nb_som_tables; ++i)
+            AH5_init_usom_table(umesh->som_tables + i, NULL, 0, SOM_INVALID);
       }
 
       /*release memory in error*/
@@ -786,6 +799,7 @@ AH5_msh_group_t *AH5_init_msh_group(
  */
 AH5_mesh_t *AH5_init_mesh(AH5_mesh_t *mesh, hsize_t nb_groups)
 {
+  hsize_t i;
   if (mesh)
   {
     mesh->nb_groups = nb_groups;
@@ -796,6 +810,9 @@ AH5_mesh_t *AH5_init_mesh(AH5_mesh_t *mesh, hsize_t nb_groups)
       mesh->groups = (AH5_msh_group_t *)malloc(nb_groups*sizeof(AH5_msh_group_t));
       if (mesh->groups == NULL)
         return NULL;
+
+      for (i = 0; i < nb_groups; ++i)
+        AH5_init_msh_group(mesh->groups + i, NULL, 0, 0);
     }
   }
 
@@ -1327,7 +1344,7 @@ char AH5_read_usom_pie_table(hid_t file_id, const char *path, AH5_usom_pie_table
               file_id, path, (nb_fields - 1), field_index + 1, 0, size,
               (nb_fields - 1) * sizeof(float), field_offsets, field_sizes,
               vectors[0]) < 0) {
-        AH5_free_usom_table(som);
+        AH5_free_usom_pie_table(som);
 
       } else {
         success = AH5_TRUE;
@@ -1385,7 +1402,7 @@ char AH5_read_usom_ef_table(hid_t file_id, const char *path, AH5_usom_ef_table_t
     success = AH5_read_int_dataset(file_id, path, som->dims[0] * som->dims[1], &(som->items));
 
   if (!success) {
-    AH5_init_usom_pie_table(som, 0);
+    AH5_init_usom_ef_table(som, 0);
     AH5_print_err_dset(AH5_C_MESH, path);
   }
 
@@ -1803,6 +1820,7 @@ char AH5_read_msh_group(hid_t file_id, const char *path, AH5_msh_group_t *msh_gr
     AH5_print_err_path(AH5_C_MESH, path);
     rdata = AH5_FALSE;
   }
+  free(path2);
   return rdata;
 }
 
@@ -1943,9 +1961,9 @@ char AH5_write_ssom_pie_table(hid_t id, const AH5_ssom_pie_table_t *som) {
   hsize_t nb_fields, i, j;
   hid_t loc_id;
   char* basename;
-  char **field_names;
-  size_t *field_offsets;
-  hid_t *field_types;
+  char** field_names;
+  size_t* field_offsets;
+  hid_t* field_types;
   AH5_ssom_pie_t* data;
 
   if (som && som->path && som->nb_dims && som->nb_points) {
@@ -3096,7 +3114,8 @@ void AH5_free_msh_group(AH5_msh_group_t *msh_group)
 {
   hsize_t i;
 
-  free(msh_group->path);
+  if (msh_group->path != NULL)
+    free(msh_group->path);
 
   if (msh_group->msh_instances != NULL)
   {
