@@ -78,24 +78,24 @@ int AH5_read_group_entitytype(
 {
   int dimension = -1;
 
-  if (strcmp(ctype, AH5_V_NODE) == 0)
+  if (AH5_strcmp(ctype, AH5_V_NODE) == 0)
   {
     *entitytype = AH5_GROUP_NODE;
     dimension = 0;
   }
   else
   {
-    if (strcmp(centitytype, AH5_V_EDGE) == 0)
+    if (AH5_strcmp(centitytype, AH5_V_EDGE) == 0)
     {
       *entitytype = AH5_GROUP_EDGE;
       dimension = 1;
     }
-    else if (strcmp(centitytype, AH5_V_FACE) == 0)
+    else if (AH5_strcmp(centitytype, AH5_V_FACE) == 0)
     {
       *entitytype = AH5_GROUP_FACE;
       dimension = 2;
     }
-    else if (strcmp(centitytype, AH5_V_VOLUME) == 0)
+    else if (AH5_strcmp(centitytype, AH5_V_VOLUME) == 0)
     {
       *entitytype = AH5_GROUP_VOLUME;
       dimension = 3;
@@ -911,7 +911,7 @@ char AH5_read_sgroup(hid_t file_id, const char *path, AH5_sgroup_t *sgroup)
     }
     if (!AH5_read_str_attr(file_id, path, AH5_A_ENTITY_TYPE, &entitytype))
     {
-      if (strcmp(type, AH5_V_NODE) != 0)
+      if (AH5_strcmp(type, AH5_V_NODE) != 0)
       {
         AH5_print_err_attr(AH5_C_MESH, path, AH5_A_ENTITY_TYPE);
         success2 = AH5_FALSE;
@@ -1014,26 +1014,26 @@ char AH5_read_ssom_pie_table(hid_t file_id, const char *path, AH5_ssom_pie_table
     if (H5TBget_field_info(
             file_id, path, field_names, field_sizes, field_offsets, &type_size) >= 0 &&
         ((nb_fields == 9 &&
-          strcmp(field_names[0], AH5_F_IMIN) == 0 &&
-          strcmp(field_names[1], AH5_F_JMIN) == 0 &&
-          strcmp(field_names[2], AH5_F_KMIN) == 0 &&
-          strcmp(field_names[3], AH5_F_IMAX) == 0 &&
-          strcmp(field_names[4], AH5_F_JMAX) == 0 &&
-          strcmp(field_names[5], AH5_F_KMAX) == 0 &&
-          strcmp(field_names[6], AH5_F_V1) == 0 &&
-          strcmp(field_names[7], AH5_F_V2) == 0 &&
-          strcmp(field_names[8], AH5_F_V3) == 0) ||
+          AH5_strcmp(field_names[0], AH5_F_IMIN) == 0 &&
+          AH5_strcmp(field_names[1], AH5_F_JMIN) == 0 &&
+          AH5_strcmp(field_names[2], AH5_F_KMIN) == 0 &&
+          AH5_strcmp(field_names[3], AH5_F_IMAX) == 0 &&
+          AH5_strcmp(field_names[4], AH5_F_JMAX) == 0 &&
+          AH5_strcmp(field_names[5], AH5_F_KMAX) == 0 &&
+          AH5_strcmp(field_names[6], AH5_F_V1) == 0 &&
+          AH5_strcmp(field_names[7], AH5_F_V2) == 0 &&
+          AH5_strcmp(field_names[8], AH5_F_V3) == 0) ||
          (nb_fields == 6 &&
-          strcmp(field_names[0], AH5_F_IMIN) == 0 &&
-          strcmp(field_names[1], AH5_F_JMIN) == 0 &&
-          strcmp(field_names[2], AH5_F_IMAX) == 0 &&
-          strcmp(field_names[3], AH5_F_JMAX) == 0 &&
-          strcmp(field_names[4], AH5_F_V1) == 0 &&
-          strcmp(field_names[5], AH5_F_V2) == 0) ||
+          AH5_strcmp(field_names[0], AH5_F_IMIN) == 0 &&
+          AH5_strcmp(field_names[1], AH5_F_JMIN) == 0 &&
+          AH5_strcmp(field_names[2], AH5_F_IMAX) == 0 &&
+          AH5_strcmp(field_names[3], AH5_F_JMAX) == 0 &&
+          AH5_strcmp(field_names[4], AH5_F_V1) == 0 &&
+          AH5_strcmp(field_names[5], AH5_F_V2) == 0) ||
          (nb_fields == 3 &&
-          strcmp(field_names[0], AH5_F_IMIN) == 0 &&
-          strcmp(field_names[1], AH5_F_IMAX) == 0 &&
-          strcmp(field_names[2], AH5_F_V1) == 0))) {
+          AH5_strcmp(field_names[0], AH5_F_IMIN) == 0 &&
+          AH5_strcmp(field_names[1], AH5_F_IMAX) == 0 &&
+          AH5_strcmp(field_names[2], AH5_F_V1) == 0))) {
       AH5_init_ssom_pie_table(som, path, nb_points);
 
       nb_dims = nb_fields / 3;
@@ -1215,7 +1215,7 @@ char AH5_read_smesh(hid_t file_id, const char *path, AH5_smesh_t *smesh)
         strcpy(path3, path2);
         strcat(path3, children.childnames[i]);
         if (AH5_read_str_attr(file_id, path3, AH5_A_TYPE, &type)) {
-          if (strcmp(type,AH5_V_POINT_IN_ELEMENT) == 0)
+          if (AH5_strcmp(type,AH5_V_POINT_IN_ELEMENT) == 0)
             success = AH5_read_ssom_pie_table(file_id, path3, smesh->som_tables + i);
           free(type);
         }
@@ -1274,7 +1274,7 @@ char AH5_read_ugroup(hid_t file_id, const char *path, AH5_ugroup_t *ugroup)
       //      Does not forgot to update free function.
       if(!AH5_read_str_attr(file_id, path, AH5_A_ENTITY_TYPE, &entitytype))
       {
-        if (strcmp(type, AH5_V_NODE) != 0)
+        if (AH5_strcmp(type, AH5_V_NODE) != 0)
         {
           AH5_print_err_attr(AH5_C_MESH, path, AH5_A_ENTITY_TYPE);
           rdata = AH5_FALSE;
@@ -1321,10 +1321,10 @@ char AH5_read_usom_pie_table(hid_t file_id, const char *path, AH5_usom_pie_table
 
     if (H5TBget_field_info(
             file_id, path, field_names, field_sizes, field_offsets, &type_size) >= 0 &&
-        strcmp(field_names[0], AH5_F_INDEX) == 0 &&
-        strcmp(field_names[1], AH5_F_V1) == 0 &&
-        (nb_fields < 3 || strcmp(field_names[2], AH5_F_V2) == 0) &&
-        (nb_fields < 4 || strcmp(field_names[3], AH5_F_V3) == 0)) {
+        AH5_strcmp(field_names[0], AH5_F_INDEX) == 0 &&
+        AH5_strcmp(field_names[1], AH5_F_V1) == 0 &&
+        (nb_fields < 3 || AH5_strcmp(field_names[2], AH5_F_V2) == 0) &&
+        (nb_fields < 4 || AH5_strcmp(field_names[3], AH5_F_V3) == 0)) {
       AH5_init_usom_pie_table(som, size);
 
       if (nb_fields == 4) {
@@ -1423,15 +1423,15 @@ char AH5_read_usom_table(hid_t file_id, const char *path, AH5_usom_table_t *som)
 
   if (AH5_path_valid(file_id, path)) {
     if (AH5_read_str_attr(file_id, path, AH5_A_TYPE, &type)) {
-      if (strcmp(type, AH5_V_POINT_IN_ELEMENT) == 0) {
+      if (AH5_strcmp(type, AH5_V_POINT_IN_ELEMENT) == 0) {
         AH5_init_usom_table(som, path, 0, SOM_POINT_IN_ELEMENT);
         success = AH5_read_usom_pie_table(file_id, path, &(som->data.pie));
 
-      } else if (strcmp(type, AH5_V_EDGE) == 0) {
+      } else if (AH5_strcmp(type, AH5_V_EDGE) == 0) {
         AH5_init_usom_table(som, path, 0, SOM_EDGE);
         success = AH5_read_usom_ef_table(file_id, path, &(som->data.ef));
 
-      } else if (strcmp(type, AH5_V_FACE) == 0) {
+      } else if (AH5_strcmp(type, AH5_V_FACE) == 0) {
         AH5_init_usom_table(som, path, 0, SOM_FACE);
         success = AH5_read_usom_ef_table(file_id, path, &(som->data.ef));
       }
@@ -1639,13 +1639,13 @@ char AH5_read_msh_instance(hid_t file_id, const char *path, AH5_msh_instance_t *
   {
     if (AH5_read_str_attr(file_id, path, AH5_A_TYPE, &type))
     {
-      if (strcmp(type, AH5_V_STRUCTURED) == 0)
+      if (AH5_strcmp(type, AH5_V_STRUCTURED) == 0)
       {
         msh_instance->type = MSH_STRUCTURED;
         if (!AH5_read_smesh(file_id, path, &(msh_instance->data.structured)))
           rdata = AH5_FALSE;
       }
-      else if (strcmp(type, AH5_V_UNSTRUCTURED) == 0)
+      else if (AH5_strcmp(type, AH5_V_UNSTRUCTURED) == 0)
       {
         msh_instance->type = MSH_UNSTRUCTURED;
         if (!AH5_read_umesh(file_id, path, &(msh_instance->data.unstructured)))
@@ -1653,8 +1653,8 @@ char AH5_read_msh_instance(hid_t file_id, const char *path, AH5_msh_instance_t *
       }
       else
       {
-        printf("***** ERROR(%s): Unexpected attribute value of \"%s@%s\". *****\n\n", AH5_C_MESH, path,
-               AH5_A_TYPE);
+        printf("***** ERROR(%s): Unexpected attribute value of \"%s@%s=%s\". *****\n\n",
+               AH5_C_MESH, path, AH5_A_TYPE, type);
         rdata = AH5_FALSE;
       }
       free(type);
@@ -1726,13 +1726,13 @@ char AH5_read_mlk_instance(hid_t file_id, const char *path, AH5_mlk_instance_t *
 
     if (rdata)
     {
-      if (strcmp(type, AH5_V_NODE))
+      if (AH5_strcmp(type, AH5_V_NODE))
         mlk_instance->type = MSHLNK_NODE;
-      else if (strcmp(type, AH5_V_EDGE))
+      else if (AH5_strcmp(type, AH5_V_EDGE))
         mlk_instance->type = MSHLNK_EDGE;
-      else if (strcmp(type, AH5_V_FACE))
+      else if (AH5_strcmp(type, AH5_V_FACE))
         mlk_instance->type = MSHLNK_FACE;
-      else if (strcmp(type, AH5_V_VOLUME))
+      else if (AH5_strcmp(type, AH5_V_VOLUME))
         mlk_instance->type = MSHLNK_VOLUME;
     }
     else
@@ -1769,7 +1769,7 @@ char AH5_read_msh_group(hid_t file_id, const char *path, AH5_msh_group_t *msh_gr
     children = AH5_read_children_name(file_id, path);
     msh_group->nb_msh_instances = children.nb_children;
     for (i = 0; i < children.nb_children; i++)
-      if (strcmp(children.childnames[i], AH5_G_MESH_LINK) == 0)
+      if (AH5_strcmp(children.childnames[i], AH5_G_MESH_LINK) == 0)
         msh_group->nb_msh_instances--;    // do not count /meshLink
     if (children.nb_children > 0)
     {
@@ -1778,7 +1778,7 @@ char AH5_read_msh_group(hid_t file_id, const char *path, AH5_msh_group_t *msh_gr
       path2 = malloc((strlen(path) + 1) * sizeof(*path2));
       for (i = 0; i < children.nb_children; i++)
       {
-        if (strcmp(children.childnames[i], AH5_G_MESH_LINK) != 0)
+        if (AH5_strcmp(children.childnames[i], AH5_G_MESH_LINK) != 0)
         {
           path2 = realloc(path2, (strlen(path) + strlen(children.childnames[i]) + 1) * sizeof(*path2));
           strcpy(path2, path);
@@ -2219,7 +2219,7 @@ char AH5_write_ugroup(hid_t loc_id, const AH5_ugroup_t *ugroup, hsize_t nb_ugrou
         AH5_write_group_entitytype(ugroup[i].entitytype, &ctype, &centitytype);
         if (AH5_write_str_attr(grp, basename, AH5_A_TYPE, ctype))
           success = AH5_TRUE;
-        if (strcmp(ctype, AH5_V_NODE))
+        if (AH5_strcmp(ctype, AH5_V_NODE))
           success = AH5_write_str_attr(grp, basename, AH5_A_ENTITY_TYPE, centitytype);
       }
       if (!success)

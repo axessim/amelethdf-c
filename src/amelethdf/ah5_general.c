@@ -501,3 +501,15 @@ char *AH5_get_base_from_path(const char *path)
   free(temp);
   return rdata;
 }
+
+
+// Compares characters of the C string str1 to those of the C string str2.
+// second is AH5 category or parameter
+//
+// Property:
+// - ignore null cher term
+//
+int AH5_strcmp(const char * str1, const char * str2)
+{
+  return strncmp(str1, str2, strlen(str2));
+}

@@ -185,6 +185,8 @@ AH5_PUBLIC char *AH5_join_path(char *base, const char *head);
 AH5_PUBLIC char *AH5_trim_path(char *path);
 AH5_PUBLIC char AH5_setpath(char **dest, const char *src);
 
+AH5_PUBLIC int AH5_strcmp(const char * str1, const char * str2);
+
 //AH5_PUBLIC size_t AH5_max_str_len2(const char* a, const char* b);
 //AH5_PUBLIC size_t AH5_max_str_len3(const char* a, const char* b, const char* c);
 //AH5_PUBLIC size_t AH5_max_str_len5(const char* a, const char* b, const char* c,
