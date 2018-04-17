@@ -51,7 +51,7 @@ char AH5_read_lbl_dataset(hid_t file_id, const char *path, AH5_lbl_dataset_t *lb
 // Read label category (all datasets)
 char AH5_read_label(hid_t file_id, AH5_label_t *label)
 {
-  char path[AH5_ABSOLUTE_PATH_LENGTH], rdata = AH5_TRUE;
+  char *path, rdata = AH5_TRUE;
   AH5_children_t children;
   hsize_t i;
 
@@ -63,10 +63,12 @@ char AH5_read_label(hid_t file_id, AH5_label_t *label)
     label->nb_datasets = children.nb_children;
     if (children.nb_children > 0)
     {
+      path = malloc((strlen(AH5_C_LABEL) + 1) * sizeof(*path));
       label->datasets = (AH5_lbl_dataset_t *) malloc((size_t) children.nb_children * sizeof(
                           AH5_lbl_dataset_t));
       for (i = 0; i < children.nb_children; i++)
       {
+        path = realloc(path, (strlen(AH5_C_LABEL) + strlen(children.childnames[i]) + 1) * sizeof(*path));
         strcpy(path, AH5_C_LABEL);
         strcat(path, children.childnames[i]);
         if(!AH5_read_lbl_dataset(file_id, path, label->datasets + i))
@@ -74,6 +76,7 @@ char AH5_read_label(hid_t file_id, AH5_label_t *label)
         free(children.childnames[i]);
       }
       free(children.childnames);
+      free(path);
     }
   }
   else

@@ -4,6 +4,8 @@
 #include <stdio.h>
 
 #include "utest.h"
+
+#define AH5_USED_DEPRECIATED_NAME_LENGTH
 #include <ah5.h>
 
 //! Test suite counter.

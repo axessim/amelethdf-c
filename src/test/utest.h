@@ -153,6 +153,7 @@ char *__message__;
 /**
  * Define the HDF5 diff executable
  */
+// TODO(XXX): avoid the use of h5diff, test fails when bin not installed
 #if defined(_MSC_VER)
 # define H5DIFF "h5diffdll"
 #else
@@ -189,8 +190,9 @@ hid_t AH5_build_test_file_from_name(const char *name, const char *ext)
 {
   char *file_name;
   hid_t file_id;
+  size_t size = (strlen(name) + strlen(ext) + 1)* sizeof(char);
 
-  file_name = (char *)malloc((strlen(name) + strlen(ext) + 1)* sizeof(char));
+  file_name = (char *)malloc(size);
   strcpy(file_name, name);
   strcat(file_name, ext);
 

@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #if WIN32
 #define snprintf sprintf_s
@@ -625,7 +626,7 @@ char AH5_read_ft_generalrationalfunction (hid_t file_id, const char *path,
 char AH5_read_ft_rational (hid_t file_id, const char *path, AH5_rational_t *rational)
 {
   char mandatory[][AH5_ATTR_LENGTH] = {AH5_A_FLOATING_TYPE};
-  char path2[AH5_ABSOLUTE_PATH_LENGTH];
+  char *path2;
   char *buf, rdata = AH5_FALSE;
   hsize_t i, invalid_nb = -1;
   char invalid = AH5_FALSE;
@@ -634,9 +635,11 @@ char AH5_read_ft_rational (hid_t file_id, const char *path, AH5_rational_t *rati
   size_t length;
   int nb_dims;
 
+  path2 = malloc((strlen(path) + strlen(AH5_G_FUNCTION) + 1) * sizeof(*path2));
   strcpy(path2, path);
   strcat(path2, AH5_G_FUNCTION);
   children = AH5_read_children_name(file_id, path2);
+  free(path2);
   rational->nb_functions = children.nb_children;
   if (children.nb_children > 0)
   {
@@ -646,6 +649,8 @@ char AH5_read_ft_rational (hid_t file_id, const char *path, AH5_rational_t *rati
     {
       if (!invalid)
       {
+        path2 = malloc((strlen(path) + strlen(AH5_G_FUNCTION) + strlen(children.childnames[i]) + 1)
+                       * sizeof(*path2));
         strcpy(path2, path);
         strcat(path2, AH5_G_FUNCTION);
         strcat(path2, children.childnames[i]);
@@ -679,6 +684,7 @@ char AH5_read_ft_rational (hid_t file_id, const char *path, AH5_rational_t *rati
           buf = NULL;
         }
       }
+      free(path2);
       free(children.childnames[i]);
     }
     free(children.childnames);
@@ -705,6 +711,7 @@ char AH5_read_ft_rational (hid_t file_id, const char *path, AH5_rational_t *rati
     else
     {
       // Read rational/data
+      path2 = malloc((strlen(path) + strlen(AH5_G_DATA) + 1) * sizeof(*path2));
       strcpy(path2, path);
       strcat(path2, AH5_G_DATA);
       if (AH5_path_valid(file_id, path2))
@@ -715,6 +722,7 @@ char AH5_read_ft_rational (hid_t file_id, const char *path, AH5_rational_t *rati
                 if (AH5_read_str_dataset(file_id, path2, (rational->dims[0]) * (rational->dims[1]), length,
                                          &(rational->data)))
                   rdata = AH5_TRUE;
+      free(path2);
     }
   }
   if (rdata)
@@ -724,7 +732,7 @@ char AH5_read_ft_rational (hid_t file_id, const char *path, AH5_rational_t *rati
                        sizeof(mandatory)/AH5_ATTR_LENGTH);
   }
   else
-    printf("***** ERROR: Cannot read dataset \"%s\". *****\n\n", path2);
+    printf("***** ERROR: Cannot read dataset \"%s\". *****\n\n", path);
   return rdata;
 }
 
@@ -787,28 +795,31 @@ char AH5_read_ft_dataset (hid_t file_id, const char *path, AH5_dataset_t *datase
 char AH5_read_ft_arrayset (hid_t file_id, const char *path, AH5_arrayset_t *arrayset)
 {
   char mandatory[][AH5_ATTR_LENGTH] = {AH5_A_FLOATING_TYPE};
-  char path2[AH5_ABSOLUTE_PATH_LENGTH];
+  char *path2;
   hsize_t i, invalid_nb = -1;
   char invalid = AH5_FALSE;
   char rdata = AH5_FALSE;
   AH5_children_t children;
 
-  strcpy(path2, path);
-  strcat(path2, AH5_G_DATA);
+  path2 = malloc((strlen(path) + strlen(AH5_G_DATA) + 1) * sizeof(*path2));
+  strncpy(path2, path, strlen(path) + 1);
+  strncat(path2, AH5_G_DATA, strlen(AH5_G_DATA));
   if (AH5_read_ft_dataset(file_id, path2, &(arrayset->data)))
   {
-    strcpy(path2, path);
-    strcat(path2, AH5_G_DS);
+    strncpy(path2, path, strlen(path) + 1);
+    strncat(path2, AH5_G_DS, strlen(AH5_G_DS));
     children = AH5_read_children_name(file_id, path2);
     arrayset->nb_dims = children.nb_children;
-    arrayset->dims = (AH5_vector_t *) malloc((size_t) children.nb_children * sizeof(AH5_vector_t));
+    arrayset->dims = malloc((size_t) children.nb_children * sizeof(*arrayset->dims));
     for (i = 0; i < children.nb_children; i++)
     {
       if (!invalid)
       {
-        strcpy(path2, path);
-        strcat(path2, AH5_G_DS);
-        strcat(path2, children.childnames[i]);
+        path2 = realloc(path2, (strlen(path) + strlen(AH5_G_DS) +
+                                strlen(children.childnames[i]) + 1) * sizeof(*path2));
+        strncpy(path2, path, strlen(path) + 1);
+        strncat(path2, AH5_G_DS, strlen(AH5_G_DS));
+        strncat(path2, children.childnames[i], strlen(children.childnames[i]));
         if(!AH5_read_ft_vector(file_id, path2, arrayset->dims + i))
         {
           invalid_nb = i;
@@ -828,6 +839,7 @@ char AH5_read_ft_arrayset (hid_t file_id, const char *path, AH5_arrayset_t *arra
     else
       rdata = AH5_TRUE;
   }
+  free(path2);
   if (rdata)
   {
     arrayset->path = strdup(path);
@@ -1232,7 +1244,7 @@ char AH5_write_ft_arrayset (hid_t file_id, AH5_arrayset_t *arrayset)
 {
   char success = AH5_FALSE;
 
-  char path2[AH5_ABSOLUTE_PATH_LENGTH], dimname[AH5_ABSOLUTE_PATH_LENGTH];
+  char *path2, dimname[7];
   char *tmp, *tmp2;
 
   unsigned int i;
@@ -1244,11 +1256,14 @@ char AH5_write_ft_arrayset (hid_t file_id, AH5_arrayset_t *arrayset)
     could be checked to raise warning.
   */
 
+  /* The number of dimension are limited to 99 (two digits). */
+
 
   if (AH5_init_floatingtype(file_id, arrayset->path) && arrayset->nb_dims > 0)
   {
     if (H5Gcreate(file_id, arrayset->path, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT) >= 0)
     {
+      path2 = malloc((strlen(arrayset->path) + strlen(AH5_G_DATA) + 1) * sizeof(*path2));
       strcpy(path2, arrayset->path);
       strcat(path2, AH5_G_DATA);
       tmp = arrayset->data.path;
@@ -1256,6 +1271,7 @@ char AH5_write_ft_arrayset (hid_t file_id, AH5_arrayset_t *arrayset)
 
       if (AH5_write_ft_dataset(file_id, &(arrayset->data)))
       {
+        path2 = malloc((strlen(arrayset->path) + strlen(AH5_G_DS) + 7) * sizeof(*path2));
         strcpy(path2, arrayset->path);
         strcat(path2, AH5_G_DS);
         if (H5Gcreate(file_id, path2, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT) >= 0)
@@ -1263,6 +1279,7 @@ char AH5_write_ft_arrayset (hid_t file_id, AH5_arrayset_t *arrayset)
           success = AH5_TRUE;
           for (i = 0; i < arrayset->nb_dims && success; ++i)
           {
+            assert(i < 99);
             sprintf(dimname, "/dim%d", i + 1);
             strcpy(path2, arrayset->path);
             strcat(path2, AH5_G_DS);
@@ -1273,8 +1290,10 @@ char AH5_write_ft_arrayset (hid_t file_id, AH5_arrayset_t *arrayset)
             arrayset->dims[i].path = tmp2;
           }
         }
+        free(path2);
       }
 
+      free(arrayset->data.path);
       arrayset->data.path = tmp;
     }
   }

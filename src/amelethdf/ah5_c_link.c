@@ -95,7 +95,7 @@ char AH5_read_lnk_instance (hid_t file_id, const char *path, AH5_lnk_instance_t 
 // Read link group (group of instances)
 char AH5_read_lnk_group (hid_t file_id, const char *path, AH5_lnk_group_t *lnk_group)
 {
-  char path2[AH5_ABSOLUTE_PATH_LENGTH], rdata = AH5_TRUE;
+  char *path2, rdata = AH5_TRUE;
   /*    char mandatory[][AH5_ATTR_LENGTH] = {}; */
   AH5_children_t children;
   hsize_t i;
@@ -114,11 +114,13 @@ char AH5_read_lnk_group (hid_t file_id, const char *path, AH5_lnk_group_t *lnk_g
                                AH5_lnk_instance_t));
       for (i = 0; i < children.nb_children; i++)
       {
+        path2 = malloc((strlen(path) + strlen(children.childnames[i]) + 1) * sizeof(*path2));
         strcpy(path2, path);
         strcat(path2, children.childnames[i]);
         if (!AH5_read_lnk_instance(file_id, path2, lnk_group->instances + i))
           rdata = AH5_FALSE;
         free(children.childnames[i]);
+        free(path2);
       }
       free(children.childnames);
     }
@@ -135,7 +137,7 @@ char AH5_read_lnk_group (hid_t file_id, const char *path, AH5_lnk_group_t *lnk_g
 // Read link category (all groups/instances)
 char AH5_read_link (hid_t file_id, AH5_link_t *link)
 {
-  char path[AH5_ABSOLUTE_PATH_LENGTH], rdata = AH5_TRUE;
+  char *path, rdata = AH5_TRUE;
   AH5_children_t children;
   hsize_t i;
 
@@ -150,11 +152,13 @@ char AH5_read_link (hid_t file_id, AH5_link_t *link)
       link->groups = (AH5_lnk_group_t *) malloc((size_t) children.nb_children * sizeof(AH5_lnk_group_t));
       for (i = 0; i < children.nb_children; i++)
       {
+        path = malloc((strlen(AH5_C_LINK) + strlen(children.childnames[i]) + 1) * sizeof(*path));
         strcpy(path, AH5_C_LINK);
         strcat(path, children.childnames[i]);
         if (!AH5_read_lnk_group(file_id, path, link->groups + i))
           rdata = AH5_FALSE;
         free(children.childnames[i]);
+        free(path);
       }
       free(children.childnames);
     }

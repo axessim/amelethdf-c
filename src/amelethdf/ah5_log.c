@@ -146,3 +146,56 @@ int AH5_check()
 {
   return AH5_count_log(eAH5_WARN) == 0;
 }
+
+
+void AH5_print_err_dset(const char *category, const char *path)
+{
+  AH5_log_error("(%s): Cannot read dataset \"%s\".", category, path);
+}
+
+
+void AH5_print_err_tble(const char *category, const char *path)
+{
+  AH5_log_error("(%s): Cannot read table \"%s\".", category, path);
+}
+
+
+void AH5_print_err_attr(const char *category, const char *path, const char *attr_name)
+{
+  AH5_log_error("(%s): Cannot read mandatory attribute \"%s[@%s]\".",
+                category, path, attr_name);
+}
+
+
+void AH5_print_err_path(const char *category, const char *path)
+{
+  AH5_log_error("(%s): Cannot read path \"%s\".", category, path);
+}
+
+
+void AH5_print_err_inv_attr(const char *category, const char *path, const char *attr_name)
+{
+  AH5_log_error("(%s): Invalid attribute value in \"%s[@%s]\".",
+                category, path, attr_name);
+}
+
+
+void AH5_print_err_func_not_implemented(const char *category, const char *path,
+                                        const char *func_name)
+{
+  AH5_log_error("(%s): Problem in %s... function '%s' not implemented yet!",
+                category, path, func_name);
+}
+
+
+void AH5_print_wrn_attr(const char *category, const char *path, const char *attr_name)
+{
+  AH5_log_warn("(%s): Invalid attribute value in \"%s[@%s]\".",
+               category, path, attr_name);
+}
+
+
+void AH5_print_wrn_outputs(const char *path)
+{
+  AH5_log_warn("Ths simulation \"%s\" does not contains outputs.", path);
+}

@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include <ah5.h>
+#include <hdf5.h>
 #include "utest.h"
 
 //! Test suite counter.
@@ -13,21 +14,24 @@ int tests_run = 0;
 void build_umesh_1(AH5_umesh_t *umesh)
 {
   int i;
+  AH5_usom_table_t *som;
+
   // init nodes
-  umesh->nb_nodes[0] = 5;
-  umesh->nb_nodes[1] = 3;
-  umesh->nodes = (float *)malloc(umesh->nb_nodes[0]*umesh->nb_nodes[1]*sizeof(float));
+  AH5_init_umesh(umesh, 11, 3, 5, 1, 0, 3);
+  /* umesh->nb_nodes[0] = 5; */
+  /* umesh->nb_nodes[1] = 3; */
+  /* umesh->nodes = (float *)malloc(umesh->nb_nodes[0]*umesh->nb_nodes[1]*sizeof(float)); */
   for (i = 0; i < umesh->nb_nodes[0]*umesh->nb_nodes[1]; i++)
     umesh->nodes[i] = i;
   // init element
-  umesh->nb_elementtypes = 3;
-  umesh->elementtypes = (char *)malloc(umesh->nb_elementtypes*sizeof(char));
-  umesh->elementtypes[0] = UELE_TETRA4;
-  umesh->elementtypes[1] = UELE_TETRA4;
-  umesh->elementtypes[2] = UELE_TRI3;
+  /* umesh->nb_elementtypes = 3; */
+  /* umesh->elementtypes = (char *)malloc(umesh->nb_elementtypes*sizeof(char)); */
+  umesh->elementtypes[0] = AH5_UELE_TETRA4;
+  umesh->elementtypes[1] = AH5_UELE_TETRA4;
+  umesh->elementtypes[2] = AH5_UELE_TRI3;
 
-  umesh->nb_elementnodes = 4+4+3;
-  umesh->elementnodes = (int *)malloc(umesh->nb_elementnodes*sizeof(int));
+  /* umesh->nb_elementnodes = 4+4+3; */
+  /* umesh->elementnodes = (int *)malloc(umesh->nb_elementnodes*sizeof(int)); */
   umesh->elementnodes[0] = 0;
   umesh->elementnodes[1] = 1;
   umesh->elementnodes[2] = 2;
@@ -43,23 +47,53 @@ void build_umesh_1(AH5_umesh_t *umesh)
   umesh->elementnodes[10] = 3;
 
   // build group
-  umesh->nb_groups = 1;
-  umesh->groups = (AH5_ugroup_t *) malloc(umesh->nb_groups * sizeof(AH5_ugroup_t));
+  /* umesh->nb_groups = 1; */
+  /* umesh->groups = (AH5_ugroup_t *) malloc(umesh->nb_groups * sizeof(AH5_ugroup_t)); */
   umesh->groups[0].path = (char *) malloc(5 * sizeof(char));
   strcpy(umesh->groups[0].path, "name");
-  umesh->groups[0].type = (char *) malloc( 8 * sizeof(char));
-  strcpy(umesh->groups[0].type, "element");
-  umesh->groups[0].entitytype = (char *) malloc( 5 * sizeof(char));
-  strcpy(umesh->groups[0].entitytype, "face");
+  umesh->groups[0].entitytype = AH5_GROUP_FACE;
   umesh->groups[0].nb_groupelts = 1;
   umesh->groups[0].groupelts = (int *) malloc(umesh->groups[0].nb_groupelts * sizeof(int));
   umesh->groups[0].groupelts[0] = 2;
+
   // group of group
-  umesh->nb_groupgroups = 0;
-  umesh->groupgroups = NULL;
+  /* umesh->nb_groupgroups = 0; */
+  /* umesh->groupgroups = NULL; */
+
   // selector on mesh
-  umesh->nb_som_tables = 0;
-  umesh->som_tables = NULL;
+  /* umesh->nb_som_tables = 0; */
+  /* umesh->som_tables = NULL; */
+
+  som = umesh->som_tables;
+  AH5_init_usom_table(som, "pie", 2, SOM_POINT_IN_ELEMENT);
+  som->data.pie.indices[0] = 0;
+  som->data.pie.indices[1] = 1;
+  som->data.pie.vectors[0][0] = 2;
+  som->data.pie.vectors[0][1] = 3;
+  som->data.pie.vectors[0][2] = 4;
+  som->data.pie.vectors[1][0] = 5;
+  som->data.pie.vectors[1][1] = 6;
+  som->data.pie.vectors[1][2] = 7;
+
+  som = umesh->som_tables + 1;
+  AH5_init_usom_table(som, "edge", 3, SOM_EDGE);
+  som->data.ef.items[0] = 10;
+  som->data.ef.items[1] = 11;
+  som->data.ef.items[2] = 12;
+  som->data.ef.items[3] = 13;
+  som->data.ef.items[4] = 14;
+  som->data.ef.items[5] = 15;
+
+  som = umesh->som_tables + 2;
+  AH5_init_usom_table(som, "face", 4, SOM_FACE);
+  som->data.ef.items[0] = 100;
+  som->data.ef.items[1] = 101;
+  som->data.ef.items[2] = 102;
+  som->data.ef.items[3] = 103;
+  som->data.ef.items[4] = 104;
+  som->data.ef.items[5] = 105;
+  som->data.ef.items[6] = 106;
+  som->data.ef.items[7] = 107;
 }
 
 
@@ -71,7 +105,7 @@ char *test_copy_umesh()
   build_umesh_1(&msh1);
 
   mu_assert("copy umesh", AH5_copy_umesh(&msh2, &msh1) != NULL);
-  
+
   return MU_FINISHED_WITHOUT_ERRORS;
 }
 
@@ -141,6 +175,8 @@ char *test_init_functions()
   mu_assert_eq_ptr("check mesh field", umesh.elementtypes, NULL);
   mu_assert_eq("check mesh field", umesh.nb_nodes[0], 0);
   mu_assert_eq("check mesh field", umesh.nb_nodes[1], 0);
+  mu_assert_eq("check mesh field", umesh.nb_som_tables, 0);
+  mu_assert_eq_ptr("check mesh field", umesh.som_tables, NULL);
 
   mu_assert_eq_ptr(
     "empty mesh", AH5_init_umesh(&umesh, 1, 2, 3, 0, 0, 0), &umesh);
@@ -152,6 +188,9 @@ char *test_init_functions()
   mu_assert_eq("check mesh field", umesh.nb_nodes[1], 3);
   mu_assert_eq("check mesh field", umesh.nb_groups, 0);
   mu_assert_eq_ptr("check mesh field", umesh.groups, NULL);
+  mu_assert_eq("check mesh field", umesh.nb_som_tables, 0);
+  mu_assert_eq_ptr("check mesh field", umesh.som_tables, NULL);
+  AH5_free_umesh(&umesh);
 
   mu_assert_eq_ptr(
     "empty mesh", AH5_init_umesh(&umesh, 0, 0, 3, 0, 0, 0), &umesh);
@@ -163,6 +202,22 @@ char *test_init_functions()
   mu_assert_eq("check mesh field", umesh.nb_nodes[1], 3);
   mu_assert_eq("check mesh field", umesh.nb_groups, 0);
   mu_assert_eq_ptr("check mesh field", umesh.groups, NULL);
+  mu_assert_eq("check mesh field", umesh.nb_som_tables, 0);
+  mu_assert_eq_ptr("check mesh field", umesh.som_tables, NULL);
+  AH5_free_umesh(&umesh);
+
+  mu_assert_eq_ptr(
+    "empty mesh", AH5_init_umesh(&umesh, 0, 0, 3, 0, 0, 2), &umesh);
+  mu_assert_eq("check mesh field", umesh.nb_elementnodes, 0);
+  mu_assert_eq_ptr("check mesh field", umesh.elementnodes, NULL);
+  mu_assert_eq("check mesh field", umesh.nb_elementtypes, 0);
+  mu_assert_eq_ptr("check mesh field", umesh.elementtypes, NULL);
+  mu_assert_eq("check mesh field", umesh.nb_nodes[0], 3);
+  mu_assert_eq("check mesh field", umesh.nb_nodes[1], 3);
+  mu_assert_eq("check mesh field", umesh.nb_groups, 0);
+  mu_assert_eq_ptr("check mesh field", umesh.groups, NULL);
+  mu_assert_eq("check mesh field", umesh.nb_som_tables, 2);
+  mu_assert_ne("check mesh field", umesh.som_tables, NULL);
 
   AH5_free_umesh(&umesh);
   mu_assert_eq("check mesh field", umesh.nb_elementnodes, 0);
@@ -171,9 +226,10 @@ char *test_init_functions()
   mu_assert_eq_ptr("check mesh field", umesh.elementtypes, NULL);
   mu_assert_eq("check mesh field", umesh.nb_nodes[0], 0);
   mu_assert_eq("check mesh field", umesh.nb_nodes[1], 0);
+  mu_assert_eq("check mesh field", umesh.nb_som_tables, 0);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_umesh(&umesh, 1, 2, 3, 4, 3, 0), &umesh);
+    "empty mesh", AH5_init_umesh(&umesh, 1, 2, 3, 4, 3, 2), &umesh);
   mu_assert_eq("check field", umesh.nb_elementnodes, 1);
   mu_assert_ne("check field", umesh.elementnodes, NULL);
   mu_assert_eq("check field", umesh.nb_elementtypes, 2);
@@ -182,55 +238,51 @@ char *test_init_functions()
   mu_assert_eq("check field", umesh.nb_nodes[1], 3);
   mu_assert_eq("check field", umesh.nb_groups, 4);
   mu_assert_ne("check field", umesh.groups, NULL);
+  mu_assert_eq("check field", umesh.nb_som_tables, 2);
+  mu_assert_ne("check field", umesh.som_tables, NULL);
 
   /*Check umesh group*/
   mu_assert_eq_ptr(
-    "null mesh", AH5_init_umsh_group(NULL, NULL, 1, GROUP_NODE, GROUP_EDGE), NULL);
+    "null mesh", AH5_init_ugroup(NULL, NULL, 1, AH5_GROUP_EDGE), NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_umsh_group(umesh.groups, "group name", 1, GROUP_NODE,
-                                      GROUP_ENTITYTYPE_UNDEF),
+    "empty mesh", AH5_init_ugroup(umesh.groups, "group name", 1, AH5_GROUP_NODE),
     umesh.groups);
   mu_assert_str_equal("check field", umesh.groups->path, "group name");
-  mu_assert_str_equal("check field", umesh.groups->type, "node");
-  mu_assert_eq_ptr("check field", umesh.groups->entitytype, NULL);
+  mu_assert_eq("check field", umesh.groups->entitytype, AH5_GROUP_NODE);
   mu_assert_eq("check field", umesh.groups->nb_groupelts, 1);
   mu_assert_ne("check field", umesh.groups->groupelts, NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_umsh_group(umesh.groups+1, "group 1", 1, GROUP_ELEMENT, GROUP_EDGE),
+    "empty mesh", AH5_init_ugroup(umesh.groups+1, "group 1", 1, AH5_GROUP_EDGE),
     umesh.groups + 1);
   mu_assert_str_equal("check field", umesh.groups[1].path, "group 1");
-  mu_assert_str_equal("check field", umesh.groups[1].type, "element");
-  mu_assert_str_equal("check field", umesh.groups[1].entitytype, "edge");
+  mu_assert_eq("check field", umesh.groups[1].entitytype, AH5_GROUP_EDGE);
   mu_assert_eq("check field", umesh.groups[1].nb_groupelts, 1);
   mu_assert_ne("check field", umesh.groups[1].groupelts, NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_umsh_group(umesh.groups+2, "group 2", 10, GROUP_ELEMENT, GROUP_FACE),
+    "empty mesh", AH5_init_ugroup(umesh.groups+2, "group 2", 10, AH5_GROUP_FACE),
     umesh.groups + 2);
   mu_assert_str_equal("check field", umesh.groups[2].path, "group 2");
-  mu_assert_str_equal("check field", umesh.groups[2].type, "element");
-  mu_assert_str_equal("check field", umesh.groups[2].entitytype, "face");
+  mu_assert_eq("check field", umesh.groups[2].entitytype, AH5_GROUP_FACE);
   mu_assert_eq("check field", umesh.groups[2].nb_groupelts, 10);
   mu_assert_ne("check field", umesh.groups[2].groupelts, NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_umsh_group(umesh.groups+3, "group 3", 1, GROUP_ELEMENT, GROUP_VOLUME),
+    "empty mesh", AH5_init_ugroup(umesh.groups+3, "group 3", 1, AH5_GROUP_VOLUME),
     umesh.groups + 3);
   mu_assert_str_equal("check field", umesh.groups[3].path, "group 3");
-  mu_assert_str_equal("check field", umesh.groups[3].type, "element");
-  mu_assert_str_equal("check field", umesh.groups[3].entitytype, "volume");
+  mu_assert_eq("check field", umesh.groups[3].entitytype, AH5_GROUP_VOLUME);
   mu_assert_eq("check field", umesh.groups[3].nb_groupelts, 1);
   mu_assert_ne("check field", umesh.groups[3].groupelts, NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_umsh_group(umesh.groups+3, NULL, 1, GROUP_ELEMENT, GROUP_ENTITYTYPE_UNDEF),
+    "empty mesh", AH5_init_ugroup(umesh.groups+3, NULL, 1, AH5_GROUP_ENTITYTYPE_UNDEF),
     NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_umsh_group(umesh.groups+3, NULL, 1, GROUP_TYPE_INVALID,
-                                      GROUP_ENTITYTYPE_UNDEF),
+    "empty mesh", AH5_init_ugroup(umesh.groups+3, NULL, 1, AH5_GROUP_ENTITYTYPE_INVALID),
     NULL);
 
   /*Check group of group*/
@@ -258,6 +310,26 @@ char *test_init_functions()
   mu_assert_str_equal("check field", umesh.groupgroups[1].path, "gg1");
   mu_assert_eq("check field", umesh.groupgroups[1].nb_groupgroupnames, 50);
   mu_assert_ne("check field", umesh.groupgroups[1].groupgroupnames, NULL);
+
+  /*Check selector on mesh*/
+  mu_assert_eq_ptr(
+      "empty mesh", AH5_init_usom_table(umesh.som_tables, "som1", 2, SOM_POINT_IN_ELEMENT),
+      umesh.som_tables);
+  mu_assert_str_equal("check field", umesh.som_tables[0].path, "som1");
+  mu_assert_equal("check field", umesh.som_tables[0].type, SOM_POINT_IN_ELEMENT);
+  mu_assert_equal("check field", umesh.som_tables[0].data.pie.nb_dims, 3);
+  mu_assert_equal("check field", umesh.som_tables[0].data.pie.nb_points, 2);
+  mu_assert_ne("check field", umesh.som_tables[0].data.pie.indices, NULL);
+  mu_assert_ne("check field", umesh.som_tables[0].data.pie.vectors, NULL);
+
+  mu_assert_eq_ptr(
+      "empty mesh", AH5_init_usom_table(umesh.som_tables+1, "som2", 3, SOM_EDGE),
+      umesh.som_tables+1);
+  mu_assert_str_equal("check field", umesh.som_tables[1].path, "som2");
+  mu_assert_equal("check field", umesh.som_tables[1].type, SOM_EDGE);
+  mu_assert_equal("check field", umesh.som_tables[1].data.ef.dims[0], 3);
+  mu_assert_equal("check field", umesh.som_tables[1].data.ef.dims[1], 2);
+  mu_assert_ne("check field", umesh.som_tables[1].data.ef.items, NULL);
 
   /*release mesh*/
   AH5_free_umesh(&umesh);
@@ -299,55 +371,50 @@ char *test_init_functions()
 
   /*Check smesh group*/
   mu_assert_eq_ptr(
-    "null mesh", AH5_init_smsh_group(NULL, NULL, 1, GROUP_NODE, GROUP_EDGE), NULL);
+    "null mesh", AH5_init_sgroup(NULL, NULL, 1, AH5_GROUP_EDGE), NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_smsh_group(smesh.groups, "group 0", 1, GROUP_NODE, GROUP_ENTITYTYPE_UNDEF),
+    "empty mesh", AH5_init_sgroup(smesh.groups, "group 0", 1, AH5_GROUP_NODE),
     smesh.groups);
   mu_assert_str_equal("check field", smesh.groups->path, "group 0");
-  mu_assert_str_equal("check field", smesh.groups->type, "node");
-  mu_assert_eq_ptr("check field", smesh.groups->entitytype, NULL);
+  mu_assert_eq("check field", smesh.groups->entitytype, AH5_GROUP_NODE);
   mu_assert_eq("check field", smesh.groups->dims[0], 1);
   mu_assert_ne("check field", smesh.groups->elements, NULL);
   mu_assert_eq("check field", smesh.groups->normals, NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_smsh_group(smesh.groups+1, "group 1", 1, GROUP_ELEMENT, GROUP_EDGE),
+    "empty mesh", AH5_init_sgroup(smesh.groups+1, "group 1", 1, AH5_GROUP_EDGE),
     smesh.groups + 1);
   mu_assert_str_equal("check field", smesh.groups[1].path, "group 1");
-  mu_assert_str_equal("check field", smesh.groups[1].type, "element");
-  mu_assert_str_equal("check field", smesh.groups[1].entitytype, "edge");
+  mu_assert_eq("check field", smesh.groups[1].entitytype, AH5_GROUP_EDGE);
   mu_assert_eq("check field", smesh.groups[1].dims[0], 1);
   mu_assert_ne("check field", smesh.groups[1].elements, NULL);
   mu_assert_eq("check field", smesh.groups[1].normals, NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_smsh_group(smesh.groups+2, "group 2", 10, GROUP_ELEMENT, GROUP_FACE),
+    "empty mesh", AH5_init_sgroup(smesh.groups+2, "group 2", 10, AH5_GROUP_FACE),
     smesh.groups + 2);
   mu_assert_str_equal("check field", smesh.groups[2].path, "group 2");
-  mu_assert_str_equal("check field", smesh.groups[2].type, "element");
-  mu_assert_str_equal("check field", smesh.groups[2].entitytype, "face");
+  mu_assert_eq("check field", smesh.groups[2].entitytype, AH5_GROUP_FACE);
   mu_assert_eq("check field", smesh.groups[2].dims[0], 10);
   mu_assert_ne("check field", smesh.groups[2].elements, NULL);
   mu_assert_ne("check field", smesh.groups[2].normals, NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_smsh_group(smesh.groups+3, "group 3", 1, GROUP_ELEMENT, GROUP_VOLUME),
+    "empty mesh", AH5_init_sgroup(smesh.groups+3, "group 3", 1, AH5_GROUP_VOLUME),
     smesh.groups + 3);
   mu_assert_str_equal("check field", smesh.groups[3].path, "group 3");
-  mu_assert_str_equal("check field", smesh.groups[3].type, "element");
-  mu_assert_str_equal("check field", smesh.groups[3].entitytype, "volume");
+  mu_assert_eq("check field", smesh.groups[3].entitytype, AH5_GROUP_VOLUME);
   mu_assert_eq("check field", smesh.groups[3].dims[0], 1);
   mu_assert_ne("check field", smesh.groups[3].elements, NULL);
   mu_assert_eq("check field", smesh.groups[3].normals, NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_smsh_group(smesh.groups+3, NULL, 1, GROUP_ELEMENT, GROUP_ENTITYTYPE_UNDEF),
+    "empty mesh", AH5_init_sgroup(smesh.groups+3, NULL, 1, AH5_GROUP_ENTITYTYPE_UNDEF),
     NULL);
 
   mu_assert_eq_ptr(
-    "empty mesh", AH5_init_smsh_group(smesh.groups+3, NULL, 1, GROUP_TYPE_INVALID,
-                                      GROUP_ENTITYTYPE_UNDEF),
+    "empty mesh", AH5_init_sgroup(smesh.groups+3, NULL, 1, AH5_GROUP_ENTITYTYPE_INVALID),
     NULL);
 
   mu_assert_eq_ptr(
@@ -430,8 +497,7 @@ char *test_write_groupgroup()
   gg.path = "gg_name";
   gg.nb_groupgroupnames = 2;
   gg.groupgroupnames = groupgroupnames;
-  mu_assert_true("Write valide data.",
-                 AH5_write_groupgroup(file_id, &gg, 1));
+  mu_assert_true("Write valide data.", AH5_write_groupgroup(file_id, &gg, 1));
 
   // Test the written data using hdf5 API.
   dset = H5Dopen(file_id, "/groupGroup/gg_name", H5P_DEFAULT);
@@ -479,42 +545,33 @@ char *test_write_unstructured_mesh_group()
 
   // Check some bad usages.
   ugrp.path = NULL;
-  ugrp.type = NULL;
-  ugrp.entitytype = NULL;
   ugrp.groupelts = NULL;
   ugrp.nb_groupelts = 0;
 
-  mu_assert_false("Negative numbre of groups.",
-                  AH5_write_umsh_group(file_id, &ugrp, 0));
-  mu_assert_false("Empty group.",
-                  AH5_write_umsh_group(file_id, &ugrp, 1));
+  mu_assert_false("Negative numbre of groups.", AH5_write_ugroup(file_id, &ugrp, 0));
+  mu_assert_false("Empty group.", AH5_write_ugroup(file_id, &ugrp, 1));
 
   // Write a simple group by relative path name.
   ugrp.path = "grp_name";
-  ugrp.type = AH5_V_ELEMENT;
-  ugrp.entitytype = AH5_V_FACE;
+  ugrp.entitytype = AH5_GROUP_FACE;
   ugrp.nb_groupelts = 10;
   ugrp.groupelts = (int *)malloc(ugrp.nb_groupelts*sizeof(int));
   for (i = 0; i < ugrp.nb_groupelts; i++)
     ugrp.groupelts[i] = i;
 
-  mu_assert_true("Write a simple group by relative path [1].",
-                 AH5_write_umsh_group(file_id, &ugrp, 1));
-  mu_assert("Check 'group' category nodes in file [1].",
-            AH5_path_valid(file_id, "/group"));
-  mu_assert("Check 'group' nodes in file [1].",
-            AH5_path_valid(file_id, "/group/grp_name"));
+  mu_assert_true(
+      "Write a simple group by relative path [1].", AH5_write_ugroup(file_id, &ugrp, 1));
+  mu_assert("Check 'group' category nodes in file [1].", AH5_path_valid(file_id, "/group"));
+  mu_assert("Check 'group' nodes in file [1].", AH5_path_valid(file_id, "/group/grp_name"));
 
 
   // Write a simple group by abs path name.
   ugrp.path = "/mesh/$mesh_group/$mesh_name/group/grp_name_2";
 
-  mu_assert_true("Write a simple group by relative path [2].",
-                 AH5_write_umsh_group(file_id, &ugrp, 1));
-  mu_assert("Check 'group' category nodes in file [2].",
-            AH5_path_valid(file_id, "/group"));
-  mu_assert("Check 'group' nodes in file [2].",
-            AH5_path_valid(file_id, "/group/grp_name_2"));
+  mu_assert_true(
+      "Write a simple group by relative path [2].", AH5_write_ugroup(file_id, &ugrp, 1));
+  mu_assert("Check 'group' category nodes in file [2].", AH5_path_valid(file_id, "/group"));
+  mu_assert("Check 'group' nodes in file [2].", AH5_path_valid(file_id, "/group/grp_name_2"));
 
   // Close and release.
   free(ugrp.groupelts);
@@ -541,37 +598,30 @@ char *test_write_umesh()
 
   // Write the mesh into '/mesh' node.
   loc_id = H5Gcreate(file_id, "/mesh", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  mu_assert("Write an simple umesh.",
-            AH5_write_umesh(loc_id, &umesh));
+  mu_assert_eq("check HDF object closed", H5Fget_obj_count(file_id, H5F_OBJ_ALL), 2);
+  mu_assert("Write an simple umesh.", AH5_write_umesh(loc_id, &umesh));
+  mu_assert_eq("check HDF object closed", H5Fget_obj_count(file_id, H5F_OBJ_ALL), 2);
+  H5Gclose(loc_id);
 
   // Check if all the mesh parts are written.
-  mu_assert("Check 'nodes' nodes in file.",
-            AH5_path_valid(file_id, "/mesh/nodes"));
-  mu_assert("Check 'elementNodes' nodes in file.",
-            AH5_path_valid(file_id, "/mesh/elementNodes"));
-  mu_assert("Check 'elementTypes' nodes in file.",
-            AH5_path_valid(file_id, "/mesh/elementTypes"));
-  mu_assert("Check 'groupGroup' nodes in file.",
-            AH5_path_valid(file_id, "/mesh/groupGroup"));
-  mu_assert("Check 'group' nodes in file.",
-            AH5_path_valid(file_id, "/mesh/group"));
-  mu_assert("Check 'group/name' nodes in file.",
-            AH5_path_valid(file_id, "/mesh/group/name"));
+  mu_assert("Check 'nodes' nodes in file.", AH5_path_valid(file_id, "/mesh/nodes"));
+  mu_assert("Check 'elementNodes' nodes in file.", AH5_path_valid(file_id, "/mesh/elementNodes"));
+  mu_assert("Check 'elementTypes' nodes in file.", AH5_path_valid(file_id, "/mesh/elementTypes"));
+  mu_assert("Check 'groupGroup' nodes in file.", AH5_path_valid(file_id, "/mesh/groupGroup"));
+  mu_assert("Check 'group' nodes in file.", AH5_path_valid(file_id, "/mesh/group"));
+  mu_assert("Check 'group/name' nodes in file.", AH5_path_valid(file_id, "/mesh/group/name"));
 
   //TODO: Used hdf5 API to check the behaviours not the read function.
   // Now read the mesh
-  mu_assert("The written mesh is readable.",
-            AH5_read_msh_instance(file_id, "/mesh", &mesh));
+  mu_assert_eq("check HDF object closed", H5Fget_obj_count(file_id, H5F_OBJ_ALL), 1);
+  mu_assert("The written mesh is readable.", AH5_read_msh_instance(file_id, "/mesh", &mesh));
+  mu_assert_eq("check HDF object closed", H5Fget_obj_count(file_id, H5F_OBJ_ALL), 1);
 
   // Check some value
-  mu_assert_equal("Check mesh type",
-                  mesh.type, MSH_UNSTRUCTURED);
-  mu_assert_equal("Check nodes size",
-                  mesh.data.unstructured.nb_nodes[0], 5);
-  mu_assert_equal("Check nodes size",
-                  mesh.data.unstructured.nb_nodes[1], 3);
-  mu_assert_str_equal("Check the mesh path.",
-                      mesh.path, "/mesh");
+  mu_assert_equal("Check mesh type", mesh.type, MSH_UNSTRUCTURED);
+  mu_assert_equal("Check nodes size", mesh.data.unstructured.nb_nodes[0], 5);
+  mu_assert_equal("Check nodes size", mesh.data.unstructured.nb_nodes[1], 3);
+  mu_assert_str_equal("Check the mesh path.", mesh.path, "/mesh");
 
   // Close and release
   AH5_free_umesh(&umesh);
@@ -606,9 +656,7 @@ char *test_write_unstructured_nodes_mesh()
   umesh.groups = (AH5_ugroup_t *)malloc(umesh.nb_groups * sizeof(AH5_ugroup_t));
   umesh.groups[0].path = (char *)malloc(5 * sizeof(char));
   strcpy(umesh.groups[0].path, "name");
-  umesh.groups[0].type = (char *)malloc( 5 * sizeof(char));
-  strcpy(umesh.groups[0].type, "node");
-  umesh.groups[0].entitytype = NULL;
+  umesh.groups[0].entitytype = AH5_GROUP_NODE;
   umesh.groups[0].nb_groupelts = 5;
   umesh.groups[0].groupelts = (int *)malloc(umesh.groups[0].nb_groupelts * sizeof(int));
   for (i = 0; i < umesh.groups[0].nb_groupelts; ++i)
@@ -625,23 +673,18 @@ char *test_write_unstructured_nodes_mesh()
 
   // Write the mesh into '/mesh' node.
   loc_id = H5Gcreate(file_id, "/mesh", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  mu_assert("Write an simple umesh.",
-            AH5_write_umesh(loc_id, &umesh));
+  mu_assert_eq("check HDF object closed", H5Fget_obj_count(file_id, H5F_OBJ_ALL), 2);
+  mu_assert("Write an simple umesh.", AH5_write_umesh(loc_id, &umesh));
+  mu_assert_eq("check HDF object closed", H5Fget_obj_count(file_id, H5F_OBJ_ALL), 2);
+  H5Gclose(loc_id);
 
   // Check if all the mesh parts are written.
-  mu_assert("Check 'nodes' nodes in file.",
-            AH5_path_valid(file_id, "/mesh/nodes"));
-  mu_assert("Check 'elementNodes' nodes in file.",
-            AH5_path_valid(file_id, "/mesh/elementNodes"));
-  mu_assert("Check 'elementTypes' nodes in file.",
-            AH5_path_valid(file_id, "/mesh/elementTypes"));
-  mu_assert("Check 'groupGroup' nodes in file.",
-            AH5_path_valid(file_id, "/mesh/groupGroup"));
-  mu_assert("Check 'group' nodes in file.",
-            AH5_path_valid(file_id, "/mesh/group"));
-  mu_assert("Check 'group/name' nodes in file.",
-            AH5_path_valid(file_id, "/mesh/group/name"));
-
+  mu_assert("Check 'nodes' nodes in file.", AH5_path_valid(file_id, "/mesh/nodes"));
+  mu_assert("Check 'elementNodes' nodes in file.", AH5_path_valid(file_id, "/mesh/elementNodes"));
+  mu_assert("Check 'elementTypes' nodes in file.", AH5_path_valid(file_id, "/mesh/elementTypes"));
+  mu_assert("Check 'groupGroup' nodes in file.", AH5_path_valid(file_id, "/mesh/groupGroup"));
+  mu_assert("Check 'group' nodes in file.", AH5_path_valid(file_id, "/mesh/group"));
+  mu_assert("Check 'group/name' nodes in file.", AH5_path_valid(file_id, "/mesh/group/name"));
 
   // Close and release
   AH5_free_umesh(&umesh);
@@ -672,8 +715,9 @@ char *test_write_mesh()
 
   // Write mesh category.
   file_id = AH5_auto_test_file();
-  mu_assert("Write mesh [1].",
-            AH5_write_mesh(file_id, &mesh));
+  mu_assert_eq("check HDF object closed", H5Fget_obj_count(file_id, H5F_OBJ_ALL), 1);
+  mu_assert("Write mesh [1].", AH5_write_mesh(file_id, &mesh));
+  mu_assert_eq("check HDF object closed", H5Fget_obj_count(file_id, H5F_OBJ_ALL), 1);
 
   // Release resource.
   free(mesh.groups[0].path);
@@ -681,12 +725,13 @@ char *test_write_mesh()
   free(mesh.groups);
 
   // Read data (build data with full path) and rename a node to build a copy.
-  mu_assert("Read mesh [1].",
-            AH5_read_mesh(file_id, &mesh));
+  mu_assert_eq("check HDF object closed", H5Fget_obj_count(file_id, H5F_OBJ_ALL), 1);
+  mu_assert("Read mesh [1].", AH5_read_mesh(file_id, &mesh));
+  mu_assert_eq("check HDF object closed", H5Fget_obj_count(file_id, H5F_OBJ_ALL), 1);
+
   free(mesh.groups[0].path);
   mesh.groups[0].path = new_string("mesh_group_name_copy");
-  mu_assert("Write mesh [2].",
-            AH5_write_mesh(file_id, &mesh));
+  mu_assert("Write mesh [2].", AH5_write_mesh(file_id, &mesh));
 
   // Clean and release resource.
   AH5_free_mesh(&mesh);
@@ -701,6 +746,7 @@ char *test_read_umesh()
 {
   AH5_msh_instance_t mesh;
   AH5_umesh_t umesh;
+  AH5_usom_table_t *som;
   hid_t file_id, loc_id;
 
   // Write a simple mesh test.
@@ -708,27 +754,69 @@ char *test_read_umesh()
   build_umesh_1(&umesh);
   loc_id = H5Gcreate(file_id, "/mesh", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   AH5_write_umesh(loc_id, &umesh);
+  H5Gclose(loc_id);
   AH5_free_umesh(&umesh);
 
   // Now read the mesh
-  mu_assert("The written mesh is readable.",
-            AH5_read_msh_instance(file_id, "/mesh", &mesh));
+  mu_assert_eq("check HDF object closed", H5Fget_obj_count(file_id, H5F_OBJ_ALL), 1);
+  mu_assert("The written mesh is readable.", AH5_read_msh_instance(file_id, "/mesh", &mesh));
+  mu_assert_eq("check HDF object closed", H5Fget_obj_count(file_id, H5F_OBJ_ALL), 1);
 
   // Check some value
-  mu_assert("Check mesh type",
-            mesh.type == MSH_UNSTRUCTURED);
-  mu_assert("Check nodes size",
-            mesh.data.unstructured.nb_nodes[0] == 5);
-  mu_assert("Check nodes size",
-            mesh.data.unstructured.nb_nodes[1] == 3);
+  mu_assert("Check mesh type", mesh.type == MSH_UNSTRUCTURED);
+  mu_assert("Check nodes size", mesh.data.unstructured.nb_nodes[0] == 5);
+  mu_assert("Check nodes size", mesh.data.unstructured.nb_nodes[1] == 3);
 
   // Check node path values.
-  mu_assert_str_equal("Check the mesh path.",
-                      mesh.path, "/mesh");
+  mu_assert_str_equal("Check the mesh path.", mesh.path, "/mesh");
 
-  mu_assert_str_equal("Check group name.",
-                      mesh.data.unstructured.groups[0].path,
-                      "/mesh/group/name");
+  mu_assert_str_equal(
+      "Check group name.", mesh.data.unstructured.groups[0].path, "/mesh/group/name");
+
+  // Check som
+  mu_assert("Check nb som tables", mesh.data.unstructured.nb_som_tables == 3);
+  som = mesh.data.unstructured.som_tables;
+  mu_assert_str_equal(
+      "Check umsh som tables 0 name.", som->path, "/mesh/selectorOnMesh/edge");
+  mu_assert("Check umsh som tables 0 type.", som->type == SOM_EDGE);
+  mu_assert("Check umsh som tables 0", som->data.ef.dims[0] == 3);
+  mu_assert("Check umsh som tables 0", som->data.ef.dims[1] == 2);
+  mu_assert("Check smsh som tables 0", som->data.ef.items[0] == 10);
+  mu_assert("Check smsh som tables 0", som->data.ef.items[1] == 11);
+  mu_assert("Check smsh som tables 0", som->data.ef.items[2] == 12);
+  mu_assert("Check smsh som tables 0", som->data.ef.items[3] == 13);
+  mu_assert("Check smsh som tables 0", som->data.ef.items[4] == 14);
+  mu_assert("Check smsh som tables 0", som->data.ef.items[5] == 15);
+
+  som = mesh.data.unstructured.som_tables + 1;
+  mu_assert_str_equal(
+      "Check umsh som tables 1 name.", som->path, "/mesh/selectorOnMesh/face");
+  mu_assert("Check umsh som tables 1 type.", som->type == SOM_FACE);
+  mu_assert("Check umsh som tables 1", som->data.ef.dims[0] == 4);
+  mu_assert("Check umsh som tables 1", som->data.ef.dims[1] == 2);
+  mu_assert("Check smsh som tables 1", som->data.ef.items[0] == 100);
+  mu_assert("Check smsh som tables 1", som->data.ef.items[1] == 101);
+  mu_assert("Check smsh som tables 1", som->data.ef.items[2] == 102);
+  mu_assert("Check smsh som tables 1", som->data.ef.items[3] == 103);
+  mu_assert("Check smsh som tables 1", som->data.ef.items[4] == 104);
+  mu_assert("Check smsh som tables 1", som->data.ef.items[5] == 105);
+  mu_assert("Check smsh som tables 1", som->data.ef.items[6] == 106);
+  mu_assert("Check smsh som tables 1", som->data.ef.items[7] == 107);
+
+  som = mesh.data.unstructured.som_tables + 2;
+  mu_assert_str_equal(
+      "Check umsh som tables 2 name.", som->path, "/mesh/selectorOnMesh/pie");
+  mu_assert("Check umsh som tables 2 type.", som->type == SOM_POINT_IN_ELEMENT);
+  mu_assert("Check umsh som tables 2", som->data.pie.nb_dims == 3);
+  mu_assert("Check umsh som tables 2", som->data.pie.nb_points == 2);
+  mu_assert("Check smsh som tables 2", som->data.pie.indices[0] == 0);
+  mu_assert("Check smsh som tables 2", som->data.pie.indices[1] == 1);
+  mu_assert("Check smsh som tables 2", som->data.pie.vectors[0][0] == 2);
+  mu_assert("Check smsh som tables 2", som->data.pie.vectors[0][1] == 3);
+  mu_assert("Check smsh som tables 2", som->data.pie.vectors[0][2] == 4);
+  mu_assert("Check smsh som tables 2", som->data.pie.vectors[1][0] == 5);
+  mu_assert("Check smsh som tables 2", som->data.pie.vectors[1][1] == 6);
+  mu_assert("Check smsh som tables 2", som->data.pie.vectors[1][2] == 7);
 
   // Close and clean
   AH5_close_test_file(file_id);
@@ -741,35 +829,345 @@ char *test_read_umesh()
 //! Test
 const char *test_element_size()
 {
-  mu_assert_eq(
-    "Check element_size", AH5_element_size(UELE_INVALID), 0);
-  mu_assert_eq(
-    "Check element_size", AH5_element_size(UELE_BAR2), 2);
-  mu_assert_eq(
-    "Check element_size", AH5_element_size(UELE_BAR3), 3);
-  mu_assert_eq(
-    "Check element_size", AH5_element_size(UELE_TRI3), 3);
-  mu_assert_eq(
-    "Check element_size", AH5_element_size(UELE_TRI6), 6);
-  mu_assert_eq(
-    "Check element_size", AH5_element_size(UELE_QUAD4), 4);
-  mu_assert_eq(
-    "Check element_size", AH5_element_size(UELE_QUAD8), 8);
-  mu_assert_eq(
-    "Check element_size", AH5_element_size(UELE_TETRA4), 4);
-  mu_assert_eq(
-    "Check element_size", AH5_element_size(UELE_PYRA5), 5);
-  mu_assert_eq(
-    "Check element_size", AH5_element_size(UELE_PENTA6), 6);
-  mu_assert_eq(
-    "Check element_size", AH5_element_size(UELE_HEXA8), 8);
-  mu_assert_eq(
-    "Check element_size", AH5_element_size(UELE_TETRA10), 10);
-  mu_assert_eq(
-    "Check element_size", AH5_element_size(UELE_HEXA20), 20);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_INVALID), 0);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_BAR2), 2);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_BAR3), 3);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_TRI3), 3);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_TRI6), 6);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_QUAD4), 4);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_QUAD8), 8);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_QUAD9), 9);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_TETRA4), 4);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_PYRA5), 5);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_PENTA6), 6);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_HEXA8), 8);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_TETRA10), 10);
+  mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_HEXA20), 20);
 
   return MU_FINISHED_WITHOUT_ERRORS;
 }
+
+
+// Test write structured mesh
+char* test_write_smesh() {
+  AH5_mesh_t mesh;
+  AH5_msh_group_t* msh_group = NULL;
+  AH5_msh_instance_t* msh_instance = NULL;
+  AH5_smesh_t* smesh = NULL;
+  AH5_sgroup_t* sgroup = NULL;
+  AH5_groupgroup_t* groupgroup = NULL;
+  AH5_ssom_pie_table_t *som = NULL;
+  int i = 0;
+  hid_t file_id;
+
+  AH5_init_mesh(&mesh, 1);
+  msh_group = mesh.groups;
+  AH5_init_msh_group(msh_group, "msh_group", 1, 0);
+  msh_instance = msh_group->msh_instances;
+  AH5_init_msh_instance(msh_instance, "msh_instance", MSH_STRUCTURED);
+  smesh = &msh_instance->data.structured;
+  AH5_init_smesh(smesh, 2, 1, 2);
+  AH5_init_axis(&smesh->x, 2);
+  smesh->x.nodes[0] = 0;
+  smesh->x.nodes[1] = 1;
+  AH5_init_axis(&smesh->y, 2);
+  smesh->y.nodes[0] = 2;
+  smesh->y.nodes[1] = 3;
+  AH5_init_axis(&smesh->z, 2);
+  smesh->z.nodes[0] = 4;
+  smesh->z.nodes[1] = 5;
+  sgroup = smesh->groups + 0;
+  AH5_init_sgroup(sgroup, "surface", 6, AH5_GROUP_FACE);
+
+  i = 0;
+  sgroup->elements[i++] = 0;  // x-
+  sgroup->elements[i++] = 0;
+  sgroup->elements[i++] = 0;
+  sgroup->elements[i++] = 0;
+  sgroup->elements[i++] = 1;
+  sgroup->elements[i++] = 1;
+
+  sgroup->elements[i++] = 0;  // y-
+  sgroup->elements[i++] = 0;
+  sgroup->elements[i++] = 0;
+  sgroup->elements[i++] = 1;
+  sgroup->elements[i++] = 0;
+  sgroup->elements[i++] = 1;
+
+  sgroup->elements[i++] = 0;  // z-
+  sgroup->elements[i++] = 0;
+  sgroup->elements[i++] = 0;
+  sgroup->elements[i++] = 1;
+  sgroup->elements[i++] = 1;
+  sgroup->elements[i++] = 0;
+
+  sgroup->elements[i++] = 1;  // x+
+  sgroup->elements[i++] = 0;
+  sgroup->elements[i++] = 0;
+  sgroup->elements[i++] = 1;
+  sgroup->elements[i++] = 1;
+  sgroup->elements[i++] = 1;
+
+  sgroup->elements[i++] = 0;  // y+
+  sgroup->elements[i++] = 1;
+  sgroup->elements[i++] = 0;
+  sgroup->elements[i++] = 1;
+  sgroup->elements[i++] = 1;
+  sgroup->elements[i++] = 1;
+
+  sgroup->elements[i++] = 0;  // z+
+  sgroup->elements[i++] = 0;
+  sgroup->elements[i++] = 1;
+  sgroup->elements[i++] = 1;
+  sgroup->elements[i++] = 1;
+  sgroup->elements[i++] = 1;
+
+  i = 0;
+  strcpy(sgroup->normals[i++], "x-");
+  strcpy(sgroup->normals[i++], "y-");
+  strcpy(sgroup->normals[i++], "z-");
+  strcpy(sgroup->normals[i++], "x+");
+  strcpy(sgroup->normals[i++], "y+");
+  strcpy(sgroup->normals[i++], "z+");
+
+  sgroup = smesh->groups + 1;
+  AH5_init_sgroup(sgroup, "volume", 1, AH5_GROUP_VOLUME);
+
+  i = 0;
+  sgroup->elements[i++] = 0;
+  sgroup->elements[i++] = 0;
+  sgroup->elements[i++] = 0;
+  sgroup->elements[i++] = 1;
+  sgroup->elements[i++] = 1;
+  sgroup->elements[i++] = 1;
+
+  groupgroup = smesh->groupgroups;
+  AH5_init_groupgroup(groupgroup, "all", 2, 7);
+  strcpy(groupgroup->groupgroupnames[0], "surface");
+  strcpy(groupgroup->groupgroupnames[1], "volume");
+
+  som = smesh->som_tables;
+  AH5_init_ssom_pie_table(som, "som1", 2);
+  som->elements[0][0] = 0;
+  som->elements[0][1] = 1;
+  som->elements[0][2] = 2;
+  som->elements[0][3] = 3;
+  som->elements[0][4] = 4;
+  som->elements[0][5] = 5;
+  som->elements[1][0] = 6;
+  som->elements[1][1] = 7;
+  som->elements[1][2] = 8;
+  som->elements[1][3] = 9;
+  som->elements[1][4] = 10;
+  som->elements[1][5] = 11;
+  som->vectors[0][0] = 12;
+  som->vectors[0][1] = 13;
+  som->vectors[0][2] = 14;
+  som->vectors[1][0] = 15;
+  som->vectors[1][1] = 16;
+  som->vectors[1][2] = 17;
+
+  som = smesh->som_tables + 1;
+  AH5_init_ssom_pie_table(som, "som2", 3);
+  som->elements[0][0] = 100;
+  som->elements[0][1] = 101;
+  som->elements[0][2] = 102;
+  som->elements[0][3] = 103;
+  som->elements[0][4] = 104;
+  som->elements[0][5] = 105;
+  som->elements[1][0] = 106;
+  som->elements[1][1] = 107;
+  som->elements[1][2] = 108;
+  som->elements[1][3] = 109;
+  som->elements[1][4] = 110;
+  som->elements[1][5] = 111;
+  som->elements[2][0] = 112;
+  som->elements[2][1] = 113;
+  som->elements[2][2] = 114;
+  som->elements[2][3] = 115;
+  som->elements[2][4] = 116;
+  som->elements[2][5] = 117;
+  som->vectors[0][0] = 118;
+  som->vectors[0][1] = 119;
+  som->vectors[0][2] = 120;
+  som->vectors[1][0] = 121;
+  som->vectors[1][1] = 122;
+  som->vectors[1][2] = 123;
+  som->vectors[2][0] = 124;
+  som->vectors[2][1] = 125;
+  som->vectors[2][2] = 126;
+
+
+  file_id = AH5_auto_test_file();
+  mu_assert("Check write smesh", AH5_write_mesh(file_id, &mesh));
+
+  AH5_free_mesh(&mesh);
+
+  // Read mesh to check the conservation of all data
+  AH5_read_mesh(file_id, &mesh);
+
+  mu_assert("Check nb msh groups", mesh.nb_groups == 1);
+  mu_assert("Check msh groups", mesh.groups != NULL);
+  msh_group = mesh.groups;
+  mu_assert_str_equal(
+      "Check msh group name", msh_group->path, "/mesh/msh_group");
+  mu_assert("Check nb msh instance", msh_group->nb_msh_instances == 1);
+  mu_assert("Check msh instance", msh_group->msh_instances != NULL);
+  msh_instance = msh_group->msh_instances;
+  mu_assert_str_equal(
+      "Check msh instance name", msh_instance->path, "/mesh/msh_group/msh_instance");
+  mu_assert("Check msh instance type", msh_instance->type == MSH_STRUCTURED);
+  smesh = &msh_instance->data.structured;
+  mu_assert("Check smsh x nb nodes", smesh->x.nb_nodes == 2);
+  mu_assert("Check smsh x nodes", smesh->x.nodes != NULL);
+  mu_assert("Check smsh x node", smesh->x.nodes[0] == 0);
+  mu_assert("Check smsh x node", smesh->x.nodes[1] == 1);
+  mu_assert("Check smsh y nb nodes", smesh->y.nb_nodes == 2);
+  mu_assert("Check smsh y nodes", smesh->y.nodes != NULL);
+  mu_assert("Check smsh y node", smesh->y.nodes[0] == 2);
+  mu_assert("Check smsh y node", smesh->y.nodes[1] == 3);
+  mu_assert("Check smsh z nb nodes", smesh->z.nb_nodes == 2);
+  mu_assert("Check smsh z nodes", smesh->z.nodes != NULL);
+  mu_assert("Check smsh z node", smesh->z.nodes[0] == 4);
+  mu_assert("Check smsh z node", smesh->z.nodes[1] == 5);
+  mu_assert("Check smsh nb groups", smesh->nb_groups == 2);
+  mu_assert("Check smsh groups", smesh->groups != NULL);
+  sgroup = smesh->groups + 0;
+  mu_assert_str_equal(
+      "Check smsh group 0", sgroup->path, "/mesh/msh_group/msh_instance/group/surface");
+  mu_assert("Check smsh group 0", sgroup->entitytype == AH5_GROUP_FACE);
+  mu_assert("Check smsh group 0", sgroup->dims[0] == 6);
+  mu_assert("Check smsh group 0", sgroup->dims[1] == 6);
+  mu_assert("Check smsh group 0", sgroup->elements != NULL);
+  i = 0;
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 0);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 0);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 0);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 0);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 1);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 1);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 0);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 0);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 0);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 1);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 0);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 1);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 0);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 0);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 0);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 1);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 1);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 0);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 1);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 0);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 0);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 1);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 1);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 1);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 0);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 1);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 0);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 1);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 1);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 1);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 0);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 0);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 1);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 1);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 1);
+  mu_assert("Check smsh group 0", sgroup->elements[i++] == 1);
+  i = 0;
+  mu_assert_str_equal("Check smsh group 0", sgroup->normals[i++], "x-");
+  mu_assert_str_equal("Check smsh group 0", sgroup->normals[i++], "y-");
+  mu_assert_str_equal("Check smsh group 0", sgroup->normals[i++], "z-");
+  mu_assert_str_equal("Check smsh group 0", sgroup->normals[i++], "x+");
+  mu_assert_str_equal("Check smsh group 0", sgroup->normals[i++], "y+");
+  mu_assert_str_equal("Check smsh group 0", sgroup->normals[i++], "z+");
+  sgroup = smesh->groups + 1;
+  mu_assert_str_equal(
+      "Check smsh group 1", sgroup->path, "/mesh/msh_group/msh_instance/group/volume");
+  mu_assert("Check smsh group 1", sgroup->entitytype == AH5_GROUP_VOLUME);
+  mu_assert("Check smsh group 1", sgroup->dims[0] == 1);
+  mu_assert("Check smsh group 1", sgroup->dims[1] == 6);
+  mu_assert("Check smsh group 1", sgroup->elements != NULL);
+  i = 0;
+  mu_assert("Check smsh group 1", sgroup->elements[i++] == 0);
+  mu_assert("Check smsh group 1", sgroup->elements[i++] == 0);
+  mu_assert("Check smsh group 1", sgroup->elements[i++] == 0);
+  mu_assert("Check smsh group 1", sgroup->elements[i++] == 1);
+  mu_assert("Check smsh group 1", sgroup->elements[i++] == 1);
+  mu_assert("Check smsh group 1", sgroup->elements[i++] == 1);
+  mu_assert("Check smsh group 1", sgroup->normals == NULL);
+  mu_assert("Check smsh nb groupgroups", smesh->nb_groupgroups == 1);
+  mu_assert("Check smsh groupgroups", smesh->groupgroups != NULL);
+  groupgroup = smesh->groupgroups + 0;
+  mu_assert_str_equal(
+      "Check smsh groupgroup 0", groupgroup->path,
+      "/mesh/msh_group/msh_instance/groupGroup/all");
+  mu_assert("Check smsh groupgroup 0 nb groups", groupgroup->nb_groupgroupnames == 2);
+  mu_assert_str_equal(
+      "Check smsh groupgroup 0 groups", groupgroup->groupgroupnames[0], "surface");
+  mu_assert_str_equal(
+      "Check smsh groupgroup 0 groups", groupgroup->groupgroupnames[1], "volume");
+
+  mu_assert("Check smsh nb som tables", smesh->nb_som_tables == 2);
+  som = smesh->som_tables;
+  mu_assert("Check smsh som tables 0", som->nb_dims == 3);
+  mu_assert("Check smsh som tables 0", som->nb_points == 2);
+  mu_assert("Check smsh som tables 0", som->elements[0][0] == 0);
+  mu_assert("Check smsh som tables 0", som->elements[0][1] == 1);
+  mu_assert("Check smsh som tables 0", som->elements[0][2] == 2);
+  mu_assert("Check smsh som tables 0", som->elements[0][3] == 3);
+  mu_assert("Check smsh som tables 0", som->elements[0][4] == 4);
+  mu_assert("Check smsh som tables 0", som->elements[0][5] == 5);
+  mu_assert("Check smsh som tables 0", som->elements[1][0] == 6);
+  mu_assert("Check smsh som tables 0", som->elements[1][1] == 7);
+  mu_assert("Check smsh som tables 0", som->elements[1][2] == 8);
+  mu_assert("Check smsh som tables 0", som->elements[1][3] == 9);
+  mu_assert("Check smsh som tables 0", som->elements[1][4] == 10);
+  mu_assert("Check smsh som tables 0", som->elements[1][5] == 11);
+  mu_assert("Check smsh som tables 0", som->vectors[0][0] == 12);
+  mu_assert("Check smsh som tables 0", som->vectors[0][1] == 13);
+  mu_assert("Check smsh som tables 0", som->vectors[0][2] == 14);
+  mu_assert("Check smsh som tables 0", som->vectors[1][0] == 15);
+  mu_assert("Check smsh som tables 0", som->vectors[1][1] == 16);
+  mu_assert("Check smsh som tables 0", som->vectors[1][2] == 17);
+  som = smesh->som_tables + 1;
+  mu_assert("Check smsh som tables 1", som->nb_dims == 3);
+  mu_assert("Check smsh som tables 1", som->nb_points == 3);
+  mu_assert("Check smsh som tables 1", som->elements[0][0] == 100);
+  mu_assert("Check smsh som tables 1", som->elements[0][1] == 101);
+  mu_assert("Check smsh som tables 1", som->elements[0][2] == 102);
+  mu_assert("Check smsh som tables 1", som->elements[0][3] == 103);
+  mu_assert("Check smsh som tables 1", som->elements[0][4] == 104);
+  mu_assert("Check smsh som tables 1", som->elements[0][5] == 105);
+  mu_assert("Check smsh som tables 1", som->elements[1][0] == 106);
+  mu_assert("Check smsh som tables 1", som->elements[1][1] == 107);
+  mu_assert("Check smsh som tables 1", som->elements[1][2] == 108);
+  mu_assert("Check smsh som tables 1", som->elements[1][3] == 109);
+  mu_assert("Check smsh som tables 1", som->elements[1][4] == 110);
+  mu_assert("Check smsh som tables 1", som->elements[1][5] == 111);
+  mu_assert("Check smsh som tables 1", som->elements[2][0] == 112);
+  mu_assert("Check smsh som tables 1", som->elements[2][1] == 113);
+  mu_assert("Check smsh som tables 1", som->elements[2][2] == 114);
+  mu_assert("Check smsh som tables 1", som->elements[2][3] == 115);
+  mu_assert("Check smsh som tables 1", som->elements[2][4] == 116);
+  mu_assert("Check smsh som tables 1", som->elements[2][5] == 117);
+  mu_assert("Check smsh som tables 1", som->vectors[0][0] == 118);
+  mu_assert("Check smsh som tables 1", som->vectors[0][1] == 119);
+  mu_assert("Check smsh som tables 1", som->vectors[0][2] == 120);
+  mu_assert("Check smsh som tables 1", som->vectors[1][0] == 121);
+  mu_assert("Check smsh som tables 1", som->vectors[1][1] == 122);
+  mu_assert("Check smsh som tables 1", som->vectors[1][2] == 123);
+  mu_assert("Check smsh som tables 1", som->vectors[2][0] == 124);
+  mu_assert("Check smsh som tables 1", som->vectors[2][1] == 125);
+  mu_assert("Check smsh som tables 1", som->vectors[2][2] == 126);
+
+  AH5_free_mesh(&mesh);
+
+  return MU_FINISHED_WITHOUT_ERRORS;
+}
+
 
 
 // Run all tests
@@ -784,6 +1182,7 @@ char *all_tests()
   mu_run_test(test_read_umesh);
   mu_run_test(test_write_mesh);
   mu_run_test(test_element_size);
+  mu_run_test(test_write_smesh);
 
   return MU_FINISHED_WITHOUT_ERRORS;
 }

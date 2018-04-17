@@ -49,7 +49,7 @@ char AH5_read_eet_dataset (hid_t file_id, const char *path, AH5_eet_dataset_t *e
 // Read externalElement category (all datasets)
 char AH5_read_external_element (hid_t file_id, AH5_external_element_t *external_element)
 {
-  char path[AH5_ABSOLUTE_PATH_LENGTH], rdata = AH5_TRUE;
+  char *path, rdata = AH5_TRUE;
   AH5_children_t children;
   hsize_t i;
 
@@ -65,11 +65,14 @@ char AH5_read_external_element (hid_t file_id, AH5_external_element_t *external_
                                      AH5_eet_dataset_t));
       for (i = 0; i < children.nb_children; i++)
       {
+        path = malloc((strlen(AH5_C_EXTERNAL_ELEMENT) + strlen(children.childnames[i]) + 1)
+                      * sizeof(*path));
         strcpy(path, AH5_C_EXTERNAL_ELEMENT);
         strcat(path, children.childnames[i]);
         if (!AH5_read_eet_dataset(file_id, path, external_element->datasets + i))
           rdata = AH5_FALSE;
         free(children.childnames[i]);
+        free(path);
       }
       free(children.childnames);
     }

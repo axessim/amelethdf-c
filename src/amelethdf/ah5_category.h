@@ -1,3 +1,29 @@
+/**
+ * @file   ah5_category.h
+ * @author Nathanaël MUOT <nathanael.muot@axessim.fr>
+ * @date   Mon Jan 25 14:54:16 2016
+ *
+ * @brief
+ *
+ * Amelet-HDF back compatibility Only the last version is compatible with
+ * reading and writing the other are compatible with reading.
+ *
+ * @def AH5_VERSION_1_6_0
+ * Amelet-HDF in version 1.5.4 is fully supported.
+ *
+ * @def AH5_VERSION_1_5_4
+ * This implementation can read the Amulet-HDF in version 1.5.4 and write it
+ * with precaution (name length restriction).
+ *
+ * @def AH5_USED_DEPRECIATED_NAME_LENGTH
+ * This nacros active the depreciated macros associated to the name length
+ * restriction deleted since version 1.6
+ *
+ * @def AH5_SILENT_PREPROCESSOR
+ * This macro hide all Amelet-HDF preprocessor warnings or messages.
+ */
+
+
 #ifndef AH5_CATEGORY_H
 #define AH5_CATEGORY_H
 
@@ -8,13 +34,17 @@
 extern "C" {
 #endif
 
-/* AH5 back compatibility */
+
+  /*
+
+   */
 #define AH5_VERSION_1_5_4                1
+#define AH5_VERSION_1_6_0                1
 
 #define AH5_FILE_A_FORMAT                "FORMAT"
 #define AH5_FILE_FORMAT                  "AMELETHDF"
 #define AH5_FILE_A_VERSION               "AMELETHDF_FORMAT_VERSION"
-#define AH5_FILE_DEFAULT_VERSION         "1.5.4"
+#define AH5_FILE_DEFAULT_VERSION         "1.6.0"
 
 // remove first char
 #define AH5_CATEGORY_NAME(name) ((name) + 1)
@@ -35,8 +65,6 @@ extern "C" {
 
 /* ah5_general.h */
 #define AH5_A_ENTRY_POINT               "entryPoint"
-#define AH5_ABSOLUTE_PATH_LENGTH        111  // length in C (incl. '\0')
-#define AH5_ELEMENT_NAME_LENGTH         31
 #define AH5_ATTR_LENGTH                 31
 #define AH5_TABLE_FIELD_NAME_LENGTH     31
 #define AH5_V_INVALID                   "INVALID"
@@ -50,6 +78,24 @@ extern "C" {
 #define AH5_TYPE_INTEGER                H5T_INTEGER
 #define AH5_TYPE_COMPLEX                H5T_COMPOUND
 #define AH5_TYPE_STRING                 H5T_STRING
+
+
+#ifdef AH5_USED_DEPRECIATED_NAME_LENGTH
+# define AH5_ABSOLUTE_PATH_LENGTH        111  // length in C (incl. '\0')
+# define AH5_ELEMENT_NAME_LENGTH         31
+#else
+# ifndef AH5_SILENT_PREPROCESSOR
+#  ifdef _WIN32
+#   pragma message ("The macros associated to name length restriction are disable, \
+defined AH5_USED_DEPRECIATED_NAME_LENGTH to keep compatibility \
+or AH5_SILENT_PREPROCESSOR for hide this message.")
+#  else
+#   warning "The macros associated to name length restriction are disable, \
+defined AH5_USED_DEPRECIATED_NAME_LENGTH to keep compatibility \
+or AH5_SILENT_PREPROCESSOR for hide this message."
+#  endif
+# endif // AH5_SILENT_PREPROCESSOR
+#endif // AH5_DEPRECIATED_NAME_LENGTH
 
 /* ah5_emsource.h */
 #define AH5_A_X                         "x"
@@ -194,6 +240,7 @@ extern "C" {
 #define AH5_V_VOLUME            "volume"
 #define AH5_V_UNSTRUCTURED      "unstructured"
 #define AH5_V_STRUCTURED        "structured"
+#define AH5_F_INDEX             "index"
 #define AH5_F_IMIN              "imin"
 #define AH5_F_IMAX              "imax"
 #define AH5_F_JMIN              "jmin"

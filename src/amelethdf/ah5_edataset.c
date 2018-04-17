@@ -169,7 +169,7 @@ char AH5_create_PEorEdataset(hid_t loc_id,
                              AH5_Edataset_t *Edataset,
                              AH5_ACCESS_TYPE access)
 {
-  hsize_t i;
+  int i;
 
   Edataset->parent        = loc_id;
   Edataset->nb_dims       = nb_dims;
@@ -341,7 +341,7 @@ char AH5_append_Edataset(AH5_Edataset_t *Edataset,
   hsize_t *ones;
   hsize_t *offset;
   hsize_t *block;
-  hsize_t i;
+  int i;
 
 
   extendibledims = (hsize_t *)malloc(Edataset->nb_dims * sizeof(hsize_t));
@@ -404,6 +404,7 @@ char AH5_append_Edataset(AH5_Edataset_t *Edataset,
 
     free(ones);
     free(offset);
+    free(block);
   }
   else
   {
@@ -434,8 +435,6 @@ char AH5_append_Edataset(AH5_Edataset_t *Edataset,
 
 char AH5_free_Edataset(AH5_Edataset_t *Edataset)
 {
-  char status;
-
   if(Edataset->dims != NULL)
   {
     free(Edataset->dims);
@@ -446,6 +445,24 @@ char AH5_free_Edataset(AH5_Edataset_t *Edataset)
   {
     free(Edataset->path);
     Edataset->path = NULL;
+  }
+
+  if(Edataset->nature != NULL)
+  {
+    free(Edataset->nature);
+    Edataset->nature = NULL;
+  }
+
+  if(Edataset->label != NULL)
+  {
+    free(Edataset->label);
+    Edataset->label = NULL;
+  }
+
+  if(Edataset->unit != NULL)
+  {
+    free(Edataset->unit);
+    Edataset->unit = NULL;
   }
 
   Edataset->created = AH5_FALSE;
@@ -477,7 +494,7 @@ char AH5_create_Earrayset(hid_t loc_id,
                           hid_t mem_type_id,
                           AH5_Earrayset_t *Earrayset)
 {
-  hsize_t i;
+  int i;
 
   Earrayset->parent     = loc_id;
 
@@ -589,7 +606,7 @@ char AH5_set_dim_Earrayset(AH5_Earrayset_t *Earrayset,
                            const char *label)
 {
   hsize_t extdim = 0;
-  hsize_t i;
+  int i;
   hsize_t sizeappend;
 
   /* build name of dimension */
@@ -764,7 +781,7 @@ char AH5_set_memory_mapping(
   hsize_t count[],
   hsize_t block[])
 {
-  hsize_t i;
+  int i;
 
   mapping->nb_dims = nb_dims;
 
@@ -1184,8 +1201,8 @@ char AH5_create_PEarrayset(hid_t loc_id,
 
   Earrayset->parent     = loc_id;
 
-  Earrayset->path = malloc(strlen(name));
-  strcpy(Earrayset->path, name);
+  Earrayset->path = malloc((strlen(name) + 1) * sizeof(*Earrayset->path));
+  strcpy(Earrayset->path, name + 1);
 
   Earrayset->nb_dims    = nb_dims;
 

@@ -102,7 +102,7 @@ char AH5_read_ort_instance (hid_t file_id, const char *path, AH5_ort_instance_t 
 // Read outputRequest group (group of instances)
 char AH5_read_ort_group (hid_t file_id, const char *path, AH5_ort_group_t *ort_group)
 {
-  char path2[AH5_ABSOLUTE_PATH_LENGTH], rdata = AH5_TRUE;
+  char *path2, rdata = AH5_TRUE;
   /*    char mandatory[][AH5_ATTR_LENGTH] = {}; */
   AH5_children_t children;
   hsize_t i;
@@ -118,16 +118,19 @@ char AH5_read_ort_group (hid_t file_id, const char *path, AH5_ort_group_t *ort_g
     ort_group->nb_instances = children.nb_children;
     if (children.nb_children > 0)
     {
+      path2 = malloc((strlen(path) + 1) * sizeof(*path2));
       ort_group->instances = (AH5_ort_instance_t *) malloc((size_t) children.nb_children * sizeof(
                                AH5_ort_instance_t));
       for (i = 0; i < children.nb_children; i++)
       {
+        path2 = realloc(path2, (strlen(path) + strlen(children.childnames[i]) + 1) * sizeof(*path2));
         strcpy(path2, path);
         strcat(path2, children.childnames[i]);
         AH5_read_ort_instance(file_id, path2, ort_group->instances + i);
         free(children.childnames[i]);
       }
       free(children.childnames);
+      free(path2);
     }
   }
   else
@@ -142,7 +145,7 @@ char AH5_read_ort_group (hid_t file_id, const char *path, AH5_ort_group_t *ort_g
 // Read outputRequest category (all groups/instances)
 char AH5_read_outputrequest(hid_t file_id, AH5_outputrequest_t *outputrequest)
 {
-  char path[AH5_ABSOLUTE_PATH_LENGTH], rdata = AH5_TRUE;
+  char *path, rdata = AH5_TRUE;
   AH5_children_t children;
   hsize_t i;
 
@@ -154,16 +157,19 @@ char AH5_read_outputrequest(hid_t file_id, AH5_outputrequest_t *outputrequest)
     outputrequest->nb_groups = children.nb_children;
     if (children.nb_children > 0)
     {
+      path = malloc((strlen(AH5_C_OUTPUT_REQUEST) + 1) * sizeof(*path));
       outputrequest->groups = (AH5_ort_group_t *) malloc((size_t) children.nb_children * sizeof(
                                 AH5_ort_group_t));
       for (i = 0; i < children.nb_children; i++)
       {
+        path = realloc(path, (strlen(AH5_C_OUTPUT_REQUEST) + strlen(children.childnames[i]) + 1) * sizeof(*path));
         strcpy(path, AH5_C_OUTPUT_REQUEST);
         strcat(path, children.childnames[i]);
         if (!AH5_read_ort_group(file_id, path, outputrequest->groups + i))
           rdata = AH5_FALSE;
         free(children.childnames[i]);
       }
+      free(path);
       free(children.childnames);
     }
   }

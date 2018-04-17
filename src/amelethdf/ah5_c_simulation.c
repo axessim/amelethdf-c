@@ -1,13 +1,14 @@
 #include "ah5_c_simulation.h"
 #include "ah5_log.h"
-
+#include "ah5_category.h"
 
 // Read simulation instance
 char AH5_read_sim_instance (hid_t file_id, const char *path, AH5_sim_instance_t *sim_instance)
 {
   char mandatory[][AH5_ATTR_LENGTH] = {AH5_A_MODULE, AH5_A_VERSION};
   /*    char mandatory2[][AH5_ATTR_LENGTH] = {}; */
-  char path1[AH5_ABSOLUTE_PATH_LENGTH],path2[AH5_ABSOLUTE_PATH_LENGTH], rdata = AH5_TRUE;
+  char *path1;
+  char rdata = AH5_TRUE;
   H5T_class_t type_class;
   char success1 = AH5_FALSE, success2 = AH5_FALSE;
   size_t length;
@@ -28,14 +29,27 @@ char AH5_read_sim_instance (hid_t file_id, const char *path, AH5_sim_instance_t 
       AH5_print_err_attr(AH5_C_SIMULATION, path, AH5_A_MODULE);
     if (!AH5_read_str_attr(file_id, path, AH5_A_VERSION, &(sim_instance->version)))
       AH5_print_err_attr(AH5_C_SIMULATION, path, AH5_A_VERSION);
-    strcpy(path2, path);
-    strcat(path2, AH5_G_PARAMETER);
-    AH5_read_opt_attrs(file_id, path2, &(sim_instance->parameter), NULL, 0);
+
+    path1 = malloc((strlen(path) + strlen(AH5_G_PARAMETER) + 1) * sizeof(*path1));
+    if (!path1)
+    {
+      AH5_print_err_dset(AH5_C_SIMULATION, path);
+      return AH5_FALSE;
+    }
+    strncpy(path1, path, strlen(path) + 1);
+    strncat(path1, AH5_G_PARAMETER, strlen(AH5_G_PARAMETER));
+    AH5_read_opt_attrs(file_id, path1, &(sim_instance->parameter), NULL, 0);
 
     // inputs
     sim_instance->nb_inputs = 1;  // in case of single value
-    strcpy(path1, path);
-    strcat(path1, AH5_G_INPUTS);
+    path1 = realloc(path1, (strlen(path) + strlen(AH5_G_INPUTS) + 1) * sizeof(*path1));
+    if (!path1)
+    {
+      AH5_print_err_dset(AH5_C_SIMULATION, path);
+      return AH5_FALSE;
+    }
+    strncpy(path1, path, strlen(path) + 1);
+    strncat(path1, AH5_G_INPUTS, strlen(AH5_G_INPUTS));
     if (AH5_path_valid(file_id, path1))
       if (H5LTget_dataset_ndims(file_id, path1, &nb_dims) >= 0)
         if (nb_dims <= 1)
@@ -43,28 +57,42 @@ char AH5_read_sim_instance (hid_t file_id, const char *path, AH5_sim_instance_t 
             if (type_class == H5T_STRING)
               if(AH5_read_str_dataset(file_id, path1, sim_instance->nb_inputs, length, &(sim_instance->inputs)))
                 success1 = AH5_TRUE;
+    if (!success1)
+    {
+      AH5_print_err_dset(AH5_C_SIMULATION, path1);
+      sim_instance->nb_inputs = 0;
+      rdata = AH5_FALSE;
+    }
+
     // outputs
     sim_instance->nb_outputs = 1;  // in case of single value
-    strcpy(path2, path);
-    strcat(path2, AH5_G_OUTPUTS);
-    if (AH5_path_valid(file_id, path2))
-      if (H5LTget_dataset_ndims(file_id, path2, &nb_dims) >= 0)
+
+    path1 = realloc(path1, (strlen(path) + strlen(AH5_G_OUTPUTS) + 1) * sizeof(*path1));
+    if (!path1)
+    {
+      AH5_print_err_dset(AH5_C_SIMULATION, path);
+      return AH5_FALSE;
+    }
+    strncpy(path1, path, strlen(path) + 1);
+    strncat(path1, AH5_G_OUTPUTS, strlen(AH5_G_OUTPUTS));
+    if (AH5_path_valid(file_id, path1))
+      if (H5LTget_dataset_ndims(file_id, path1, &nb_dims) >= 0)
         if (nb_dims <= 1)
-          if (H5LTget_dataset_info(file_id, path2, &(sim_instance->nb_outputs), &type_class, &length) >= 0)
+          if (H5LTget_dataset_info(file_id, path1, &(sim_instance->nb_outputs), &type_class, &length) >= 0)
             if (type_class == H5T_STRING)
-              if(AH5_read_str_dataset(file_id, path2, sim_instance->nb_outputs, length, &(sim_instance->outputs)))
+              if(AH5_read_str_dataset(file_id, path1, sim_instance->nb_outputs, length, &(sim_instance->outputs)))
                 success2 = AH5_TRUE;
+    if (!success2)
+    {
+      AH5_print_wrn_outputs(path);
+      sim_instance->nb_outputs = 0;
+    }
+
+    free(path1);
   }
-  if (!success1)
+  else
   {
-    AH5_print_err_dset(AH5_C_SIMULATION, path1);
-    sim_instance->nb_inputs = 0;
     rdata = AH5_FALSE;
-  }
-  if (!success2)
-  {
-    AH5_print_wrn_outputs(path);
-    sim_instance->nb_outputs = 0;
   }
 
   return rdata;
@@ -74,7 +102,7 @@ char AH5_read_sim_instance (hid_t file_id, const char *path, AH5_sim_instance_t 
 // Read simulation category (all instances)
 char AH5_read_simulation (hid_t file_id, AH5_simulation_t *simulation)
 {
-  char path[AH5_ABSOLUTE_PATH_LENGTH], rdata = AH5_TRUE;
+  char *path, rdata = AH5_TRUE;
   AH5_children_t children;
   hsize_t i;
 
@@ -90,11 +118,13 @@ char AH5_read_simulation (hid_t file_id, AH5_simulation_t *simulation)
                                 AH5_sim_instance_t));
       for (i = 0; i < children.nb_children; i++)
       {
+        path = malloc((strlen(AH5_C_SIMULATION) + strlen(children.childnames[i]) + 1)* sizeof(*path));
         strcpy(path, AH5_C_SIMULATION);
         strcat(path, children.childnames[i]);
         if (!AH5_read_sim_instance(file_id, path, simulation->instances + i))
           rdata = AH5_FALSE;
         free(children.childnames[i]);
+        free(path);
       }
       free(children.childnames);
     }

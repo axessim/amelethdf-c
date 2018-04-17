@@ -2,6 +2,16 @@
  * Configur file filled by compier tool.
  */
 
+#pragma once
+#ifndef AH5_CONFIG_H_
+#define AH5_CONFIG_H_
+
+#define AH5_VERSION_MAJOR @AMELETHDF_VERSION_MAJOR@
+#define AH5_VERSION_MINOR @AMELETHDF_VERSION_MINOR@
+#define AH5_VERSION_REVISION @AMELETHDF_VERSION_REVISION@
+#define AH5_STR_VERSION "@AMELETHDF_FULL_VERSION@"
+
+
 #define AH5_MPI_ENABME_ @AMELETHDF_ENABLE_MPI@
 
 #if @AMELETHDF_DEBUG@
@@ -9,3 +19,6 @@
 #else
 # define AH5_NDEBUG 1
 #endif
+
+
+#endif  // AH5_CONFIG_H_

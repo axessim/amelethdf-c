@@ -84,6 +84,14 @@ def cmake_onoff(boolean):
         return "OFF"
 
 
+def get_default_cmake_generator():
+    "Return the default CMake gemerator or None"
+
+    if "win" in guessed_platform():
+        return "NMake Makefiles"
+    return None
+
+
 usage = """usage: %prog [options] arg1 arg2 [cmake options]
 
 This script provide a easy way for build Amelet-HDF C library. The main
@@ -101,6 +109,7 @@ Copy/colle the cmake command line into QtCreator for build the project.
 
 
 def main():
+    platform = guessed_platform()
     parser = OptionParser(usage=usage)
 
     group = OptionGroup(parser, "General Configure Options", "")
@@ -126,6 +135,16 @@ def main():
                      action="store_true", default=False)
     parser.add_option_group(group)
 
+    group = OptionGroup(parser, "CMake", "")
+    group.add_option("--cmake-generator",
+                     dest="cmake_generator",
+                     default=get_default_cmake_generator(),
+                     help="Define the generator used by CMake")
+    group.add_option("--cmake-args",
+                     dest="cmake_args", default="",
+                     help="The value of this option are directly provide to camke")
+    parser.add_option_group(group)
+
     group = OptionGroup(parser, "Control", "")
     group.add_option("--clean",
                      action="store_true", dest="clean", default=False,
@@ -149,24 +168,30 @@ def main():
     # Configure cmake with adk
     if options.hdf5 is not None:
         hdf5_path = normpath(options.hdf5)
-        cmake_options.setdefault("HDF5_DIR", hdf5_path)
+        cmake_options.setdefault("HDF5_DIR:PATH", hdf5_path)
 
     if options.prefix is not None:
-        cmake_options.setdefault("CMAKE_INSTALL_PREFIX",
+        cmake_options.setdefault("CMAKE_INSTALL_PREFIX:PATH",
                                  normpath(options.prefix))
 
     if options.docs is not None:
         cmake_options.setdefault(
-            "AMELETHDF_BUILD_DOCS", cmake_onoff(options.docs))
+            "AMELETHDF_BUILD_DOCS:BOOL", cmake_onoff(options.docs))
 
     if options.flavor is not None:
         cmake_options.setdefault("CMAKE_BUILD_TYPE", options.flavor)
         cmake_options.setdefault(
-            "AMELETHDF_ENABLE_COVERAGE",
+            "AMELETHDF_ENABLE_COVERAGE:BOOL",
             cmake_onoff(options.flavor == "Debug"))
 
     args = ["-D%s=%s" % (name, val) for name, val in cmake_options.items()]
     args += user_args
+
+    # configure cmake
+    if options.cmake_args:
+        args += options.cmake_args.split(" ")
+    if options.cmake_generator:
+        args.extend(("-G", options.cmake_generator))
 
     # deal with build dir.
     srcdir = None
