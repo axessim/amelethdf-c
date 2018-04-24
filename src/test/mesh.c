@@ -1169,6 +1169,24 @@ char* test_write_smesh() {
 }
 
 
+char *test_umsh_made_of_nodes()
+{
+  AH5_umesh_t mesh;
+  AH5_init_umesh(&mesh, 0, 0, 1, 0, 0, 0);
+  mu_assert_eq("check umesh nb element nodes", mesh.nb_elementnodes, 0);
+  mu_assert_eq("check umesh element nodes", mesh.elementnodes, NULL);
+  mu_assert_eq("check umesh nb element types", mesh.nb_elementtypes, 0);
+  mu_assert_eq("check umesh element types", mesh.elementtypes, NULL);
+  mu_assert_eq("check umesh nb nodes", mesh.nb_nodes[0], 1);
+  mu_assert("check umesh nodes", mesh.nodes != NULL);
+
+  AH5_free_umesh(&mesh);
+  mu_assert_eq("check umesh nb element types", mesh.nb_nodes[0], 0);
+  mu_assert_eq("check umesh element types", mesh.nodes, NULL);
+
+  return MU_FINISHED_WITHOUT_ERRORS;
+}
+
 
 // Run all tests
 char *all_tests()
@@ -1183,6 +1201,7 @@ char *all_tests()
   mu_run_test(test_write_mesh);
   mu_run_test(test_element_size);
   mu_run_test(test_write_smesh);
+  mu_run_test(test_umsh_made_of_nodes);
 
   return MU_FINISHED_WITHOUT_ERRORS;
 }

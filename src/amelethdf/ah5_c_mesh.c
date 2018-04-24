@@ -1476,13 +1476,19 @@ char AH5_read_umesh(hid_t file_id, const char *path, AH5_umesh_t *umesh)
     path2 = malloc((strlen(path) + strlen(AH5_G_ELEMENT_NODES) + 1) * sizeof(*path2));
     strcpy(path2, path);
     strcat(path2, AH5_G_ELEMENT_NODES);
-    if (AH5_path_valid(file_id, path2))
+    if (AH5_path_valid(file_id, path2)) {
       if (H5LTget_dataset_ndims(file_id, path2, &nb_dims) >= 0)
         if (nb_dims <= 1)
           if (H5LTget_dataset_info(file_id, path2, &(umesh->nb_elementnodes), &type_class, &length) >= 0)
             if (type_class == H5T_INTEGER && length == 4)
               if (AH5_read_int_dataset(file_id, path2, umesh->nb_elementnodes, &(umesh->elementnodes)))
                 success = AH5_TRUE;
+    }
+    else
+    {
+      umesh->nb_elementnodes = 0;
+      success = AH5_TRUE;
+    }
     if (!success)
     {
       AH5_print_err_dset(AH5_C_MESH, path2);
@@ -1497,7 +1503,7 @@ char AH5_read_umesh(hid_t file_id, const char *path, AH5_umesh_t *umesh)
     path2 = realloc(path2, (strlen(path) + strlen(AH5_G_ELEMENT_TYPES) + 1) * sizeof(*path2));
     strcpy(path2, path);
     strcat(path2, AH5_G_ELEMENT_TYPES);
-    if (AH5_path_valid(file_id, path2))
+    if (AH5_path_valid(file_id, path2)) {
       if (H5LTget_dataset_ndims(file_id, path2, &nb_dims) >= 0)
         if (nb_dims <= 1)
           if (H5LTget_dataset_info(file_id, path2, &(umesh->nb_elementtypes), &type_class, &length) >= 0)
@@ -1514,6 +1520,12 @@ char AH5_read_umesh(hid_t file_id, const char *path, AH5_umesh_t *umesh)
                 umesh->elementtypes = NULL;
               }
             }
+    }
+    else
+    {
+      umesh->nb_elementtypes = 0;
+      success = AH5_TRUE;
+    }
     if (!success)
     {
       AH5_print_err_dset(AH5_C_MESH, path2);
