@@ -22,6 +22,8 @@ AH5_PUBLIC char AH5_write_flat_str_dataset(hid_t loc_id, const char *dset_name, 
                                            const size_t slen, const char *buf);
 AH5_PUBLIC char AH5_write_int_dataset(hid_t loc_id, const char *dset_name, const hsize_t len,
                                       const int *wdata);
+AH5_PUBLIC char AH5_write_long_dataset(hid_t loc_id, const char *dset_name, const hsize_t len,
+                                       const long *wdata);
 AH5_PUBLIC char AH5_write_flt_dataset(hid_t loc_id, const char *dset_name, const hsize_t len,
                                       const float *wdata);
 AH5_PUBLIC char AH5_write_cpx_dataset(hid_t loc_id, const char *dset_name, const hsize_t len,

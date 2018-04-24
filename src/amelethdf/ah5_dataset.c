@@ -132,6 +132,22 @@ char AH5_write_int_dataset(hid_t loc_id, const char *dset_name, const hsize_t le
 }
 
 
+// Write 1D long dataset
+char AH5_write_long_dataset(
+    hid_t loc_id, const char *dset_name, const hsize_t len, const long *wdata)
+{
+  char success = AH5_FALSE;
+  hsize_t dims[1] = {len};
+  H5O_info_t info;
+
+  H5Oget_info(loc_id, &info);
+  if (info.type == H5O_TYPE_GROUP)
+    if (H5LTmake_dataset_long(loc_id, dset_name, 1, dims, wdata) >= 0)
+      success = AH5_TRUE;
+  return success;
+}
+
+
 // Write 1D float dataset
 char AH5_write_flt_dataset(hid_t loc_id, const char *dset_name, const hsize_t len,
                            const float *wdata)
