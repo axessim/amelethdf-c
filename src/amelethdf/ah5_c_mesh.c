@@ -1480,7 +1480,7 @@ char AH5_read_umesh(hid_t file_id, const char *path, AH5_umesh_t *umesh)
       if (H5LTget_dataset_ndims(file_id, path2, &nb_dims) >= 0)
         if (nb_dims <= 1)
           if (H5LTget_dataset_info(file_id, path2, &(umesh->nb_elementnodes), &type_class, &length) >= 0)
-            if (type_class == H5T_INTEGER && length == 4)
+            if (type_class == H5T_INTEGER)
               if (AH5_read_int_dataset(file_id, path2, umesh->nb_elementnodes, &(umesh->elementnodes)))
                 success = AH5_TRUE;
     }
@@ -1507,7 +1507,7 @@ char AH5_read_umesh(hid_t file_id, const char *path, AH5_umesh_t *umesh)
       if (H5LTget_dataset_ndims(file_id, path2, &nb_dims) >= 0)
         if (nb_dims <= 1)
           if (H5LTget_dataset_info(file_id, path2, &(umesh->nb_elementtypes), &type_class, &length) >= 0)
-            if (type_class == H5T_INTEGER && length == 1)
+            if (type_class == H5T_INTEGER)
             {
               umesh->elementtypes = (char *) malloc((size_t) umesh->nb_elementtypes * sizeof(char));
               dset_id = H5Dopen(file_id, path2, H5P_DEFAULT);
