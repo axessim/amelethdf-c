@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <assert.h>
 
 #include <ah5.h>
 #include <hdf5.h>
@@ -10,10 +11,70 @@
 //! Test suite counter.
 int tests_run = 0;
 
+
+// Build a misformed umesh with elementNodes and elementTypes of wrong type.
+char build_misformed_umesh(const char* fpath)
+{
+  char success = AH5_FALSE;
+  const int etypes[1] = {1};
+  const long enodes[2] = {0, 1};
+  hsize_t i;
+  hid_t file_id;
+  hid_t cmesh_id;
+  hid_t gmesh_id;
+  hid_t mesh_id;
+  AH5_mesh_t mesh;
+  AH5_umesh_t* umesh = NULL;
+
+  if (&mesh == AH5_init_mesh(&mesh, 1)) {
+    if (mesh.groups == AH5_init_msh_group(mesh.groups, "/mesh/mesh", 1, 0)) {
+      if (mesh.groups->msh_instances == AH5_init_msh_instance(
+              mesh.groups->msh_instances, "/mesh/mesh/mesh", MSH_UNSTRUCTURED)) {
+        umesh = &mesh.groups->msh_instances->data.unstructured;
+
+        // init nodes
+        if (umesh == AH5_init_umesh(umesh, 0, 0, 2, 0, 0, 0)) {
+          for (i = 0; i < umesh->nb_nodes[0]*umesh->nb_nodes[1]; i++)
+            umesh->nodes[i] = i;
+
+          file_id = AH5_create(fpath, H5F_ACC_TRUNC, NULL);
+          if (file_id >= 0) {
+            if (AH5_TRUE == AH5_write_mesh(file_id, &mesh)) {
+              cmesh_id = H5Gopen(file_id, "mesh", H5P_DEFAULT);
+              if (cmesh_id >= 0) {
+                gmesh_id = H5Gopen(cmesh_id, "mesh", H5P_DEFAULT);
+                if (gmesh_id >= 0) {
+                  mesh_id = H5Gopen(gmesh_id, "mesh", H5P_DEFAULT);
+                  if (mesh_id >= 0) {
+                    if (H5Ldelete(mesh_id, "elementTypes", H5P_DEFAULT) >= 0 &&
+                        H5Ldelete(mesh_id, "elementNodes", H5P_DEFAULT) >= 0) {
+                      if (AH5_write_int_dataset(mesh_id, "elementTypes", 1, etypes) == AH5_TRUE &&
+                          AH5_write_long_dataset(mesh_id, "elementNodes", 2, enodes) == AH5_TRUE) {
+                        success = AH5_TRUE;
+                      }
+                    }
+                    H5Gclose(mesh_id);
+                  }
+                  H5Gclose(gmesh_id);
+                }
+                H5Gclose(cmesh_id);
+              }
+            }
+            AH5_close(file_id);
+          }
+        }
+      }
+    }
+    AH5_free_mesh(&mesh);
+  }
+  return success;
+}
+
+
 //! Build a simple unstructured mesh two tetra,
 void build_umesh_1(AH5_umesh_t *umesh)
 {
-  int i;
+  hsize_t i;
   AH5_usom_table_t *som;
 
   // init nodes
@@ -380,7 +441,7 @@ char *test_init_functions()
   mu_assert_eq("check field", smesh.groups->entitytype, AH5_GROUP_NODE);
   mu_assert_eq("check field", smesh.groups->dims[0], 1);
   mu_assert_ne("check field", smesh.groups->elements, NULL);
-  mu_assert_eq("check field", smesh.groups->normals, NULL);
+  mu_assert_eq_ptr("check field", smesh.groups->normals, NULL);
 
   mu_assert_eq_ptr(
     "empty mesh", AH5_init_sgroup(smesh.groups+1, "group 1", 1, AH5_GROUP_EDGE),
@@ -389,7 +450,7 @@ char *test_init_functions()
   mu_assert_eq("check field", smesh.groups[1].entitytype, AH5_GROUP_EDGE);
   mu_assert_eq("check field", smesh.groups[1].dims[0], 1);
   mu_assert_ne("check field", smesh.groups[1].elements, NULL);
-  mu_assert_eq("check field", smesh.groups[1].normals, NULL);
+  mu_assert_eq_ptr("check field", smesh.groups[1].normals, NULL);
 
   mu_assert_eq_ptr(
     "empty mesh", AH5_init_sgroup(smesh.groups+2, "group 2", 10, AH5_GROUP_FACE),
@@ -407,7 +468,7 @@ char *test_init_functions()
   mu_assert_eq("check field", smesh.groups[3].entitytype, AH5_GROUP_VOLUME);
   mu_assert_eq("check field", smesh.groups[3].dims[0], 1);
   mu_assert_ne("check field", smesh.groups[3].elements, NULL);
-  mu_assert_eq("check field", smesh.groups[3].normals, NULL);
+  mu_assert_eq_ptr("check field", smesh.groups[3].normals, NULL);
 
   mu_assert_eq_ptr(
     "empty mesh", AH5_init_sgroup(smesh.groups+3, NULL, 1, AH5_GROUP_ENTITYTYPE_UNDEF),
@@ -474,7 +535,7 @@ char *test_write_groupgroup()
   char **groupgroupnames;
   char **rdata;
   size_t sdim;
-  int ndims, i;
+  hsize_t i;
   hsize_t dims[1];
 
   file_id = AH5_auto_test_file();
@@ -504,7 +565,7 @@ char *test_write_groupgroup()
   filetype = H5Dget_type(dset);
   sdim = H5Tget_size(filetype);
   space = H5Dget_space(dset);
-  ndims = H5Sget_simple_extent_dims(space, dims, NULL);
+  H5Sget_simple_extent_dims(space, dims, NULL);
   rdata = (char **) malloc(dims[0] * sizeof (char *));
   rdata[0] = (char *) malloc(dims[0] * sdim * sizeof (char));
   for (i=1; i<dims[0]; i++)
@@ -539,7 +600,7 @@ char *test_write_unstructured_mesh_group()
 {
   hid_t file_id;
   AH5_ugroup_t ugrp;
-  int i;
+  hsize_t  i;
 
   file_id = AH5_auto_test_file();
 
@@ -548,7 +609,7 @@ char *test_write_unstructured_mesh_group()
   ugrp.groupelts = NULL;
   ugrp.nb_groupelts = 0;
 
-  mu_assert_false("Negative numbre of groups.", AH5_write_ugroup(file_id, &ugrp, 0));
+  mu_assert_true("Negative numbre of groups.", AH5_write_ugroup(file_id, &ugrp, 0));
   mu_assert_false("Empty group.", AH5_write_ugroup(file_id, &ugrp, 1));
 
   // Write a simple group by relative path name.
@@ -586,7 +647,8 @@ char *test_write_umesh()
 {
   AH5_umesh_t umesh;
   AH5_msh_instance_t mesh;
-  hid_t file_id, loc_id;
+  hid_t file_id = -1;
+  hid_t loc_id;
 
   // Bad used
   mu_assert("Can not write an empty umesh!",
@@ -637,7 +699,7 @@ char *test_write_unstructured_nodes_mesh()
 {
   AH5_umesh_t umesh;
   hid_t file_id, loc_id;
-  int i;
+  hsize_t i;
 
   // Build the nesh
   // init nodes
@@ -827,7 +889,7 @@ char *test_read_umesh()
 
 
 //! Test
-const char *test_element_size()
+char *test_element_size()
 {
   mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_INVALID), 0);
   mu_assert_eq("Check element_size", AH5_element_size(AH5_UELE_BAR2), 2);
@@ -1174,15 +1236,37 @@ char *test_umsh_made_of_nodes()
   AH5_umesh_t mesh;
   AH5_init_umesh(&mesh, 0, 0, 1, 0, 0, 0);
   mu_assert_eq("check umesh nb element nodes", mesh.nb_elementnodes, 0);
-  mu_assert_eq("check umesh element nodes", mesh.elementnodes, NULL);
+  mu_assert_eq_ptr("check umesh element nodes", mesh.elementnodes, NULL);
   mu_assert_eq("check umesh nb element types", mesh.nb_elementtypes, 0);
-  mu_assert_eq("check umesh element types", mesh.elementtypes, NULL);
+  mu_assert_eq_ptr("check umesh element types", mesh.elementtypes, NULL);
   mu_assert_eq("check umesh nb nodes", mesh.nb_nodes[0], 1);
   mu_assert("check umesh nodes", mesh.nodes != NULL);
 
   AH5_free_umesh(&mesh);
   mu_assert_eq("check umesh nb element types", mesh.nb_nodes[0], 0);
-  mu_assert_eq("check umesh element types", mesh.nodes, NULL);
+  mu_assert_eq_ptr("check umesh element types", mesh.nodes, NULL);
+
+  return MU_FINISHED_WITHOUT_ERRORS;
+}
+
+
+char *test_misformed_umesh()
+{
+  hid_t ahdf;
+
+  mu_assert_eq("misformed mesh creation", build_misformed_umesh("test.h5"), AH5_TRUE);
+
+  ahdf = H5Fopen("test.h5", H5F_ACC_RDONLY, H5P_DEFAULT);
+  mu_assert("open", ahdf > 0);
+  AH5_msh_instance_t msh;
+  mu_assert_eq("read", AH5_read_msh_instance(ahdf, "/mesh/mesh/mesh", &msh), AH5_TRUE);
+  H5Fclose(ahdf);
+  mu_assert_eq("type", msh.type, MSH_UNSTRUCTURED);
+  mu_assert_eq("nb etypes", msh.data.unstructured.nb_elementtypes, 1);
+  mu_assert_eq("etypes", msh.data.unstructured.elementtypes[0], 1);
+  mu_assert_eq("nb enodes", msh.data.unstructured.nb_elementnodes, 2);
+  mu_assert_eq("enodes", msh.data.unstructured.elementnodes[0], 0);
+  mu_assert_eq("enodes", msh.data.unstructured.elementnodes[1], 1);
 
   return MU_FINISHED_WITHOUT_ERRORS;
 }
@@ -1202,12 +1286,13 @@ char *all_tests()
   mu_run_test(test_element_size);
   mu_run_test(test_write_smesh);
   mu_run_test(test_umsh_made_of_nodes);
+  mu_run_test(test_misformed_umesh);
 
   return MU_FINISHED_WITHOUT_ERRORS;
 }
 
 // Main function, run tests and print results.
-int main(int argc, char **argv)
+int main(int UNUSED(argc), char **UNUSED(argv))
 {
   char *result;
   tests_run = 0;
