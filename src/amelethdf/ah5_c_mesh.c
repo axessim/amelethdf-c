@@ -8,6 +8,7 @@
  *
  */
 
+#include "ah5_general.h"
 #include "ah5_internal.h"
 #include "ah5_c_mesh.h"
 #include "ah5_log.h"
@@ -309,8 +310,8 @@ AH5_sgroup_t *AH5_init_sgroup(
       group->elements = (int*) malloc(sizeof(int) * group->dims[0] * group->dims[1]);
       success &= group->elements != NULL;
       if (!success) {
-        printf("***** ERROR: Fail to initialize group: "
-               "fail to allocate elements: %d x %d.\n", group->dims[0], group->dims[1]);
+        printf("***** ERROR: Fail to initialize group: fail to allocate elements: %d x %d.\n",
+               (int)group->dims[0], (int)group->dims[1]);
       }
 
       if (entitytype == AH5_GROUP_FACE)
@@ -1768,7 +1769,9 @@ char AH5_read_mlk_instance(hid_t file_id, const char *path, AH5_mlk_instance_t *
 // Read mesh group
 char AH5_read_msh_group(hid_t file_id, const char *path, AH5_msh_group_t *msh_group)
 {
-  char *path2, *path3, rdata = AH5_TRUE;
+  char *path2 = NULL;
+  char *path3 = NULL;
+  char rdata = AH5_TRUE;
   AH5_children_t children;
   hsize_t i, j = 0;
 
@@ -1832,7 +1835,8 @@ char AH5_read_msh_group(hid_t file_id, const char *path, AH5_msh_group_t *msh_gr
     AH5_print_err_path(AH5_C_MESH, path);
     rdata = AH5_FALSE;
   }
-  free(path2);
+  if (path2 != NULL) free(path2);
+  if (path3 != NULL) free(path3);
   return rdata;
 }
 
@@ -2055,7 +2059,7 @@ char AH5_write_ssom_pie_table(hid_t id, const AH5_ssom_pie_table_t *som) {
         if (H5TBmake_table(
                 basename,  // not used
                 loc_id, basename, nb_fields, som->nb_points, sizeof(AH5_ssom_pie_t),
-                field_names, field_offsets, field_types, nb_fields, NULL, 1, data) < 0) {
+                (const char**)field_names, field_offsets, field_types, nb_fields, NULL, 1, data) < 0) {
           success = AH5_FALSE;
 
         } else {
@@ -2221,26 +2225,38 @@ char AH5_write_ugroup(hid_t loc_id, const AH5_ugroup_t *ugroup, hsize_t nb_ugrou
   else
     grp = H5Gcreate(loc_id, AH5_CATEGORY_NAME(AH5_G_GROUP), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
-  for (i = 0; i < nb_ugroup; ++i)
-  {
-    if (ugroup[i].nb_groupelts > 0)
+  if (grp >= 0) {
+    if (nb_ugroup == 0)
     {
-      basename = AH5_get_name_from_path(ugroup[i].path);  // No allocation.
-      if (AH5_write_int_dataset(grp, basename, ugroup[i].nb_groupelts, ugroup[i].groupelts))
-      {
-        AH5_write_group_entitytype(ugroup[i].entitytype, &ctype, &centitytype);
-        if (AH5_write_str_attr(grp, basename, AH5_A_TYPE, ctype))
-          success = AH5_TRUE;
-        if (AH5_strcmp(ctype, AH5_V_NODE))
-          success = AH5_write_str_attr(grp, basename, AH5_A_ENTITY_TYPE, centitytype);
-      }
-      if (!success)
-        break;
+      success = AH5_TRUE;
     }
+    else
+    {
+      for (i = 0; i < nb_ugroup; ++i)
+      {
+        if (ugroup[i].nb_groupelts > 0)
+        {
+          basename = AH5_get_name_from_path(ugroup[i].path);  // No allocation.
+          if (AH5_write_int_dataset(grp, basename, ugroup[i].nb_groupelts, ugroup[i].groupelts))
+          {
+            AH5_write_group_entitytype(ugroup[i].entitytype, &ctype, &centitytype);
+            if (AH5_write_str_attr(grp, basename, AH5_A_TYPE, ctype))
+              success = AH5_TRUE;
+            if (AH5_strcmp(ctype, AH5_V_NODE))
+              success = AH5_write_str_attr(grp, basename, AH5_A_ENTITY_TYPE, centitytype);
+          }
+          if (!success)
+            break;
+        }
+        else
+        {
+          success = AH5_FALSE;
+          break;
+        }
+      }
+    }
+    success &= !HDF5_FAILED(H5Gclose(grp));
   }
-
-  success &= !HDF5_FAILED(H5Gclose(grp));
-
   return success;
 }
 
@@ -2327,7 +2343,7 @@ char AH5_write_usom_pie_table(hid_t id, const AH5_usom_pie_table_t *som, const c
         if (H5TBmake_table(
                 basename,  // not used
                 loc_id, basename, nb_fields, som->nb_points, sizeof(AH5_usom_pie_t),
-                field_names, field_offsets, field_types, nb_fields, NULL, 1, data) < 0) {
+                (const char**)field_names, field_offsets, field_types, nb_fields, NULL, 1, data) < 0) {
           success = AH5_FALSE;
 
         } else {
@@ -2360,7 +2376,6 @@ char AH5_write_usom_pie_table(hid_t id, const AH5_usom_pie_table_t *som, const c
 char AH5_write_usom_ef_table(
     hid_t id, const AH5_usom_ef_table_t *som, const char *path, AH5_usom_class_t type) {
   char success = AH5_TRUE;
-  hsize_t nb_fields, i, j;
   hid_t loc_id;
   char* basename;
 
@@ -2412,7 +2427,7 @@ char AH5_write_usom_ef_table(
 
 char AH5_write_umesh_som_table(hid_t file_id, const AH5_usom_table_t *som, hsize_t nb_som)
 {
-  int i;
+  hsize_t i;
 
   for (i = 0; i < nb_som; ++i)
     if (!AH5_write_usom_table(file_id, som))
@@ -2441,7 +2456,7 @@ char AH5_write_usom_table(hid_t id, const AH5_usom_table_t *som) {
 /** Write unstructured mesh */
 char AH5_write_umesh(hid_t msh_id, const AH5_umesh_t *umesh)
 {
-  int i;
+  hsize_t i;
   char success = AH5_FALSE;
 
   // Check umesh sanity first
@@ -2453,13 +2468,13 @@ char AH5_write_umesh(hid_t msh_id, const AH5_umesh_t *umesh)
     return success;
 
   // Write m x 1 dataset "elementNodes" (32-bit signed integer)
-  if (!AH5_write_int_dataset(msh_id, AH5_CATEGORY_NAME(AH5_G_ELEMENT_NODES), umesh->nb_elementnodes,
-                             umesh->elementnodes))
+  if (!AH5_write_int_dataset(msh_id, AH5_CATEGORY_NAME(AH5_G_ELEMENT_NODES),
+                             umesh->nb_elementnodes, umesh->elementnodes))
     return success;
 
   // Write m x 1 dataset "elementTypes" (8-bit signed char)
-  if (!AH5_write_char_dataset(msh_id, AH5_CATEGORY_NAME(AH5_G_ELEMENT_TYPES), umesh->nb_elementtypes,
-                              umesh->elementtypes))
+  if (!AH5_write_char_dataset(msh_id, AH5_CATEGORY_NAME(AH5_G_ELEMENT_TYPES),
+                              umesh->nb_elementtypes, umesh->elementtypes))
     return success;
 
   // Write m x n dataset "nodes" (32-bit signed float)
@@ -2515,7 +2530,7 @@ char AH5_write_msh_instance(hid_t loc_id, const AH5_msh_instance_t *msh_instance
 }
 
 // Write link between mesh
-char AH5_write_mlk_instance(hid_t loc_id, const AH5_mlk_instance_t *mlk_instance)
+char AH5_write_mlk_instance(hid_t UNUSED(loc_id), const AH5_mlk_instance_t *UNUSED(mlk_instance))
 {
   char success = AH5_FALSE;
 
@@ -3176,8 +3191,6 @@ AH5_groupgroup_t * AH5_copy_groupgroup(AH5_groupgroup_t *dest, const AH5_groupgr
 // Copy an unstructured group
 AH5_ugroup_t * AH5_copy_ugroup(AH5_ugroup_t *dest, const AH5_ugroup_t *src)
 {
-  AH5_group_entitytype_t entitytype;
-
   if (src && dest)
   {
     if (!AH5_init_ugroup(
