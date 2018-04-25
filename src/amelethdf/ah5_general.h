@@ -16,6 +16,20 @@
 extern "C" {
 #endif
 
+// Portable UNUSED parameter macro used on function signature for C and C++
+#ifdef UNUSED
+// pass
+#elif defined(__GNUC__)
+# define UNUSED(x) UNUSED_ ## x __attribute__((unused))
+#elif defined(__LCLINT__)
+# define UNUSED(x) /*@unused@*/ x
+#elif defined(__cplusplus)
+# define UNUSED(x)
+#else
+# define UNUSED(x) x
+#endif
+
+
 // See http://gcc.gnu.org/wiki/Visibility
 #if defined _WIN32 || defined __CYGWIN__
 # ifdef AMELETHDF_C_LIBRARY
