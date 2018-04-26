@@ -1253,12 +1253,12 @@ char *test_umsh_made_of_nodes()
 char *test_misformed_umesh()
 {
   hid_t ahdf;
+  AH5_msh_instance_t msh;
 
   mu_assert_eq("misformed mesh creation", build_misformed_umesh("test.h5"), AH5_TRUE);
 
   ahdf = H5Fopen("test.h5", H5F_ACC_RDONLY, H5P_DEFAULT);
   mu_assert("open", ahdf > 0);
-  AH5_msh_instance_t msh;
   mu_assert_eq("read", AH5_read_msh_instance(ahdf, "/mesh/mesh/mesh", &msh), AH5_TRUE);
   H5Fclose(ahdf);
   mu_assert_eq("type", msh.type, MSH_UNSTRUCTURED);
