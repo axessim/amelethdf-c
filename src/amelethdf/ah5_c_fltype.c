@@ -64,7 +64,7 @@ AH5_datasetx_t *AH5_init_datasetx(
  */
 AH5_datasetx_t *AH5_init_datasetx_str(AH5_datasetx_t *data, hsize_t data_size, hsize_t strlen)
 {
-  int i;
+  hsize_t i;
 
   if (data)
   {
@@ -1109,7 +1109,7 @@ char AH5_write_ft_vector (hid_t file_id, AH5_vector_t *vector)
   return success;
 }
 
-char AH5_write_ft_linearlistofreal1 (hid_t file_id, AH5_linearlistofreal1_t *linearlistofreal1)
+char AH5_write_ft_linearlistofreal1 (hid_t UNUSED(file_id), AH5_linearlistofreal1_t *linearlistofreal1)
 {
   char success = AH5_FALSE;
 
@@ -1119,7 +1119,7 @@ char AH5_write_ft_linearlistofreal1 (hid_t file_id, AH5_linearlistofreal1_t *lin
   return success;
 }
 
-char AH5_write_ft_linearlistofreal2 (hid_t file_id, AH5_linearlistofreal2_t *linearlistofreal2)
+char AH5_write_ft_linearlistofreal2 (hid_t UNUSED(file_id), AH5_linearlistofreal2_t *linearlistofreal2)
 {
   char success = AH5_FALSE;
 
@@ -1129,7 +1129,7 @@ char AH5_write_ft_linearlistofreal2 (hid_t file_id, AH5_linearlistofreal2_t *lin
   return success;
 }
 
-char AH5_write_ft_logarithmlistofreal (hid_t file_id,
+char AH5_write_ft_logarithmlistofreal (hid_t UNUSED(file_id),
                                        AH5_logarithmlistofreal_t *logarithmlistofreal)
 {
   char success = AH5_FALSE;
@@ -1140,7 +1140,7 @@ char AH5_write_ft_logarithmlistofreal (hid_t file_id,
   return success;
 }
 
-char AH5_write_ft_perdecadelistofreal (hid_t file_id,
+char AH5_write_ft_perdecadelistofreal (hid_t UNUSED(file_id),
                                        AH5_perdecadelistofreal_t *perdecadelistofreal)
 {
   char success = AH5_FALSE;
@@ -1151,7 +1151,7 @@ char AH5_write_ft_perdecadelistofreal (hid_t file_id,
   return success;
 }
 
-char AH5_write_ft_linearlistofinteger2 (hid_t file_id,
+char AH5_write_ft_linearlistofinteger2 (hid_t UNUSED(file_id),
                                         AH5_linearlistofinteger2_t *linearlistofinteger2)
 {
   char success = AH5_FALSE;
@@ -1162,7 +1162,7 @@ char AH5_write_ft_linearlistofinteger2 (hid_t file_id,
   return success;
 }
 
-char AH5_write_ft_rationalfunction (hid_t file_id, AH5_rationalfunction_t *rationalfunction)
+char AH5_write_ft_rationalfunction (hid_t UNUSED(file_id), AH5_rationalfunction_t *rationalfunction)
 {
   char success = AH5_FALSE;
 
@@ -1172,7 +1172,7 @@ char AH5_write_ft_rationalfunction (hid_t file_id, AH5_rationalfunction_t *ratio
   return success;
 }
 
-char AH5_write_ft_generalrationalfunction (hid_t file_id,
+char AH5_write_ft_generalrationalfunction (hid_t UNUSED(file_id),
     AH5_generalrationalfunction_t *generalrationalfunction)
 {
   char success = AH5_FALSE;
@@ -1183,7 +1183,7 @@ char AH5_write_ft_generalrationalfunction (hid_t file_id,
   return success;
 }
 
-char AH5_write_ft_rational (hid_t file_id, AH5_rational_t *rational)
+char AH5_write_ft_rational (hid_t UNUSED(file_id), AH5_rational_t *rational)
 {
   char success = AH5_FALSE;
 
@@ -1312,8 +1312,6 @@ char AH5_write_ft_arrayset (hid_t file_id, AH5_arrayset_t *arrayset)
 
 char AH5_write_floatingtype (hid_t file_id, AH5_ft_t *floatingtype)
 {
-  char success = AH5_FALSE;
-
   switch (floatingtype->type)
   {
   case FT_SINGLE_INTEGER:
@@ -1346,9 +1344,9 @@ char AH5_write_floatingtype (hid_t file_id, AH5_ft_t *floatingtype)
     return AH5_write_ft_dataset(file_id, &(floatingtype->data.dataset));
   case FT_ARRAYSET:
     return AH5_write_ft_arrayset(file_id, &(floatingtype->data.arrayset));
+  default:
+    return AH5_FALSE;
   }
-
-  return success;
 }
 
 

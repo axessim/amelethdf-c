@@ -302,8 +302,8 @@ char AH5_write_flt_array(hid_t loc_id, const char *dset_name, const int rank, co
 
 
 // Write nD complex float dataset
-char AH5_write_cpx_array(hid_t loc_id, const char *dset_name, const int rank, const hsize_t dims[],
-                         const AH5_complex_t *wdata)
+char AH5_write_cpx_array(hid_t UNUSED(loc_id), const char *dset_name, const int UNUSED(rank), const hsize_t dims[],
+                         const AH5_complex_t *UNUSED(wdata))
 {
   char success = AH5_FALSE;
 

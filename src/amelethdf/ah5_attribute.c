@@ -104,7 +104,7 @@ char AH5_read_cpx_attr(hid_t loc_id, const char *path, const char *attr_name, AH
 // null char (similar to strlen).
 size_t AH5_read_str_attr_len(hid_t loc_id, const char *path, const char *attr_name)
 {
-  hid_t attr_id, filetype, memtype;
+  hid_t attr_id, filetype;
   size_t sdim = 0;
 
   if (AH5_path_valid(loc_id, path) || strcmp(path, ".") == 0)
@@ -159,7 +159,7 @@ char AH5_read_opt_attrs(hid_t loc_id, const char *path, AH5_opt_attrs_t *opt_att
   char success = AH5_FALSE, is_mandatory;
   H5O_info_t object_info;
   hsize_t i, j, k = 0;
-  hid_t attr_id, type_id, memtype;
+  hid_t attr_id, type_id;
   float buf[2];
   hsize_t nb_present_mandatory_attrs = 0;
   char temp_name[AH5_ATTR_LENGTH];
