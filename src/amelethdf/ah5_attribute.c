@@ -142,6 +142,7 @@ char AH5_read_str_attr(hid_t loc_id, const char *path, const char *attr_name, ch
         success = AH5_TRUE;
       else
         free(*rdata);
+      (*rdata)[sdim - 1] = '\0';
       H5Tclose(memtype);
       H5Tclose(atype);
       H5Aclose(attr_id);
