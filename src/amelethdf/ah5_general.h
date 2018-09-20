@@ -79,6 +79,11 @@ extern "C" {
 #endif
 
 
+#define AH5_DEPRECATED(new_func_name) {                                             \
+    printf("***** WARNING: the function '%s' is deprecated, use '%s' instead.", \
+           __func__, new_func_name);}
+
+
 #ifdef AH5_SDT_CCOMPLEX
 #include <complex.h>
 typedef float complex AH5_complex_t;
@@ -189,13 +194,16 @@ AH5_PUBLIC hid_t AH5_H5Tcreate_cpx_filetype(void);
 AH5_PUBLIC char AH5_version_minimum(const char *required_version, const char *sim_version);
 AH5_PUBLIC char *AH5_trim_zeros(const char *version);
 AH5_PUBLIC char AH5_path_valid(hid_t file_id, const char *path);
-AH5_PUBLIC AH5_set_t AH5_add_to_set(AH5_set_t aset, char *aelement);
-AH5_PUBLIC int AH5_index_in_set(AH5_set_t aset, char *aelement, hsize_t *index);
+AH5_PUBLIC AH5_set_t* AH5_add_to_set(AH5_set_t* aset, const char *aelement);
+AH5_PUBLIC char AH5_index_in_set(const AH5_set_t* aset, const char *aelement, hsize_t *index);
+AH5_PUBLIC void AH5_free_set(AH5_set_t* aset);
+AH5_PUBLIC void AH5_init_set(AH5_set_t* aset);
 AH5_PUBLIC AH5_children_t AH5_read_children_name(hid_t file_id, const char *path);
 
 AH5_PUBLIC char *AH5_get_name_from_path(const char *path);
 AH5_PUBLIC char *AH5_get_base_from_path(const char *path);
 AH5_PUBLIC char *AH5_join_path(char *base, const char *head);
+AH5_PUBLIC size_t AH5_join_pathn(const char *base, const char *head, char* joined, size_t size);
 AH5_PUBLIC char *AH5_trim_path(char *path);
 AH5_PUBLIC char AH5_setpath(char **dest, const char *src);
 

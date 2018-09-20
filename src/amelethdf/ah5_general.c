@@ -225,6 +225,53 @@ char *AH5_trim_zeros(const char *version)
 
 /** Join path. Append to 'base' the new node 'name' and return 'base'
  *
+ * @param base Base path.
+ * @param head Head path.
+ * @param joined Joined path. If NULL only required size is returned.
+ * @param size Masimal number of char written in joined.
+ *
+ * @return The actual size of the joined path.
+ *
+ * Example:
+ *
+ *  "/base" + "name" -> "/base/name"
+ *  "base/" + "name" -> "base/name"
+ *  "./base" + "/name" -> "./base/name"
+ *  "" + "name" -> "name"
+ *  "base" + "" -> "base"
+ *
+ */
+size_t AH5_join_pathn(const char *base, const char *head, char* joined, size_t size) {
+  const size_t base_len = strlen(base);
+  const size_t head_len = strlen(head);
+  size_t actual_size = 0;
+  int need_sep = 0;
+  if (base_len == 0) {
+    if (joined != NULL) strncpy(joined, head, size);
+    actual_size = head_len + 1;
+  } else if (head_len == 0) {
+    if (joined != NULL) strncpy(joined, base, size);
+    actual_size = base_len + 1;
+  } else {
+    need_sep = base[base_len - 1] != '/' && head[0] != '/';
+    actual_size = 1 + base_len + head_len + ((need_sep)? 1: 0);
+    if (joined != NULL) {
+      joined[0] = '\0';
+      strncat(joined, base, size);
+      size = (size >= base_len)? size - base_len: 0;
+      if (need_sep) strncat(joined, "/", size);
+      size = (size >= 1)? size - 1: 0;
+      strncat(joined, head, size);
+    }
+  }
+
+  return actual_size;
+}
+
+
+/** Join path. Append to 'base' the new node 'name' and return 'base'
+ *
+ *
  * Parameters:
  *  - base: Pointer to the destination path, which should contain a C string,
  *    and be large enough to contain the concatenated resulting path.
@@ -244,6 +291,8 @@ char *AH5_trim_zeros(const char *version)
  */
 char *AH5_join_path(char *base, const char *head)
 {
+  AH5_DEPRECATED("AH5_join_pathn");
+
   char *endbase = NULL;
 
   if (head[0] == '\0')
@@ -388,30 +437,61 @@ char AH5_setpath(char **dest, const char *src)
 
 
 // Add element to aset; allocates new memory!!!
-AH5_set_t AH5_add_to_set(AH5_set_t aset, char *aelement)
+AH5_set_t* AH5_add_to_set(AH5_set_t* aset, const char *aelement)
 {
-  hsize_t id = 0;
-
-  if (!AH5_index_in_set(aset, aelement, &id))
+  char** tmp = NULL;
+  hsize_t i = 0;
+  size_t len = 0;
+  if (!AH5_index_in_set(aset, aelement, NULL))
   {
-    aset.values[aset.nb_values] = strdup(aelement);  // malloc!!!
-    aset.nb_values++;
+    tmp = malloc(sizeof(char*) * (1 + aset->nb_values));
+    for (i = 0; i < aset->nb_values; ++i) {
+      len = strlen(aset->values[i]);
+      tmp[i] = malloc(len + 1);
+      strncpy(tmp[i], aset->values[i], len);
+      tmp[i][len] = '\0';
+      free(aset->values[i]);
+    }
+    len = strlen(aelement);
+    tmp[aset->nb_values] = malloc(len);
+    strncpy(tmp[i], aelement, len);
+    tmp[i][len] = '\0';
+
+    free(aset->values);
+    aset->values = tmp;
+    ++aset->nb_values;
   }
   return aset;
 }
 
 
-// Return the index of first occurrence of an element
-int AH5_index_in_set(AH5_set_t aset, char *aelement, hsize_t *index)
+void AH5_init_set(AH5_set_t* aset) {
+  aset->nb_values = 0;
+  aset->values = NULL;
+}
+
+void AH5_free_set(AH5_set_t* aset)
 {
-  int present = AH5_FALSE;
+  hsize_t i = 0;
+  if (aset->nb_values > 0) {
+    for (i = 0; i < aset->nb_values; ++i) free(aset->values[i]);
+    free(aset->values);
+    AH5_init_set(aset);
+  }
+}
+
+
+// Return the index of first occurrence of an element
+char AH5_index_in_set(const AH5_set_t* aset, const char *aelement, hsize_t *index)
+{
+  char present = AH5_FALSE;
   hsize_t i;
 
-  for (i = 0; i < aset.nb_values; i++)
+  for (i = 0; i < aset->nb_values; i++)
   {
-    if (strcmp(aelement, aset.values[i]) == 0)
+    if (AH5_strcmp(aelement, aset->values[i]) == 0)
     {
-      *index = i;
+      if (index != NULL) *index = i;
       present = AH5_TRUE;
       break;
     }
@@ -479,7 +559,7 @@ char *AH5_get_name_from_path(const char *path)
 {
   int i;
 
-  for (i = (int) strlen(path); i > -1; i--)
+  for (i = (int) strlen(path); i > -1; --i)
     if (path[i] == '/')
       break;
   return (char *) path + i + 1;

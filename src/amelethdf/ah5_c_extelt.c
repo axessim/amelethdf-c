@@ -1,3 +1,4 @@
+#include "ah5_general.h"
 #include "ah5_c_extelt.h"
 #include "ah5_log.h"
 
@@ -17,8 +18,16 @@ char AH5_read_eet_dataset (hid_t file_id, const char *path, AH5_eet_dataset_t *e
   hsize_t dims[2], i;
   size_t length;
   int nb_dims;
+  ssize_t fpath_size;
 
   eet_dataset->path = strdup(path);
+
+  fpath_size = H5Fget_name(file_id, NULL, 0);
+  // Strange behavior of H5Fget_name: it seems to return to small length.
+  eet_dataset->principle_file_path = malloc(fpath_size + 2);
+  eet_dataset->principle_file_path[fpath_size + 1] = '\0';
+  eet_dataset->principle_file_path[fpath_size] = '\0';
+  H5Fget_name(file_id, eet_dataset->principle_file_path, fpath_size + 1);
 
   if (AH5_path_valid(file_id, path))
     if (H5LTget_dataset_ndims(file_id, path, &nb_dims) >= 0)
@@ -122,6 +131,11 @@ void AH5_print_external_element (const AH5_external_element_t *external_element)
 // Close external files and free memory used by dataset in externalElement
 void AH5_free_eet_dataset (AH5_eet_dataset_t *eet_dataset)
 {
+  if (eet_dataset->principle_file_path != NULL)
+  {
+    free(eet_dataset->principle_file_path);
+    eet_dataset->principle_file_path = NULL;
+  }
   if (eet_dataset->path != NULL)
   {
     free(eet_dataset->path);
@@ -167,29 +181,35 @@ char AH5_open_external_files(AH5_eet_dataset_t *eet_dataset)
   char success = AH5_TRUE;
   hid_t file_id;
   hid_t *buf_id;
-  AH5_set_t buf = {NULL, 0};
+  AH5_set_t buf;
+  AH5_init_set(&buf);
   hsize_t i;
-  char *name;
+  char const* name;
   hsize_t id = 0;
+  size_t fpath_size;
+  char* fpath;
 
-  buf_id = (hid_t *) malloc((size_t) eet_dataset->nb_eed_items * sizeof(
-                              hid_t)); // temporary buffer containing file_id
-  buf.values = (char **) malloc((size_t) eet_dataset->nb_eed_items * sizeof(
-                                  char *)); // temporary buffer containing paths
-  for (i = 0; i < eet_dataset->nb_eed_items; i++)
+  buf_id = malloc(eet_dataset->nb_eed_items * sizeof(hid_t));  // temporary buffer containing file_id
+  for (i = 0; i < eet_dataset->nb_eed_items; ++i)
   {
     name = eet_dataset->eed_items[AH5_EE_EXTERNAL_FILE_NAME(i)]; // copy of the pointer (shorter expression)
-    if (!AH5_index_in_set(buf, name, &id))  // avoid multiple opening
+
+    if (AH5_index_in_set(&buf, name, &id) == AH5_FALSE)  // avoid multiple opening
     {
-      if (ACCESS(name, R_OK) != -1)
+
+      fpath_size = AH5_file_path_next_to(eet_dataset->principle_file_path, name, NULL, 0);
+      fpath = malloc(fpath_size);
+      AH5_file_path_next_to(eet_dataset->principle_file_path, name, fpath, fpath_size);
+      if (ACCESS(fpath, F_OK | R_OK) != -1)
       {
-        file_id = H5Fopen(name, H5F_ACC_RDONLY, H5P_DEFAULT);
+        file_id = H5Fopen(fpath, H5F_ACC_RDONLY, H5P_DEFAULT);
       }
       else
       {
         file_id = -1;
       }
-      buf = AH5_add_to_set(buf, name);  // new memory allocation!!!
+      free(fpath);
+      AH5_add_to_set(&buf, name);
       buf_id[buf.nb_values - 1] = file_id;
       eet_dataset->file_id[i] = file_id;  // write new file_id into the ext_elt structure
       if (file_id < 0)
@@ -204,11 +224,7 @@ char AH5_open_external_files(AH5_eet_dataset_t *eet_dataset)
     }
   }
 
-  for (i = 0; i < buf.nb_values; i++)
-  {
-    free(buf.values[i]);
-  }
-  free(buf.values);
+  AH5_free_set(&buf);
   free(buf_id);
   return success;
 }
@@ -243,4 +259,38 @@ char AH5_close_external_files(AH5_eet_dataset_t *eet_dataset)
     }
   }
   return success;
+}
+
+
+char AH5_is_external_element(
+    const AH5_external_element_t* externals, const char* path,
+    hid_t* file_id, char const** external_path) {
+  char is_external = AH5_FALSE;
+  AH5_eet_dataset_t* element = externals->datasets;
+  char const* internal_path = NULL;
+  hsize_t iext = 0;
+
+  for (; element != externals->datasets + externals->nb_datasets && is_external == AH5_FALSE; ++element)
+  {
+    for (iext = 0; iext < element->nb_eed_items; ++iext)
+    {
+      internal_path = element->eed_items[AH5_EE_INTERNAL_NAME(iext)];
+      if (AH5_strcmp(path, internal_path) == 0)
+      {
+        *file_id = element->file_id[iext];
+        *external_path = element->eed_items[AH5_EE_EXTERNAL_NAME(iext)];
+        is_external = AH5_TRUE;
+        break;
+      }
+    }
+  }
+  return is_external;
+}
+
+
+size_t AH5_file_path_next_to(const char* fpath1, const char* fname2, char* fpath2, size_t size) {
+  char* dpath = AH5_get_base_from_path(fpath1);
+  const size_t asize = AH5_join_pathn(dpath, fname2, fpath2, size);
+  free(dpath);
+  return asize;
 }
