@@ -182,13 +182,13 @@ char AH5_open_external_files(AH5_eet_dataset_t *eet_dataset)
   hid_t file_id;
   hid_t *buf_id;
   AH5_set_t buf;
-  AH5_init_set(&buf);
   hsize_t i;
   char const* name;
   hsize_t id = 0;
   size_t fpath_size;
   char* fpath;
 
+  AH5_init_set(&buf);
   buf_id = malloc(eet_dataset->nb_eed_items * sizeof(hid_t));  // temporary buffer containing file_id
   for (i = 0; i < eet_dataset->nb_eed_items; ++i)
   {
