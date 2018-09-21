@@ -78,6 +78,9 @@ extern "C" {
 # define ACCESS _acess
 #endif
 
+#ifdef _WIN32
+#define __func__ __FUNCTION__
+#endif
 
 #define AH5_DEPRECATED(new_func_name) {                                             \
     printf("***** WARNING: the function '%s' is deprecated, use '%s' instead.", \
