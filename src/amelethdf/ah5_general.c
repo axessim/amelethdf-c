@@ -291,9 +291,9 @@ size_t AH5_join_pathn(const char *base, const char *head, char* joined, size_t s
  */
 char *AH5_join_path(char *base, const char *head)
 {
-  AH5_DEPRECATED("AH5_join_pathn");
-
   char *endbase = NULL;
+
+  AH5_DEPRECATED("AH5_join_pathn");
 
   if (head[0] == '\0')
     return base;
