@@ -125,18 +125,20 @@ static char *test_chararray(hid_t hdf)
   int maxdim = 3;
   int i;
 
+  char status = AH5_TRUE;
+
   const char *initval;
 
   hid_t strtype = H5Tcopy(H5T_C_S1);
   H5Tset_size(strtype, 7);
 
-  char status = AH5_create_earray(hdf, // parent
-                                  "ll_strarray",                          // name
-                                  rank,                                   // nb of dimensions
-                                  dims,                                // dimension at creation
-                                  extdims,                             // max dimension
-                                  strtype,
-                                  &dataset);                           // dataset
+  status = AH5_create_earray(hdf,            // parent
+                             "ll_strarray",  // name
+                             rank,           // nb of dimensions
+                             dims,           // dimension at creation
+                             extdims,        // max dimension
+                             strtype,
+                             &dataset);      // dataset
 
   mu_assert("Creation of strEarray failed.", status==AH5_TRUE);
 
