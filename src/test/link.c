@@ -16,7 +16,7 @@ hid_t CreateTestFile()
   hid_t link_grp;
   hid_t links;
   hid_t link;
-  const char *labels[2] = {"label subject", "label object"};
+  char *labels[2] = {"label subject", "label object"};
 
   fid = H5Fcreate(TEST_FILE, H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
   if (fid < 0) return fid;
@@ -31,7 +31,7 @@ hid_t CreateTestFile()
   if (link < 0) return link;
 
   // Label array.
-  ah5_status = AH5_write_str_dataset(label_grp, "link", 2, 14, labels);
+  ah5_status = AH5_write_str_dataset(label_grp, "link", 2, 14, (char** const)labels);
   if (ah5_status != AH5_TRUE) return -1;
 
   // link attribute.s
@@ -181,7 +181,7 @@ void DisplayResult(const Result *result)
 }
 
 // All files must have the main function.
-int main(int argc, char **argv)
+int main(int UNUSED(argc), char **UNUSED(argv))
 {
   Result result;
   hid_t file_id;

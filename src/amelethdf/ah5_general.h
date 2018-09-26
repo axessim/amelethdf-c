@@ -2,7 +2,6 @@
 #define AH5_GENERAL_H
 
 
-
 #include <stdlib.h>
 #include <string.h>
 #include <hdf5.h>

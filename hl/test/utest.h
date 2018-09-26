@@ -201,4 +201,18 @@ __inline void filecopy(const char *input, const char *output)
 //! Close the test file.
 #define AH5_close_test_file(file_id) H5Fclose((file_id))
 
+#define AH5_UTEST_MAIN(all_tests, count)            \
+  int main() { \
+    char *result = all_tests();                     \
+    count = 0;                                      \
+    if (result != 0) {                              \
+      printf("%s\n", result);                       \
+    } else {                                        \
+      printf("ALL TESTS PASSED\n");                 \
+    }                                               \
+    printf("Tests run: %d\n", count);               \
+                                                    \
+    return result != 0;                             \
+  }
+
 #endif // _TESTS_TEST_H_

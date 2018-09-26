@@ -13,7 +13,6 @@ int tests_run = 0;
 char *test_attribute()
 {
   hid_t       file, group, invalid_id = -3;         /* Handles */
-  int         k;
   int         tst_int[3] = {1, 2, 3};
   float       tst_flt[3] = {1.1, 2.2, 3.3};
   char        tst_str[4][60] = {"Amelet", "is just", "beautiful", "but number of characters of given attribute is limited"};
@@ -151,21 +150,4 @@ char *all_tests()
 }
 
 
-int main(int argc, char **argv)
-{
-  char *result;
-  tests_run = 0;
-  result = all_tests();
-
-  if (result != 0)
-  {
-    printf("%s\n", result);
-  }
-  else
-  {
-    printf("ALL TESTS PASSED\n");
-  }
-  printf("Tests run: %d\n", tests_run);
-
-  return result != 0;
-}
+AH5_UTEST_MAIN(all_tests, tests_run);

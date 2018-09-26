@@ -18,8 +18,21 @@ AH5_PUBLIC char AH5_read_str_dataset(hid_t file_id, const char *path, const hsiz
 
 AH5_PUBLIC char AH5_write_char_dataset(hid_t loc_id, const char *dset_name, const hsize_t len,
                                        const char *wdata);
+
+
+/**
+ * Write a dataset made of c-strings of same length written one after the other.
+ *
+ * @param loc_id id of the location
+ * @param dset_name name of the dataset
+ * @param len number of strings in the dataset
+ * @param slen Length (returned by strlen) of the strings
+ * @param wdata data to be stored.
+ *
+ * @return status of writing: AH5_TRUE if success.
+ */
 AH5_PUBLIC char AH5_write_flat_str_dataset(hid_t loc_id, const char *dset_name, const hsize_t len,
-                                           const size_t slen, const char *buf);
+                                           const size_t slen, const char* buf);
 AH5_PUBLIC char AH5_write_int_dataset(hid_t loc_id, const char *dset_name, const hsize_t len,
                                       const int *wdata);
 AH5_PUBLIC char AH5_write_long_dataset(hid_t loc_id, const char *dset_name, const hsize_t len,
@@ -41,22 +54,8 @@ AH5_PUBLIC char AH5_write_cpx_dataset(hid_t loc_id, const char *dset_name, const
  * @return status of writing: AH5_TRUE if success.
  */
 AH5_PUBLIC char AH5_write_str_dataset(hid_t loc_id, const char *dset_name, const hsize_t len,
-                                      const size_t slen, char **wdata);
+                                      const size_t slen, char** const wdata);
 
-
-/**
- * Write a dataset made of c-strings of same length written one after the other.
- *
- * @param loc_id id of the location
- * @param dset_name name of the dataset
- * @param len number of strings in the dataset
- * @param slen Length (returned by strlen) of the strings
- * @param wdata data to be stored.
- *
- * @return status of writing: AH5_TRUE if success.
- */
-AH5_PUBLIC char AH5_write_flatstr_dataset(hid_t loc_id, const char *dset_name, const hsize_t len,
-                                          const size_t slen, char *wdata);
 
 AH5_PUBLIC char AH5_write_int_array(hid_t loc_id, const char *dset_name, const int rank,
                                     const hsize_t dims[], const int *wdata);

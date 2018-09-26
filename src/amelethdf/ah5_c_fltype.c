@@ -1197,15 +1197,11 @@ char AH5_write_ft_dataset (hid_t file_id, AH5_dataset_t *dataset)
 {
   char success = AH5_FALSE;
   hsize_t total_size = 1;
-  int i;
+  int i = 0;
 
-  if (AH5_init_floatingtype(file_id, dataset->path) && dataset->nb_dims > 0)
-  {
-    switch (dataset->type_class)
-    {
-      for (i = 0; i < dataset->nb_dims; ++i)
-        total_size *= dataset->dims[i];
-
+  if (AH5_init_floatingtype(file_id, dataset->path) && dataset->nb_dims > 0) {
+    for (i = 0; i < dataset->nb_dims; ++i) total_size *= dataset->dims[i];
+    switch (dataset->type_class) {
     case H5T_INTEGER:
       if (AH5_write_int_array(file_id, dataset->path, dataset->nb_dims, dataset->dims, dataset->values.i))
         success = AH5_TRUE;

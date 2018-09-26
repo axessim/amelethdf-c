@@ -6,7 +6,7 @@
 
 #ifndef AH5_WITH_MPI_
 
-int main(int argc, char **argv)
+int main(int UNUSED(argc), char **UNUSED(argv))
 {
 
   printf("MPI extension is not enabled, test done.\n");
@@ -392,21 +392,3 @@ int main(int argc, char **argv)
 }
 
 #endif // End AH5_WITH_MPI_
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

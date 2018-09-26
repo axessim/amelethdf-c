@@ -13,13 +13,12 @@ hid_t create_type_id(hid_t real_or_double)
 {
   hid_t type_id;
   hid_t type_size, two_type_size;
-  herr_t status;
 
   type_size = H5Tget_size(real_or_double);
   two_type_size = type_size * 2;
   type_id = H5Tcreate(H5T_COMPOUND, two_type_size);
-  status = H5Tinsert(type_id, "r", 0, real_or_double);
-  status = H5Tinsert(type_id, "i", type_size, real_or_double);
+  H5Tinsert(type_id, "r", 0, real_or_double);
+  H5Tinsert(type_id, "i", type_size, real_or_double);
   return type_id;
 }
 
@@ -27,16 +26,12 @@ hid_t create_type_id(hid_t real_or_double)
 // Data extracted from http://www.hdfgroup.org/ftp/HDF5/examples/examples-by-api/hdf5-examples/1_8/C/H5T/h5ex_t_string.c
 char *test_write_complex_dataset()
 {
-  hid_t file_id, filetype, memtype, space, dset;
-  size_t sdim;
-  hsize_t dims[1] = {2};
-  int ndims, i, j;
+  hid_t file_id;
+  int i, j;
   int rank;
   int length;
-  size_t type_size;
   float *buf;
   hid_t real_id_type;
-  herr_t status;
   hsize_t *newdims;
 
   AH5_complex_t cplx[2];
@@ -50,14 +45,14 @@ char *test_write_complex_dataset()
   // Test the written data using hdf5 API.
 
   real_id_type = create_type_id(H5T_NATIVE_FLOAT);
-  status = H5LTget_dataset_ndims(file_id, "dataset_name", &rank);
-  newdims = (hsize_t *) malloc(rank * sizeof(hsize_t));
-  status = H5LTget_dataset_info(file_id,"dataset_name" , newdims, NULL, NULL);
+  H5LTget_dataset_ndims(file_id, "dataset_name", &rank);
+  newdims = malloc(rank * sizeof(hsize_t));
+  H5LTget_dataset_info(file_id,"dataset_name" , newdims, NULL, NULL);
   length = newdims[0];
   for (i = 1; i < rank; i++)
     length = length * newdims[i];
-  buf = (float *) malloc(2 * length * sizeof(float));
-  status = H5LTread_dataset(file_id, "dataset_name", real_id_type, buf);
+  buf = malloc(2 * length * sizeof(float));
+  H5LTread_dataset(file_id, "dataset_name", real_id_type, buf);
   j = 0;
   for (i = 0; i < length; i++)
   {
@@ -81,7 +76,6 @@ char *test_read_complex_dataset()
   hid_t dataspace_id, dset_id, dtr_id, dti_id, file_id;
   size_t type_size;
   hid_t type_id;
-  herr_t status, status_2;
   float *real_part, *imag_part;
   const char *path = "dataset_name";
   AH5_complex_t cplx[2];
@@ -106,13 +100,13 @@ char *test_read_complex_dataset()
                       H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   type_size = H5Tget_size(H5T_NATIVE_FLOAT);
   dtr_id = H5Tcreate(H5T_COMPOUND,type_size);
-  status = H5Tinsert(dtr_id,"r",0, H5T_NATIVE_FLOAT);
+  H5Tinsert(dtr_id,"r",0, H5T_NATIVE_FLOAT);
   dti_id = H5Tcreate(H5T_COMPOUND,type_size);
-  status = H5Tinsert(dti_id,"i",0, H5T_NATIVE_FLOAT);
-  status = H5Dwrite(dset_id,dtr_id,H5S_ALL,H5S_ALL,H5P_DEFAULT,real_part);
-  status = H5Dwrite(dset_id,dti_id,H5S_ALL,H5S_ALL,H5P_DEFAULT,imag_part);
-  status = H5Tclose(dtr_id);
-  status = H5Tclose(dti_id);
+  H5Tinsert(dti_id,"i",0, H5T_NATIVE_FLOAT);
+  H5Dwrite(dset_id,dtr_id,H5S_ALL,H5S_ALL,H5P_DEFAULT,real_part);
+  H5Dwrite(dset_id,dti_id,H5S_ALL,H5S_ALL,H5P_DEFAULT,imag_part);
+  H5Tclose(dtr_id);
+  H5Tclose(dti_id);
   free(real_part);
   free(imag_part);
   mu_assert("Read complex dataset.",
@@ -136,8 +130,10 @@ char *test_write_string_dataset()
 
   hid_t file_id, filetype, memtype, space, dset;
   size_t sdim;
+  int ndims;
   hsize_t dims[1] = {DIM0};
-  int ndims, i, j;
+  hsize_t i;
+  int j;
   /*char wdata[DIM0][SDIM] =*/
   char *wdata[] = {"Parting", "is such", "sweet  ", "sorrow."};
   char **rdata;
@@ -157,9 +153,10 @@ char *test_write_string_dataset()
   sdim = H5Tget_size(filetype);
   space = H5Dget_space(dset);
   ndims = H5Sget_simple_extent_dims(space, dims, NULL);
+  mu_assert("Wrong number of dimensions", ndims == 1);
   rdata = (char **) malloc(dims[0] * sizeof (char *));
   rdata[0] = (char *) malloc(dims[0] * (sdim + 1) * sizeof (char));
-  for (i=1; i<dims[0]; i++)
+  for (i = 1; i < dims[0]; ++i)
     rdata[i] = rdata[0] + i * (sdim + 1);
   memtype = H5Tcopy(H5T_C_S1);
   mu_assert("HDF5 error in H5LTget_dataset_info",
@@ -252,22 +249,5 @@ char *all_tests()
   return MU_FINISHED_WITHOUT_ERRORS;
 }
 
-// Main function, run tests and print results.
-int main(int argc, char **argv)
-{
-  char *result;
-  tests_run = 0;
-  result = all_tests();
 
-  if (result != 0)
-  {
-    printf("%s\n", result);
-  }
-  else
-  {
-    printf("ALL TESTS PASSED\n");
-  }
-  printf("Tests run: %d\n", tests_run);
-
-  return result != 0;
-}
+AH5_UTEST_MAIN(all_tests, tests_run);

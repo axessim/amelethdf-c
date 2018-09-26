@@ -246,4 +246,20 @@ void filecopy(const char *input, const char *output)
 #define AH5_open_exemple_file(name) AH5_open(XSTR(AH5_DATA_DIR) "/" name, H5F_ACC_RDONLY)
 #define AH5_open_test_data_file(name) AH5_open(XSTR(AH5_TEST_DATA_DIR) "/" name, H5F_ACC_RDONLY)
 
+
+#define AH5_UTEST_MAIN(all_tests, count)            \
+  int main() { \
+    char *result = all_tests();                     \
+    count = 0;                                      \
+    if (result != 0) {                              \
+      printf("%s\n", result);                       \
+    } else {                                        \
+      printf("ALL TESTS PASSED\n");                 \
+    }                                               \
+    printf("Tests run: %d\n", count);               \
+                                                    \
+    return result != 0;                             \
+  }
+
+
 #endif // _TESTS_TEST_H_

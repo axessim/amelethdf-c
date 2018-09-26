@@ -5,30 +5,18 @@
 #include <ah5_edataset.h>
 
 
-char Verify(hid_t loc_id, const char *path, hsize_t size, int *ref)
-{
+char Verify(hid_t loc_id, const char *path, hsize_t size, int *ref) {
   // Read the dataset we have just written
-
-//  printf("Verify %s : %d\n", path, (int)size);
-
-  int *data;
-  int i;
+  // printf("Verify %s : %d\n", path, (int)size);
+  int *data = NULL;
+  hsize_t i = 0;
   char status = AH5_read_int_dataset(loc_id, path, size, &data);
 
-  if(status!=AH5_TRUE)
-  {
-    return status;
-  }
+  if(status!=AH5_TRUE) return status;
 
-
-  for(i=0; i<size; i++)
-  {
+  for(i=0; i < size; i++) {
     //printf("%s %d %d\n", path, ref[i], data[i]);
-
-    if(data[i] != ref[i])
-    {
-      status = AH5_FALSE;
-    }
+    if(data[i] != ref[i]) status = AH5_FALSE;
   }
 
   return status;
@@ -57,49 +45,39 @@ static char *test_low_level(hid_t hdf)
   int maxdim = 3;
   hsize_t size;
   int *data;
-  int iu;
-  int iv;
+  hsize_t iu = 0;
+  hsize_t iv = 0;
 
-  char status = AH5_create_earray(hdf, // parent
-                                  "ll_array",                          // name
-                                  2,                                   // nb of dimensions
-                                  dims,                                // dimension at creation
-                                  extdims,                             // max dimension
+  char status = AH5_create_earray(hdf,               // parent
+                                  "ll_array",        // name
+                                  2,                 // nb of dimensions
+                                  dims,              // dimension at creation
+                                  extdims,           // max dimension
                                   H5T_NATIVE_INT,
-                                  &dataset);                           // dataset
+                                  &dataset);         // dataset
 
-  mu_assert("Creation of Earray failed.", status==AH5_TRUE);
-
+  mu_assert("Creation of Earray failed.", status == AH5_TRUE);
 
   // Extend dataset
 
   extdims[0] = 0;
   extdims[1] = 1;
 
+  for (i = 0; i < maxdim; ++i) {
+    int value[] = { 2 + i, 2 + i };
 
-  for(i=0; i<maxdim; i++)
-  {
-    int value[] =
-    {
-      2 + i, 2 + i
-    };
-
-    if(i!=0)
-    {
+    if (i != 0) {
       status = AH5_extend_earray(dataset, 2, dims, extdims);
-
-      mu_assert("Extension of Earray failed.", status==AH5_TRUE);
+      mu_assert("Extension of Earray failed.", status == AH5_TRUE);
     }
 
-    mu_assert("Dims of Earray have not been updated.", dims[1]==i+1);
-
+    mu_assert("Dims of Earray have not been updated.", dims[1] == (hsize_t)(i + 1));
 
     start[1] = i;
     status = AH5_write_earray(dataset, 2, dims,
                               block, start, ones, ones, block, value, H5T_NATIVE_INT);
 
-    mu_assert("Write extension of Earray failed.", status==AH5_TRUE);
-
+    mu_assert("Write extension of Earray failed.", status == AH5_TRUE);
   }
 
   // Close the dataset
@@ -108,12 +86,10 @@ static char *test_low_level(hid_t hdf)
 
   // Read the dataset we have just written
   size = dims[0] * dims[1];
-  data = (int *)malloc(size * sizeof(int));
+  data = malloc(size * sizeof(int));
 
-  for(iu=0; iu<dims[0]; iu++)
-  {
-    for(iv=0; iv<dims[1]; iv++)
-    {
+  for (iu = 0; iu < dims[0]; ++iu) {
+    for (iv = 0; iv < dims[1]; ++iv) {
       i = iu * (int)dims[1] + iv;
       data[i] = iv+2;
     }
@@ -123,10 +99,9 @@ static char *test_low_level(hid_t hdf)
 
   free(data);
 
-  mu_assert("Error in the written data.", status==AH5_TRUE);
+  mu_assert("Error in the written data.", status == AH5_TRUE);
 
   return NULL;
-
 }
 
 
@@ -153,7 +128,7 @@ static char *test_chararray(hid_t hdf)
   const char *initval;
 
   hid_t strtype = H5Tcopy(H5T_C_S1);
-  herr_t err = H5Tset_size(strtype, 7);
+  H5Tset_size(strtype, 7);
 
   char status = AH5_create_earray(hdf, // parent
                                   "ll_strarray",                          // name
@@ -371,7 +346,7 @@ static char *test_Earrayset(hid_t hdf)
 
 
 
-int main(int argc, char **argv)
+int main(int UNUSED(argc), char **UNUSED(argv))
 {
 
   hid_t hdf = H5Fcreate("ut_ext_array.h5",

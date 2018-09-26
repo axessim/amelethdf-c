@@ -66,67 +66,39 @@ char AH5_extend_earray(hid_t dataset,
 
 
 char AH5_write_array_with_properties(hid_t dataset,
-                                     const int rank, const hsize_t dims[], const hsize_t blockdims[],
-                                     const hsize_t start[], const hsize_t stride[],
-                                     const hsize_t count[], const hsize_t block[],
-                                     const void *data, hid_t mem_type_id, hid_t properties)
-{
-  hid_t dataspace;
-  hid_t memspace;
-  herr_t status;
+                                     const int rank, const hsize_t *UNUSED(dims), const hsize_t blockdims[],
+                                     const hsize_t* start, const hsize_t* stride,
+                                     const hsize_t* count, const hsize_t* block,
+                                     const void *data, hid_t mem_type_id, hid_t properties) {
+  hid_t dataspace = 0;
+  hid_t memspace = 0;
+  herr_t status = 0;
+  char success = AH5_TRUE;
 
-  /* Get data space */
   dataspace = H5Dget_space(dataset);
-
-
-  /* Create the memory space */
   memspace = H5Screate_simple(rank, blockdims, NULL);
 
-
   /* Select the part to write */
-  status = H5Sselect_hyperslab(dataspace,
-                               H5S_SELECT_SET,
-                               start,
-                               stride,
-                               count,
-                               block);
+  status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start, stride, count, block);
 
-  if(HDF5_FAILED(status))
-  {
-
+  if (HDF5_FAILED(status)) {
     H5Sclose(memspace);
-
     H5Sclose(dataspace);
-
     return AH5_FALSE;
   }
 
-  /* Write data */
-  status = H5Dwrite(dataset, mem_type_id,
-                    memspace, dataspace, properties, data);
-
-
-  if(HDF5_FAILED(status))
-  {
-
-    H5Pclose(properties);
-
-    H5Dclose(dataset);
-
-    H5Sclose(memspace);
-
-    H5Sclose(dataspace);
-
-    return AH5_FALSE;
-  }
+  status = H5Dwrite(dataset, mem_type_id, memspace, dataspace, properties, data);
 
   H5Pclose(properties);
-
+  if(HDF5_FAILED(status)) {
+    H5Dclose(dataset);
+    success = AH5_FALSE;
+  } else {
+    success = AH5_TRUE;
+  }
   H5Sclose(memspace);
-
   H5Sclose(dataspace);
-
-  return AH5_TRUE;
+  return success;
 }
 
 

@@ -212,7 +212,7 @@ char AH5_write_cpx_dataset(hid_t loc_id, const char *dset_name, const hsize_t le
 // wdata[len][slen]; param slen: string length with null char.
 // TODO Check HDF5 return code.
 char AH5_write_flat_str_dataset(hid_t loc_id, const char *dset_name, const hsize_t len,
-                                const size_t slen, const char *buf)
+                                const size_t slen, char const* buf)
 {
   char success = AH5_FALSE;
   hid_t filetype, memtype, space, dset;
@@ -243,7 +243,7 @@ char AH5_write_flat_str_dataset(hid_t loc_id, const char *dset_name, const hsize
 // wdata[len][slen]; param slen: string length with null char.
 // TODO Check HDF5 return code.
 char AH5_write_str_dataset(hid_t loc_id, const char *dset_name, const hsize_t len,
-                           const size_t slen, char **wdata)
+                           const size_t slen, char** const wdata)
 {
   char success = AH5_FALSE;
   char *buf = NULL;
@@ -302,7 +302,7 @@ char AH5_write_flt_array(hid_t loc_id, const char *dset_name, const int rank, co
 
 
 // Write nD complex float dataset
-char AH5_write_cpx_array(hid_t UNUSED(loc_id), const char *dset_name, const int UNUSED(rank), const hsize_t dims[],
+char AH5_write_cpx_array(hid_t UNUSED(loc_id), const char *dset_name, const int UNUSED(rank), const hsize_t *UNUSED(dims),
                          const AH5_complex_t *UNUSED(wdata))
 {
   char success = AH5_FALSE;
