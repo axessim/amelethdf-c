@@ -88,10 +88,11 @@ AH5_PUBLIC char AH5_extend_earray(hid_t dataset,
                                   const int rank, hsize_t dims[], hsize_t extensiondims[]);
 
 
-AH5_PUBLIC char AH5_write_array_with_properties(hid_t dataset,
-    const int rank, const hsize_t dims[], const hsize_t blockdims[],
-    const hsize_t start[], const hsize_t stride[],
-    const hsize_t count[], const hsize_t block[],
+AH5_PUBLIC char AH5_write_array_with_properties(
+    hid_t dataset,
+    const int rank, const hsize_t *UNUSED(dims), const hsize_t blockdims[],
+    const hsize_t* start, const hsize_t* stride,
+    const hsize_t* count, const hsize_t* block,
     const void *data, hid_t mem_type_id, hid_t properties);
 
 AH5_PUBLIC char AH5_write_earray(hid_t dataset,
@@ -503,5 +504,3 @@ AH5_PUBLIC char AH5_append_PEarrayset(
 #endif
 
 #endif
-
-

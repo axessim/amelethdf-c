@@ -132,6 +132,22 @@ char AH5_write_int_dataset(hid_t loc_id, const char *dset_name, const hsize_t le
 }
 
 
+// Write 1D long dataset
+char AH5_write_long_dataset(
+    hid_t loc_id, const char *dset_name, const hsize_t len, const long *wdata)
+{
+  char success = AH5_FALSE;
+  hsize_t dims[1] = {len};
+  H5O_info_t info;
+
+  H5Oget_info(loc_id, &info);
+  if (info.type == H5O_TYPE_GROUP)
+    if (H5LTmake_dataset_long(loc_id, dset_name, 1, dims, wdata) >= 0)
+      success = AH5_TRUE;
+  return success;
+}
+
+
 // Write 1D float dataset
 char AH5_write_flt_dataset(hid_t loc_id, const char *dset_name, const hsize_t len,
                            const float *wdata)
@@ -195,8 +211,8 @@ char AH5_write_cpx_dataset(hid_t loc_id, const char *dset_name, const hsize_t le
 // Write 1D string dataset
 // wdata[len][slen]; param slen: string length with null char.
 // TODO Check HDF5 return code.
-char AH5_write_str_dataset(hid_t loc_id, const char *dset_name, const hsize_t len,
-                           const size_t slen, char **wdata)
+char AH5_write_flat_str_dataset(hid_t loc_id, const char *dset_name, const hsize_t len,
+                                const size_t slen, char const* buf)
 {
   char success = AH5_FALSE;
   hid_t filetype, memtype, space, dset;
@@ -227,6 +243,31 @@ char AH5_write_str_dataset(hid_t loc_id, const char *dset_name, const hsize_t le
   H5Sclose(space);
   H5Tclose(memtype);
   H5Tclose(filetype);
+
+  return success;
+}
+
+
+// Write 1D string dataset
+// wdata[len][slen]; param slen: string length with null char.
+// TODO Check HDF5 return code.
+char AH5_write_str_dataset(hid_t loc_id, const char *dset_name, const hsize_t len,
+                           const size_t slen, char** const wdata)
+{
+  char success = AH5_FALSE;
+  char *buf = NULL;
+  hsize_t k;
+
+  if (len > 0)
+    buf = (char *) malloc((size_t) len*(slen+1) * sizeof(char));
+
+  for (k = 0; k < len; k++)
+  {
+    buf[k * slen] = '\0';
+    strcat(buf + (k*(slen)), wdata[k]);
+  }
+
+  success = AH5_write_flat_str_dataset(loc_id, dset_name, len, slen, buf);
   free(buf);
 
   return success;
@@ -270,8 +311,8 @@ char AH5_write_flt_array(hid_t loc_id, const char *dset_name, const int rank, co
 
 
 // Write nD complex float dataset
-char AH5_write_cpx_array(hid_t loc_id, const char *dset_name, const int rank, const hsize_t dims[],
-                         const AH5_complex_t *wdata)
+char AH5_write_cpx_array(hid_t UNUSED(loc_id), const char *dset_name, const int UNUSED(rank), const hsize_t *UNUSED(dims),
+                         const AH5_complex_t *UNUSED(wdata))
 {
   char success = AH5_FALSE;
 

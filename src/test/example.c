@@ -35,12 +35,16 @@ static char *test_path_usage()
 
   // Build group from the file root by relative path (group name).
   grp1_id = H5Gcreate(file_id, "grp1", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  mu_assert("Fail to create grp 1", grp1_id >= 0);
   // Build group from a node with them name
   grp2_id = H5Gcreate(grp1_id, "grp2", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  mu_assert("Fail to create grp 2", grp2_id >= 0);
   // Build group from a node with relative path
   grp3_id = H5Gcreate(grp1_id, "grp2/grp3", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  mu_assert("Fail to create grp 3", grp3_id >= 0);
   // Build group with absolute path
   grp4_id = H5Gcreate(grp1_id, "/grp1/grp4", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  mu_assert("Fail to create grp 4", grp4_id >= 0);
 
   AH5_close_test_file(file_id);
 
@@ -57,19 +61,4 @@ static char *all_tests()
   return NULL; // And do not forget to return NULL at end to say success.
 }
 
-
-// All files must have the main function.
-int main(int argc, char **argv)
-{
-  char *result = all_tests();
-
-  if (result != 0)
-    printf("%s\n", result);
-  else
-    printf("ALL TESTS PASSED\n");
-  printf("Tests run: %d\n", tests_run);
-
-  return result != 0;
-}
-
-
+AH5_UTEST_MAIN(all_tests, tests_run);

@@ -2,7 +2,6 @@
 #define AH5_GENERAL_H
 
 
-
 #include <stdlib.h>
 #include <string.h>
 #include <hdf5.h>
@@ -15,6 +14,20 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+// Portable UNUSED parameter macro used on function signature for C and C++
+#ifdef UNUSED
+// pass
+#elif defined(__GNUC__)
+# define UNUSED(x) UNUSED_ ## x __attribute__((unused))
+#elif defined(__LCLINT__)
+# define UNUSED(x) /*@unused@*/ x
+#elif defined(__cplusplus)
+# define UNUSED(x)
+#else
+# define UNUSED(x) x
+#endif
+
 
 // See http://gcc.gnu.org/wiki/Visibility
 #if defined _WIN32 || defined __CYGWIN__
@@ -63,6 +76,14 @@ extern "C" {
 # define AH5_SDT_CCOMPLEX
 # define ACCESS _acess
 #endif
+
+#ifdef _WIN32
+#define __func__ __FUNCTION__
+#endif
+
+#define AH5_DEPRECATED(new_func_name) {                                             \
+    printf("***** WARNING: the function '%s' is deprecated, use '%s' instead.", \
+           __func__, new_func_name);}
 
 
 #ifdef AH5_SDT_CCOMPLEX
@@ -175,15 +196,20 @@ AH5_PUBLIC hid_t AH5_H5Tcreate_cpx_filetype(void);
 AH5_PUBLIC char AH5_version_minimum(const char *required_version, const char *sim_version);
 AH5_PUBLIC char *AH5_trim_zeros(const char *version);
 AH5_PUBLIC char AH5_path_valid(hid_t file_id, const char *path);
-AH5_PUBLIC AH5_set_t AH5_add_to_set(AH5_set_t aset, char *aelement);
-AH5_PUBLIC int AH5_index_in_set(AH5_set_t aset, char *aelement, hsize_t *index);
+AH5_PUBLIC AH5_set_t* AH5_add_to_set(AH5_set_t* aset, const char *aelement);
+AH5_PUBLIC char AH5_index_in_set(const AH5_set_t* aset, const char *aelement, hsize_t *index);
+AH5_PUBLIC void AH5_free_set(AH5_set_t* aset);
+AH5_PUBLIC void AH5_init_set(AH5_set_t* aset);
 AH5_PUBLIC AH5_children_t AH5_read_children_name(hid_t file_id, const char *path);
 
 AH5_PUBLIC char *AH5_get_name_from_path(const char *path);
 AH5_PUBLIC char *AH5_get_base_from_path(const char *path);
 AH5_PUBLIC char *AH5_join_path(char *base, const char *head);
+AH5_PUBLIC size_t AH5_join_pathn(const char *base, const char *head, char* joined, size_t size);
 AH5_PUBLIC char *AH5_trim_path(char *path);
 AH5_PUBLIC char AH5_setpath(char **dest, const char *src);
+
+AH5_PUBLIC int AH5_strcmp(const char * str1, const char * str2);
 
 //AH5_PUBLIC size_t AH5_max_str_len2(const char* a, const char* b);
 //AH5_PUBLIC size_t AH5_max_str_len3(const char* a, const char* b, const char* c);

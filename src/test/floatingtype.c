@@ -18,7 +18,7 @@ char *test_init_datasetx()
   mu_assert("bad input", !AH5_init_datasetx(&data, 1, H5T_NATIVE_LDOUBLE));
   mu_assert("empty", AH5_init_datasetx(&data, 0, H5T_FLOAT));
   mu_assert_eq_ptr("empty", data.f, NULL);
-  
+
   mu_assert("valid float", AH5_init_datasetx(&data, 5, H5T_FLOAT));
   mu_assert_ne("valid float", data.f, NULL);
   free(data.f);
@@ -26,7 +26,7 @@ char *test_init_datasetx()
   mu_assert("valid int", AH5_init_datasetx(&data, 5, H5T_INTEGER));
   mu_assert_ne("valid int", data.i, NULL);
   free(data.i);
-  
+
   return MU_FINISHED_WITHOUT_ERRORS;
 }
 
@@ -43,7 +43,7 @@ char *test_init_vector()
   mu_assert_eq_ptr("empty vec", vec.values.f, NULL);
   mu_assert_eq_ptr("empty vec", vec.values.i, NULL);
   free(vec.path);
-  
+
   vec.path = NULL;
   mu_assert("init without name", AH5_init_ft_vector(&vec, NULL, 10, H5T_FLOAT));
   mu_assert_eq_ptr("vec name", vec.path, NULL);
@@ -53,7 +53,7 @@ char *test_init_vector()
 
   mu_assert("init", AH5_init_ft_vector(&vec, "name", 10, H5T_FLOAT));
   AH5_free_ft_vector(&vec);
-  
+
   return MU_FINISHED_WITHOUT_ERRORS;
 }
 
@@ -117,7 +117,7 @@ char *test_init_arrayset()
   mu_assert_str_equal("data on mesh", flt.dims->values.s[0], "/mesh/path");
   mu_assert_eq("data on mesh", flt.dims->nb_values, 1);
   mu_assert_eq("data on mesh", flt.dims->type_class, AH5_TYPE_STRING);
-  
+
   AH5_free_ft_arrayset(&flt);
 
   mu_assert("2d float", AH5_init_ft_arrayset(&flt, "name", 2, dims2d, H5T_INTEGER));
@@ -138,7 +138,7 @@ char *test_init_arrayset()
   mu_assert_eq("2d float", flt.data.dims[1], 2);
   mu_assert_ne("2d float", flt.data.values.i, NULL);
   AH5_free_ft_arrayset(&flt);
-  
+
   return MU_FINISHED_WITHOUT_ERRORS;
 }
 
@@ -185,8 +185,8 @@ char *test_write_single_flotingtype()
 char *test_write_ft_vector()
 {
   hid_t file_id;
-  int i;
-  const int nb_values = 10;
+  hsize_t i;
+  const hsize_t nb_values = 10;
   float *fvalues;
 
   AH5_vector_t vector;
@@ -222,8 +222,7 @@ char *test_write_ft_vector()
 char *test_write_ft_dataset()
 {
   hid_t file_id;
-  int i;
-  const int nb_values = 10;
+  hsize_t i;
   float *fvalues;
 
   AH5_dataset_t ds;
@@ -261,8 +260,9 @@ char *test_write_ft_dataset()
 char *test_write_ft_arrayset()
 {
   hid_t file_id;
-  int i;
-  int nb_values = 1;
+  hsize_t i;
+  int dim = 0;
+  hsize_t nb_values = 1;
   float *fvalues;
   char **svalues;
 
@@ -296,10 +296,9 @@ char *test_write_ft_arrayset()
   array.data.opt_attrs.nb_instances = 0;
   array.data.nb_dims = array.nb_dims;
   array.data.dims = (hsize_t *)malloc(array.data.nb_dims*sizeof(hsize_t));
-  for (i = 0; i < array.data.nb_dims; ++i)
-  {
-    array.data.dims[i] = array.dims[i].nb_values;
-    nb_values *= array.dims[i].nb_values;
+  for (dim = 0; dim < array.data.nb_dims; ++dim) {
+    array.data.dims[dim] = array.dims[dim].nb_values;
+    nb_values *= array.dims[dim].nb_values;
   }
   array.data.values.f = (float *)malloc(nb_values*sizeof(float));
   for (i = 0; i < nb_values; ++i)
@@ -340,10 +339,7 @@ char *test_write_ft_arrayset()
   dataonmesh.data.dims[0] = 10;
   dataonmesh.data.dims[1] = dataonmesh.dims[1].nb_values;
   nb_values = 1;
-  for (i = 0; i < dataonmesh.data.nb_dims; ++i)
-  {
-    nb_values *= dataonmesh.data.dims[i];
-  }
+  for (dim = 0; dim < dataonmesh.data.nb_dims; ++dim) nb_values *= dataonmesh.data.dims[dim];
   dataonmesh.data.values.f = (float *)malloc(nb_values*sizeof(float));
   for (i = 0; i < nb_values; ++i)
     dataonmesh.data.values.f[i] = 0.3 * i;
@@ -384,22 +380,5 @@ char *all_tests()
   return MU_FINISHED_WITHOUT_ERRORS;
 }
 
-// Main function, run tests and print results.
-int main(int argc, char **argv)
-{
-  char *result;
-  tests_run = 0;
-  result = all_tests();
 
-  if (result != 0)
-  {
-    printf("%s\n", result);
-  }
-  else
-  {
-    printf("ALL TESTS PASSED\n");
-  }
-  printf("Tests run: %d\n", tests_run);
-
-  return result != 0;
-}
+AH5_UTEST_MAIN(all_tests, tests_run);

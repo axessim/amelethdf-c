@@ -19,9 +19,9 @@ char *test_read_exemple_file_1_5_4_near_field_with_nec_simulation()
   AH5_link_t link;
   AH5_mesh_t mesh;
   AH5_outputrequest_t outputrequest;
-  
+
   file_id = AH5_open_exemple_file("ah5_1_5_4_near_field_with_nec_simulation.h5");
-  
+
   mu_assert("read simulation", AH5_read_simulation(file_id, &simu));
   AH5_print_simulation(&simu);
   AH5_free_simulation(&simu);
@@ -45,7 +45,7 @@ char *test_read_exemple_file_1_5_4_near_field_with_nec_simulation()
   mu_assert("read outputrequest", AH5_read_outputrequest(file_id, &outputrequest));
   AH5_print_outputrequest(&outputrequest);
   AH5_free_outputrequest(&outputrequest);
-  
+
   return MU_FINISHED_WITHOUT_ERRORS;
 }
 
@@ -54,13 +54,13 @@ char *test_read_exemple_file_1_5_4_generic_mesh()
 {
   hid_t file_id;
   AH5_mesh_t mesh;
-  
+
   file_id = AH5_open_exemple_file("ah5_1_5_4_generic_mesh.h5");
 
   mu_assert("read mesh", AH5_read_mesh(file_id, &mesh));
   AH5_print_mesh(&mesh);
   AH5_free_mesh(&mesh);
-  
+
   return MU_FINISHED_WITHOUT_ERRORS;
 }
 
@@ -70,26 +70,8 @@ char *all_tests()
 {
   mu_run_test(test_read_exemple_file_1_5_4_near_field_with_nec_simulation);
   mu_run_test(test_read_exemple_file_1_5_4_generic_mesh);
-  
+
   return MU_FINISHED_WITHOUT_ERRORS;
 }
 
-// Main function, run tests and print results.
-int main(int argc, char **argv)
-{
-  char *result;
-  tests_run = 0;
-  result = all_tests();
-
-  if (result != 0)
-  {
-    printf("%s\n", result);
-  }
-  else
-  {
-    printf("ALL TESTS PASSED\n");
-  }
-  printf("Tests run: %d\n", tests_run);
-
-  return result != 0;
-}
+AH5_UTEST_MAIN(all_tests, tests_run);

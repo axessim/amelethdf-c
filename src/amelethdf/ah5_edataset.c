@@ -66,67 +66,39 @@ char AH5_extend_earray(hid_t dataset,
 
 
 char AH5_write_array_with_properties(hid_t dataset,
-                                     const int rank, const hsize_t dims[], const hsize_t blockdims[],
-                                     const hsize_t start[], const hsize_t stride[],
-                                     const hsize_t count[], const hsize_t block[],
-                                     const void *data, hid_t mem_type_id, hid_t properties)
-{
-  hid_t dataspace;
-  hid_t memspace;
-  herr_t status;
+                                     const int rank, const hsize_t *UNUSED(dims), const hsize_t blockdims[],
+                                     const hsize_t* start, const hsize_t* stride,
+                                     const hsize_t* count, const hsize_t* block,
+                                     const void *data, hid_t mem_type_id, hid_t properties) {
+  hid_t dataspace = 0;
+  hid_t memspace = 0;
+  herr_t status = 0;
+  char success = AH5_TRUE;
 
-  /* Get data space */
   dataspace = H5Dget_space(dataset);
-
-
-  /* Create the memory space */
   memspace = H5Screate_simple(rank, blockdims, NULL);
 
-
   /* Select the part to write */
-  status = H5Sselect_hyperslab(dataspace,
-                               H5S_SELECT_SET,
-                               start,
-                               stride,
-                               count,
-                               block);
+  status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start, stride, count, block);
 
-  if(HDF5_FAILED(status))
-  {
-
+  if (HDF5_FAILED(status)) {
     H5Sclose(memspace);
-
     H5Sclose(dataspace);
-
     return AH5_FALSE;
   }
 
-  /* Write data */
-  status = H5Dwrite(dataset, mem_type_id,
-                    memspace, dataspace, properties, data);
-
-
-  if(HDF5_FAILED(status))
-  {
-
-    H5Pclose(properties);
-
-    H5Dclose(dataset);
-
-    H5Sclose(memspace);
-
-    H5Sclose(dataspace);
-
-    return AH5_FALSE;
-  }
+  status = H5Dwrite(dataset, mem_type_id, memspace, dataspace, properties, data);
 
   H5Pclose(properties);
-
+  if(HDF5_FAILED(status)) {
+    H5Dclose(dataset);
+    success = AH5_FALSE;
+  } else {
+    success = AH5_TRUE;
+  }
   H5Sclose(memspace);
-
   H5Sclose(dataspace);
-
-  return AH5_TRUE;
+  return success;
 }
 
 
@@ -169,7 +141,7 @@ char AH5_create_PEorEdataset(hid_t loc_id,
                              AH5_Edataset_t *Edataset,
                              AH5_ACCESS_TYPE access)
 {
-  hsize_t i;
+  int i;
 
   Edataset->parent        = loc_id;
   Edataset->nb_dims       = nb_dims;
@@ -341,7 +313,7 @@ char AH5_append_Edataset(AH5_Edataset_t *Edataset,
   hsize_t *ones;
   hsize_t *offset;
   hsize_t *block;
-  hsize_t i;
+  int i;
 
 
   extendibledims = (hsize_t *)malloc(Edataset->nb_dims * sizeof(hsize_t));
@@ -404,6 +376,7 @@ char AH5_append_Edataset(AH5_Edataset_t *Edataset,
 
     free(ones);
     free(offset);
+    free(block);
   }
   else
   {
@@ -434,8 +407,6 @@ char AH5_append_Edataset(AH5_Edataset_t *Edataset,
 
 char AH5_free_Edataset(AH5_Edataset_t *Edataset)
 {
-  char status;
-
   if(Edataset->dims != NULL)
   {
     free(Edataset->dims);
@@ -446,6 +417,24 @@ char AH5_free_Edataset(AH5_Edataset_t *Edataset)
   {
     free(Edataset->path);
     Edataset->path = NULL;
+  }
+
+  if(Edataset->nature != NULL)
+  {
+    free(Edataset->nature);
+    Edataset->nature = NULL;
+  }
+
+  if(Edataset->label != NULL)
+  {
+    free(Edataset->label);
+    Edataset->label = NULL;
+  }
+
+  if(Edataset->unit != NULL)
+  {
+    free(Edataset->unit);
+    Edataset->unit = NULL;
   }
 
   Edataset->created = AH5_FALSE;
@@ -477,7 +466,7 @@ char AH5_create_Earrayset(hid_t loc_id,
                           hid_t mem_type_id,
                           AH5_Earrayset_t *Earrayset)
 {
-  hsize_t i;
+  int i;
 
   Earrayset->parent     = loc_id;
 
@@ -589,7 +578,7 @@ char AH5_set_dim_Earrayset(AH5_Earrayset_t *Earrayset,
                            const char *label)
 {
   hsize_t extdim = 0;
-  hsize_t i;
+  int i;
   hsize_t sizeappend;
 
   /* build name of dimension */
@@ -764,7 +753,7 @@ char AH5_set_memory_mapping(
   hsize_t count[],
   hsize_t block[])
 {
-  hsize_t i;
+  int i;
 
   mapping->nb_dims = nb_dims;
 

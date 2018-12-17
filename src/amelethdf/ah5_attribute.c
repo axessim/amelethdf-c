@@ -39,7 +39,7 @@ AH5_attr_instance_t *AH5_init_attr_str(AH5_attr_instance_t *attr, const char *na
     attr->value.s = (char*)malloc((strlen(val)+1) * sizeof(char));
     strcpy(attr->value.s, val);
   }
-  
+
   return attr;
 }
 
@@ -104,7 +104,7 @@ char AH5_read_cpx_attr(hid_t loc_id, const char *path, const char *attr_name, AH
 // null char (similar to strlen).
 size_t AH5_read_str_attr_len(hid_t loc_id, const char *path, const char *attr_name)
 {
-  hid_t attr_id, filetype, memtype;
+  hid_t attr_id, filetype;
   size_t sdim = 0;
 
   if (AH5_path_valid(loc_id, path) || strcmp(path, ".") == 0)
@@ -123,7 +123,7 @@ size_t AH5_read_str_attr_len(hid_t loc_id, const char *path, const char *attr_na
 // Read string attribute <attr_name> given by address <path>
 char AH5_read_str_attr(hid_t loc_id, const char *path, const char *attr_name, char **rdata)
 {
-  hid_t attr_id, filetype, memtype;
+  hid_t attr_id, atype, memtype;
   size_t sdim;
   char success = AH5_FALSE;
 
@@ -131,19 +131,20 @@ char AH5_read_str_attr(hid_t loc_id, const char *path, const char *attr_name, ch
     if (H5Aexists_by_name(loc_id, path, attr_name, H5P_DEFAULT) > 0)
     {
       attr_id = H5Aopen_by_name(loc_id, path, attr_name, H5P_DEFAULT, H5P_DEFAULT);
-      filetype = H5Aget_type(attr_id);
-      sdim = H5Tget_size(filetype);
+      atype = H5Aget_type(attr_id);
+      sdim = H5Tget_size(atype);
       sdim++;  // make a space for null terminator
       // XXX allocate memory into an input argument is dangerous thing.
       *rdata = (char *) malloc(sdim * sizeof(char));
-      memtype = H5Tcopy(H5T_C_S1);
+      memtype = H5Tget_native_type(atype, H5T_DIR_ASCEND);
       H5Tset_size(memtype, sdim);
       if (H5Aread(attr_id, memtype, *rdata) >= 0)
         success = AH5_TRUE;
       else
         free(*rdata);
+      (*rdata)[sdim - 1] = '\0';
       H5Tclose(memtype);
-      H5Tclose(filetype);
+      H5Tclose(atype);
       H5Aclose(attr_id);
     }
   if (!success)
@@ -159,7 +160,7 @@ char AH5_read_opt_attrs(hid_t loc_id, const char *path, AH5_opt_attrs_t *opt_att
   char success = AH5_FALSE, is_mandatory;
   H5O_info_t object_info;
   hsize_t i, j, k = 0;
-  hid_t attr_id, type_id, memtype;
+  hid_t attr_id, type_id;
   float buf[2];
   hsize_t nb_present_mandatory_attrs = 0;
   char temp_name[AH5_ATTR_LENGTH];
@@ -214,12 +215,8 @@ char AH5_read_opt_attrs(hid_t loc_id, const char *path, AH5_opt_attrs_t *opt_att
           break;
         case H5T_STRING:
           opt_attrs->instances[k].value.s = NULL;
-          memtype = H5Tcopy(H5T_C_S1);
-          H5Tset_size(memtype, AH5_ATTR_LENGTH);
-          opt_attrs->instances[k].value.s = (char *) malloc(AH5_ATTR_LENGTH * sizeof(char));
-          if (H5Aread(attr_id, memtype, opt_attrs->instances[k].value.s) >= 0)
+          if (AH5_read_str_attr(loc_id, path, temp_name, &opt_attrs->instances[k].value.s))
             success = AH5_TRUE;
-          H5Tclose(memtype);
           break;
         default:
           opt_attrs->instances[k].type = H5T_NO_CLASS;
@@ -447,6 +444,3 @@ void AH5_free_opt_attrs(AH5_opt_attrs_t *opt_attrs)
     opt_attrs->nb_instances = 0;
   }
 }
-
-
-
