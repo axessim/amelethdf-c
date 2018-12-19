@@ -1,6 +1,7 @@
 # Top level CMakeList.txt file
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6 FATAL_ERROR)
+ENABLE_LANGUAGE(Fortran)
 ENABLE_TESTING()
 
 PROJECT(AMELETHDF)
@@ -15,6 +16,10 @@ OPTION(AMELETHDF_ENABLE_MPI "Enable MPI support" OFF)
 OPTION(AMELETHDF_BUILD_DOCS "Build Amelet-HDF docs" ON)
 OPTION(AMELETHDF_ENABLE_COVERAGE "Enable coverage" OFF)
 OPTION(AMELETHDF_BUILD_FORTRAN "Build FORTRAN support" OFF)
+
+IF(AMELETHDF_BUILD_FORTRAN)
+  ENABLE_LANGUAGE(Fortran)
+ENDIF()
 
 SET(AMELETHDF_VERSION_MAJOR "1")
 SET(AMELETHDF_VERSION_MINOR "0")
@@ -172,8 +177,8 @@ INSTALL(FILES
 # Finalise ah5 configure
 #-------------------------------------------------------------
 # Define the Amelet-HDF tools and test dependance.
-SET(AMELETHDF_TOOLS_LINK_LIBS amelethdfc ${AMELETHDF_DEP_LINK_LIBS})
-SET(AMELETHDF_TESTS_LINK_LIBS amelethdfc ${AMELETHDF_DEP_LINK_LIBS})
+SET(AMELETHDF_TOOLS_LINK_LIBS amelethdfc_shared ${AMELETHDF_DEP_LINK_LIBS})
+SET(AMELETHDF_TESTS_LINK_LIBS amelethdfc_shared ${AMELETHDF_DEP_LINK_LIBS})
 #
 SET(AMELETHDF_INCLUDE_DIRS
   ${CMAKE_CURRENT_BINARY_DIR}/src/amelethdf
@@ -185,7 +190,7 @@ SET(AMELETHDF_HL_DEP_INCLUDE_DIRS
   ${AMELETHDF_INCLUDE_DIRS}
   ${AMELETHDF_HL_DEP_INCLUDE_DIRS})
 SET(AMELETHDF_HL_DEP_LINK_LIBS
-  amelethdfc
+  amelethdfc_shared
   ${AMELETHDF_DEP_LINK_LIBS})
 SET(AMELETHDF_HL_DEP_LINK_LIBS_DIRS
   ${AMELETHDF_DEP_LINK_LIBS_DIRS}
@@ -236,6 +241,20 @@ ENDIF ()
 #-------------------------------------------------------------
 # create a AmeletHDFConfig.cmake file and co.
 #-------------------------------------------------------------
+SET(AMELETHDF_FORTRAN_LIBRARIES
+  amelethdff_static
+  amelethdfc_static
+  ${HDF5_Fortran_LIBRARIES}
+  ${HDF5_Fortran_HL_LIBRARIES}
+  ${AMELETHDF_DEP_LINK_LIBS}
+  PARENT_SCOPE)
+SET(AMELETHDF_FORTRAN_INCLUDE
+  ${AMELETHDF_BINARY_DIR}/fortran/src
+  ${CMAKE_CURRENT_BINARY_DIR}/src/amelethdf
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/amelethdf
+  PARENT_SCOPE)
+
+
 # CMAKE CONFIGURE FILE into build-tree
 SET(AMELETHDF_CMAKE_DIR ${PROJECT_BINARY_DIR})
 SET(AMELETHDF_CMAKE_DIR_ABS ${AMELETHDF_CMAKE_DIR})                # The absolute path
@@ -246,7 +265,7 @@ SET(AMELETHDF_EXPORT_LIBRARY_DIRS
 SET(AMELETHDF_EXPORT_LIBRARIES amelethdfc_hl amelethdfc ${AMELETHDF_DEP_LINK_LIBS})
 
 # Add all targets to the build-tree export set
-EXPORT(TARGETS amelethdfc amelethdfc_hl
+EXPORT(TARGETS amelethdfc_shared amelethdfc_hl
   FILE "${AMELETHDF_CMAKE_DIR}/AmeletHDFLibraryDepends.cmake")
 # Export the package for use from the build-tree
 # (this registers the build-tree with a global CMake-registry)

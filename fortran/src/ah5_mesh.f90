@@ -26,6 +26,19 @@ module ah5_mesh_m
   public ah5_groupgroup_path
   public ah5_groupgroup_getitem
 
+  public ah5_mesh_t
+  public ah5_axis_t
+  public ah5_smesh_t
+  !public ah5_meshx_t
+  public ah5_msh_group_t
+  public ah5_msh_instance_t
+  public ah5_read_mesh
+  public ah5_free_mesh
+
+  public ah5_mesh_groups
+  public ah5_msh_group_instances
+  public ah5_msh_instance_path
+  public ah5_msh_group_t_path
   !================================ type ======================================!
 
   ! The valid Amelet-HDF unstructured elements type
@@ -56,6 +69,10 @@ module ah5_mesh_m
   integer, public, parameter :: AH5_GROUP_FACE = 3
   integer, public, parameter :: AH5_GROUP_VOLUME = 4
 
+
+  integer, public, parameter :: MSH_INVALID             = -1
+  integer, public, parameter :: MSH_STRUCTURED          = 1
+  integer, public, parameter :: MSH_UNSTRUCTURED        = 2
 
   ! The Amelet-HDF mesh group of group (set of groups).
   type, bind(C) :: ah5_groupgroup_t
@@ -88,6 +105,49 @@ module ah5_mesh_m
      type(c_ptr)                     :: som_tables
   end type ah5_umesh_t
 
+
+  type, bind(C) :: ah5_axis_t
+     integer(hsize_t) :: nb_nodes
+     type(c_ptr) :: nodes
+  end type ah5_axis_t
+
+  type, bind(C) :: ah5_smesh_t
+     type(AH5_axis_t) :: x
+     type(AH5_axis_t) :: y
+     type(AH5_axis_t) :: z
+     integer(hsize_t) :: nb_groups
+     type(c_ptr) :: groups
+     integer(hsize_t) :: nb_groupgroups
+     type(c_ptr) :: groupgroups 
+     integer(hsize_t) ::nb_some_tables
+     type(c_ptr) :: som_tables
+  end type ah5_smesh_t
+
+!!$  type, bind(C) :: ah5_meshx_t
+!!$     type(AH5_smesh_t) ::    structured
+!!$     type(AH5_umesh_t) ::    unstructured
+!!$  end type ah5_meshx_t
+
+  type, bind(C) :: ah5_msh_instance_t
+     type(c_ptr) :: path
+     integer(c_int) :: type
+     type(AH5_umesh_t) ::   data
+  end type ah5_msh_instance_t
+
+  type, bind(C) :: ah5_msh_group_t
+     type(c_ptr) :: path
+     integer(hsize_t) :: nb_msh_instances
+     type(c_ptr) :: msh_instances
+     integer(hsize_t) ::   nb_mlk_instances
+     type(c_ptr) :: mlk_instances
+  end type ah5_msh_group_t
+
+  ! AHDF mesh
+  type, bind(C) :: ah5_mesh_t
+     integer(hsize_t) :: nb_groups
+     type(c_ptr) :: groups !=> ah5_msh_group_t
+  end type ah5_mesh_t
+
   !================================ interfaces ================================!
 
   ! Binding with Amelet-HDF C library
@@ -115,10 +175,92 @@ module ah5_mesh_m
        character(c_char), intent(in), value :: elementtype
        integer(c_int) :: element_size
      end function ah5_element_size_c
+
+     function AH5_read_mesh_c(file_id, mesh) &
+          bind(C, name="AH5_read_mesh")
+       import c_char, c_int, c_ptr
+       integer(c_int), value, intent(in) :: file_id
+       type(c_ptr), value :: mesh
+       integer(kind=c_int) ::  ah5_read_mesh_c
+     end function AH5_read_mesh_c
+
+     subroutine ah5_free_mesh_c(mesh) &
+          bind(C, name="AH5_free_mesh")
+       import c_ptr
+       type(c_ptr), value :: mesh
+     end subroutine ah5_free_mesh_c
+
   end interface
 
 
 contains
+  ! read from file the /mesh
+  subroutine ah5_read_mesh(file_id, mesh, hdferr)
+    integer(hid_t), intent(in) :: file_id    ! File identifier
+    type(ah5_mesh_t), target :: mesh       ! the output mesh
+    integer,  optional :: hdferr ! Error code 0 on success
+    ! and -1 on failure
+    character(kind=c_char) :: errcof
+    integer(c_int) :: errcoff
+    integer :: fi
+    character(len=25) :: ci
+
+    errcoff =ah5_read_mesh_c(file_id , c_loc(mesh))
+    fi=errcoff
+    write(ci,*) fi    
+    errcof=trim(ci)//c_null_char
+    if (present(hdferr)) then
+       call ah5_error_if(errcof, hdferr)
+    else
+       call ah5_error_if(errcof)
+    end if
+  end subroutine ah5_read_mesh
+
+  function ah5_mesh_groups(this) result(meshgroups)
+    type(ah5_mesh_t), intent(in) :: this
+    type(ah5_msh_group_t), dimension(:), pointer :: meshgroups
+
+    call C_F_POINTER(&
+         CPTR=this%groups, &
+         FPTR=meshgroups, &
+         SHAPE=(/this%nb_groups/))
+  end function ah5_mesh_groups
+
+  function ah5_msh_group_instances(this) result(msh_instances)
+    type(ah5_msh_group_t), intent(in) :: this
+    type(ah5_msh_instance_t), dimension(:), pointer :: msh_instances
+
+    call C_F_POINTER(&
+         CPTR=this%msh_instances, &
+         FPTR=msh_instances, &
+         SHAPE=(/this%nb_msh_instances/))
+  end function ah5_msh_group_instances
+
+  ! read the msh_instance path
+  subroutine ah5_msh_instance_path(this, path)
+    type(ah5_msh_instance_t), intent(in) :: this
+    character(len=:), intent(inout), allocatable :: path
+
+    call ah5_c_string_ptr_to_f_string(this%path, path)
+  end subroutine ah5_msh_instance_path
+
+  ! read the msh_group_t path
+  subroutine ah5_msh_group_t_path(this, path)
+    type(ah5_msh_group_t), intent(in) :: this
+    character(len=:), intent(inout), allocatable :: path
+
+    call ah5_c_string_ptr_to_f_string(this%path, path)
+  end subroutine ah5_msh_group_t_path
+
+  ! release  mesh
+  subroutine ah5_free_mesh(mesh, hdferr)
+    type(ah5_mesh_t), target :: mesh       ! the output mesh
+    integer, intent(out), optional :: hdferr ! Error code 0 on success
+    ! and -1 on failure
+
+    call ah5_free_mesh_c(c_loc(mesh))
+  end subroutine ah5_free_mesh
+
   ! read from file the unstructured mesh
   subroutine ah5_read_umesh(file_id, path, umesh, hdferr)
     integer(hid_t), intent(in) :: file_id    ! File identifier
@@ -203,7 +345,7 @@ contains
     call C_F_POINTER(&
          CPTR=this%nodes, &
          FPTR=nodes, &
-         SHAPE=this%nb_nodes)
+         SHAPE=(/this%nb_nodes(2),this%nb_nodes(1)/))
   end function ah5_umesh_nodes
 
   ! return groups

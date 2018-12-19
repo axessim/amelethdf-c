@@ -16,8 +16,8 @@ FOREACH (tool_file ${tools_src})
 
   ADD_EXECUTABLE (${tool_exec} ${tool_file})
   TARGET_LINK_LIBRARIES (${tool_exec}
-    amelethdff
-    amelethdfc
+    amelethdff_shared
+    amelethdfc_shared
     ${AMELETHDF_DEP_LINK_LIBS})
 
 ENDFOREACH (tool_file)

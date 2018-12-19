@@ -2,12 +2,12 @@
 
 # build fortran unit test tool
 FILE(GLOB_RECURSE utestf_src utest.f90)
-ADD_LIBRARY(utestf_lib STATIC ${utestf_src})
-SET_TARGET_PROPERTIES(utestf_lib PROPERTIES OUTPUT_NAME "utestf")
-INSTALL(TARGETS utestf_lib ARCHIVE DESTINATION "lib")
-FILE(GLOB utestf_module ${CMAKE_CURRENT_BINARY_DIR}/*.mod)
-INSTALL(FILES ${utestf_inc} DESTINATION "include")
-SET(utestf_inc ${CMAKE_CURRENT_BINARY_DIR})
+ADD_LIBRARY(ah5_utestf_lib STATIC ${utestf_src})
+SET_TARGET_PROPERTIES(ah5_utestf_lib PROPERTIES OUTPUT_NAME "utestf")
+INSTALL(TARGETS ah5_utestf_lib ARCHIVE DESTINATION "lib")
+FILE(GLOB ah5_utestf_module ${CMAKE_CURRENT_BINARY_DIR}/*.mod)
+INSTALL(FILES ${ah5_utestf_inc} DESTINATION "include")
+SET(ah5_utestf_inc ${CMAKE_CURRENT_BINARY_DIR})
 
 
 # build tests
@@ -26,9 +26,9 @@ FOREACH (test_file ${tests_src})
 
   ADD_EXECUTABLE (${test_exec} ${test_file})
   TARGET_LINK_LIBRARIES (${test_exec}
-    utestf_lib
-    amelethdff
-    amelethdfc
+    ah5_utestf_lib
+    amelethdff_shared
+    amelethdfc_shared
     ${AMELETHDF_DEP_LINK_LIBS})
 
   ADD_TEST (${test_exec} "${EXECUTABLE_OUTPUT_PATH}/${test_exec}")

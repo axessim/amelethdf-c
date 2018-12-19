@@ -216,16 +216,7 @@ char AH5_write_flat_str_dataset(hid_t loc_id, const char *dset_name, const hsize
 {
   char success = AH5_FALSE;
   hid_t filetype, memtype, space, dset;
-  hsize_t dims[1] = {len}, k;
-  char *buf = NULL;
-
-  buf = (char *) malloc((size_t) len*(slen+1) * sizeof(char));
-  buf[0] = '\0';
-  for (k = 0; k < len; k++)
-  {
-    buf[k * slen] = '\0';
-    strcat(buf + (k*(slen)), wdata[k]);
-  }
+  hsize_t dims[1] = {len};
 
   filetype = H5Tcopy(AH5_NATIVE_STRING);
   H5Tset_size(filetype, slen);
