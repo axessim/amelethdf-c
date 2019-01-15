@@ -1,0 +1,36 @@
+{
+    "STEPS" : "012345678",
+
+    "SRC_PATH": "${CONF_DIR}",
+
+    "PRODUCT_NAME" : "${repo_name}",
+    "PRODUCT_BRANCH" : "${repo_branch}",
+    "PRODUCT_VERSION" : "refind://[\\d\\.]*/${repo_tag}?index=1",
+    "PACKAGE_NAME": "${PRODUCT_NAME}-${PRODUCT_BRANCH}",
+    "PRODUCT_SUMMARY" : "Amelet-HDF C library",
+
+    "environment_variables" : ["STEPS"],
+
+    "build": {
+        "factory": "binary",
+        "configure": ["python", "${SRC_PATH}/configure.py",
+                      "--build", ".",
+                      "--prefix", "local",
+                      "--flavor", "Release",
+                      "--hdf5-dir", "${ADK_PATH}/share/cmake/hdf5/",
+                      "--cmake-generator", "${CMAKE_GENERATOR}"],
+        "build": ["${MAKE}", "${MAKE_MULTI_CORE_FLAG}"],
+        "install": ["${MAKE}", "${MAKE_MULTI_CORE_FLAG}", "install"],
+        "installer": {
+            "local": "local",
+            "with_distribution_id": false
+        }
+    },
+
+    "test": {
+        "factory": {"type": "shell", "command": ["ctest", "--output-on-failure"]},
+        "environ": {"path": "${BUILD_DIR}\\local\\bin;${ADK_PATH}\\lib;${Env_Path}"}
+    },
+
+    "ADDITIONAL_CONTENT": {}
+}
