@@ -155,7 +155,7 @@ char *__message__;
  */
 // TODO(XXX): avoid the use of h5diff, test fails when bin not installed
 #if defined(_MSC_VER)
-# define H5DIFF "h5diffdll"
+# define H5DIFF "h5diff"
 #else
 # define H5DIFF "h5diff -q"
 #endif

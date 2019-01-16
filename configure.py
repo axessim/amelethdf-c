@@ -94,17 +94,17 @@ def get_default_cmake_generator():
 
 usage = """usage: %prog [options] arg1 arg2 [cmake options]
 
-This script provide a easy way for build Amelet-HDF C library. The main
+This script provides an easy way to build Amelet-HDF C library. The main
 behaviour is to run cmake with right command line options.
 
-This scipt can be also used with QtCreator developpement
-environement. QtCreator can use cmake configure file for build a
-project. However, it's hard to remember the command line to build QtCreator
+This script can also be used with QtCreator development environment.
+QtCreator can use cmake configure file to build a project. However,
+it's hard to remember the command line to build a QtCreator
 project. This scipt can help you with the dry mode (see "--drymode").
 
 # %prog [options] --drymode
 
-Copy/colle the cmake command line into QtCreator for build the project.
+Copy/paste the cmake command line into QtCreator to build the project.
 """
 
 
@@ -114,18 +114,17 @@ def main():
 
     group = OptionGroup(parser, "General Configure Options", "")
     group.add_option("--build", dest="build", default=None,
-                     help="Where is build the application")
+                     help="Where the application will be built")
     group.add_option("--prefix", dest="prefix", default=None,
-                     help="Where is installed the application")
+                     help="Where the application will be installed")
     group.add_option("--flavor", dest="flavor", default=None,
                      choices=CHOICE_FLAVOR,
-                     help="build flavor id (default: %(default)s)")
+                     help="Build flavor (default: %(default)s)")
     parser.add_option_group(group)
 
     group = OptionGroup(parser, "Manage dependencies", "")
     group.add_option("--hdf5-dir", dest="hdf5",
-                     help="path to the HDF5 cmake directory "
-                     "'${SOMEWHERE}/share/cmake/hdf5'",
+                     help="Path to the HDF5 settings",
                      metavar="PATH", default=None)
     parser.add_option_group(group)
 
@@ -142,21 +141,21 @@ def main():
                      help="Define the generator used by CMake")
     group.add_option("--cmake-args",
                      dest="cmake_args", default="",
-                     help="The value of this option are directly provide to camke")
+                     help="The values of this option are directly provided to cmake")
     parser.add_option_group(group)
 
     group = OptionGroup(parser, "Control", "")
     group.add_option("--clean",
                      action="store_true", dest="clean", default=False,
-                     help="Clean build directory before do something")
+                     help="Clean the build directory before doing something")
     group.add_option("--drymode",
                      action="store_true", dest="drymode", default=False,
-                     help="Build environement en display info for outside "
+                     help="Build environment and display info for outside "
                      "configuration")
     group.add_option('--log-level', dest='log_level',
                      default=DEFAULT_LOG_LEVEL,
                      choices=CHOICE_LOG_LEVELS,
-                     help="the logging level (default: %(default)s)")
+                     help="The logging level (default: %(default)s)")
     parser.add_option_group(group)
 
     (options, user_args) = parser.parse_args()
@@ -209,7 +208,7 @@ def main():
                     shutil.rmtree(content)
         os.chdir(builddir)
         args.insert(0, srcdir)
-        info("Mustard should be build here '%s'." % options.build)
+        info("Amelet-HDF C should be built here '%s'." % options.build)
 
     args.insert(0, "cmake")
     info("# %s" % (" ".join(args)))
@@ -217,9 +216,9 @@ def main():
         info("Configure Amelet-HDF C library")
         info("Cmake stdout:")
         if (sp.Popen(args, stdout=sp.PIPE).wait() != 0):
-            error("Configure finiche with an error!")
+            error("Configure finished with an error!")
         info("Cmake end")
-        info("For build teta run the folowin command.")
+        info("To build Amelet-HDF C run the following commands:")
         if srcdir is not None:
             os.chdir(srcdir)
             info("# cd %s" % options.build)
@@ -228,7 +227,7 @@ def main():
             info("# make docs")
             info("# make coverage")
 
-        info("For adjust configuration or reconfigure used in build dir:")
+        info("To adjust configuration or reconfigure use in build dir:")
         info("# cmake-gui .")
         info("# cmake .")
 

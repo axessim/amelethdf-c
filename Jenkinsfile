@@ -43,6 +43,31 @@ pipeline
                         }
                     }
                 }
+
+               	stage('Windows (win7-64b)')
+                {
+                    agent { label 'win7-64b' }
+
+                    steps
+                    {
+                        deleteDir()
+
+                        checkout_git("axsdeploy", "master")
+                        checkout_git("amelethdf-c", "${GIT_BRANCH}")
+
+                        dir("amelethdf-c")
+                        {
+                            bat '''python ..\\axsdeploy\\bootstrap.py --config-file .\\axsdeploy.json build'''
+                        }
+                    }
+                    post
+                    {
+                        failure
+                        {
+                            sendMailError("Build Windows (win7-64b) failed")
+                        }
+                    }
+                }
             }
         }
 
