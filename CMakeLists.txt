@@ -6,7 +6,7 @@ ENABLE_TESTING()
 PROJECT(AMELETHDF)
 
 MESSAGE("--------------------------------------------------")
-MESSAGE(STATUS "Configuring project AmeketHDF HL")
+MESSAGE(STATUS "Configuring project Amelet-HDF C")
 MESSAGE(STATUS "Host system is ${CMAKE_SYSTEM_NAME}")
 MESSAGE(STATUS "Configuration is ${CMAKE_BUILD_TYPE}")
 SITE_NAME(HOST_NAME)
@@ -75,8 +75,14 @@ ENDIF()
 
 SET(AMELETHDF_DEP_INCLUDE_DIRS
   ${HDF5_INCLUDE_DIR} ${HDF5_INCLUDE_DIRS} ${AMELETHDF_DEP_INCLUDE_DIRS})
-SET(AMELETHDF_DEP_LINK_LIBS
-  ${HDF5_C_LIBRARIES} ${HDF5_HL_LIBRARIES} ${AMELETHDF_DEP_LINK_LIBS})
+# Fix hdf5 lib linking on windows (replace .dll of bin dir by .lib of lib dir)
+SET(HDF5_LIBRARIES ${HDF5_LIBRARIES} ${HDF5_C_LIBRARIES} ${HDF5_HL_LIBRARIES})
+FOREACH(LIB IN LISTS HDF5_LIBRARIES)
+  STRING(REGEX REPLACE "(.*)/bin/(.*)\\.dll" "\\1/lib/\\2.lib" TMP ${LIB})
+  LIST(APPEND TMP_LIST ${TMP})
+ENDFOREACH()
+SET(HDF5_LIBRARIES ${TMP_LIST})
+SET(AMELETHDF_DEP_LINK_LIBS ${HDF5_LIBRARIES} ${AMELETHDF_DEP_LINK_LIBS})
 # The previous configuration is not enough for working with
 # configuration files built by hdf5.
 IF (DEFINED HDF5_VERSION_STRING)
