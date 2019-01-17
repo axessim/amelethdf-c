@@ -27,7 +27,7 @@ pipeline
 		    {
                         deleteDir()
 
-                        checkout_git("axsdeploy", "master")
+                        checkout_git("axsdeploy", "${GIT_BRANCH}")
                         checkout_git("amelethdf-c", "${GIT_BRANCH}")
 
                         dir("amelethdf-c")
@@ -52,7 +52,7 @@ pipeline
                     {
                         deleteDir()
 
-                        checkout_git("axsdeploy", "master")
+                        checkout_git("axsdeploy", "${GIT_BRANCH}")
                         checkout_git("amelethdf-c", "${GIT_BRANCH}")
 
                         dir("amelethdf-c")
@@ -79,7 +79,7 @@ pipeline
 	    {
                 deleteDir()
 
-                checkout_git("axsdeploy", "master")
+                checkout_git("axsdeploy", "${GIT_BRANCH}")
                 checkout_git("amelethdf-c", "${GIT_BRANCH}")
 
                 dir("amelethdf-c")
