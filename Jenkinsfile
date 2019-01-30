@@ -34,6 +34,8 @@ pipeline
                         {
                             sh '''python ../axsdeploy/bootstrap.py --config-file ./axsdeploy.json build'''
 			}
+
+			deleteDir()
                     }
 		    post
 		    {
@@ -59,6 +61,8 @@ pipeline
                         {
                             bat '''python ..\\axsdeploy\\bootstrap.py --config-file .\\axsdeploy.json build'''
                         }
+
+			deleteDir()
                     }
                     post
                     {
